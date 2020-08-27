@@ -1,0 +1,238 @@
+delimiters "%", "%"
+gen_doc(db) ::= <<
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+
+namespace %db.NameSpace; format="pascal"%.DAL
+{
+    public class InternalFunctions
+    {
+        public static int Sum(IEnumerable<int> elements)
+        {
+            return elements.Sum();
+        }
+        public static decimal Sum(IEnumerable<decimal> elements)
+        {
+            return elements.Sum();
+        }
+
+        public static T Coalesce<T>(T param, T TDefault)
+        {
+            if (param == null) return TDefault;
+            return param;
+        }
+        public static int Count<T>(IEnumerable<T> elements)
+        {
+            return elements.Count();
+        }
+
+        public static DateTime DateTime(string s)
+        {
+            int year = 0; var month = 0; var day = 0; var hour = 0; var minute = 0; var second = 0;
+            var tokensDate = s.Split();
+            var pass = false;
+            for (int i = 0; i < tokensDate.Length; i++)
+            {
+                if (i + 1 < tokensDate.Length)
+                {
+                    var j = i + 1;
+                    if (tokensDate[j] == "year" || tokensDate[j] == "years")
+                    { year = int.Parse(tokensDate[i]); pass = true; }
+                    else if (tokensDate[j] == "month" || tokensDate[j] == "months")
+                    { month = int.Parse(tokensDate[i]); pass = true; }
+                    else if (tokensDate[j] == "day" || tokensDate[j] == "days")
+                    { day = int.Parse(tokensDate[i]); pass = true; }
+                }
+                if (!pass)
+                {
+                    var newTokens = tokensDate[i].Split('-');
+                    if (newTokens.Length >= 3)
+                    {
+                        if (newTokens[0][0] == '0')
+                        {
+                            var y = new String(newTokens[0].Skip(1).ToArray());
+                            year = int.Parse(y);
+                        }
+                        else year = int.Parse(newTokens[0]);
+                        if (newTokens[1][0] == '0')
+                        {
+                            var m = new String(newTokens[1].Skip(1).ToArray());
+                            month = int.Parse(m);
+                        }
+                        else month = int.Parse(newTokens[1]);
+                        if (newTokens[2][0] == '0')
+                        {
+                            var d = new String(newTokens[2].Skip(1).ToArray());
+                            day = int.Parse(d);
+                        }
+                        else day = int.Parse(newTokens[2]);
+                    }
+                    if (newTokens.Length == 3)
+                        pass = true;
+                }
+                if (!pass)
+                {
+                    var newTokens = tokensDate[i].Split(':');
+                    if (newTokens.Length == 3)
+                    {
+                        if (newTokens[0][0] == '0')
+                        {
+                            var h = new String(newTokens[0].Skip(1).ToArray());
+                            hour = int.Parse(h);
+                        }
+                        else hour = int.Parse(newTokens[0]);
+                        if (newTokens[1][0] == '0')
+                        {
+                            var m = new String(newTokens[1].Skip(1).ToArray());
+                            minute = int.Parse(m);
+                        }
+                        else minute = int.Parse(newTokens[1]);
+                        if (newTokens[2][0] == '0')
+                        {
+                            var d = new String(newTokens[2].Skip(1).ToArray());
+                            second = int.Parse(d);
+                        }
+                        else second = int.Parse(newTokens[2]);
+                    }
+                }
+
+            }
+            return new DateTime(year, month, day, hour, minute, second);
+        }
+        public static DateTime DateTime(DateTime dt) => dt;
+        public static TimeSpan Interval(string s)
+        {
+            var date = DateTime(s);
+            return new TimeSpan(date.Day, date.Hour, date.Minute, date.Second);
+        }
+        public static TimeSpan Time(string s)
+        {
+            var date = DateTime(s);
+            return new TimeSpan(date.Hour, date.Minute, date.Second);
+        }
+        public static DateTime ToDate(string date, string format) => DateTime(date);
+
+        public static string Lower(string s) => s.ToLower();
+
+         public static T Nextval<T>(IEnumerable<T> enumerable, ref bool FOUND)
+        {
+            if (enumerable.GetEnumerator().MoveNext())
+            {
+                FOUND = true;
+                return enumerable.GetEnumerator().Current;
+            }
+            FOUND = false;
+            return default(T);
+        }
+        
+        public static T Currval<T>(IEnumerable<T> enumerable)
+        {
+            return enumerable.GetEnumerator().Current;
+        }
+
+        public static IEnumerable<long> LongEnumerable(int increment, int start, int minValue, long maxValue)
+        {
+            var lStart = (long)start;
+            while (lStart < maxValue)
+            {
+                yield return start;
+                start += increment;
+            }
+        }
+        public static IEnumerable<int> IntEnumerable(int increment, int start, int minValue, int maxValue)
+        {
+            var lStart = start;
+            while (lStart < maxValue)
+            {
+                yield return start;
+                start += increment;
+            }
+        }
+        public static bool Like(string toSearch, string toFind)
+        {
+            %db.LikeBody%
+        }
+        public static int Avg(IEnumerable<int> elems)
+        {
+            return (int)elems.Average();
+        }
+    }
+    
+    public class Interval
+    {
+        TimeSpan timeSpan;
+        public Interval(string s)
+        {
+            timeSpan = InternalFunctions.Interval(s);
+        }
+        public Interval()
+        {
+            timeSpan = new TimeSpan();
+        }
+        public Interval(TimeSpan ts)
+        {
+            timeSpan = ts;
+        }
+        public Interval(long ticks)
+        {
+            timeSpan = new TimeSpan(ticks);
+        }
+        public Interval(int hour, int minute, int second)
+        {
+            timeSpan = new TimeSpan(hour, minute, second);
+        }
+        public Interval(int days, int hour, int minute, int second)
+        {
+            timeSpan = new TimeSpan(days, hour, minute, second);
+        }
+        public Interval(int days, int hour, int minute, int second, int milliseconds)
+        {
+            timeSpan = new TimeSpan(days, hour, minute, second, milliseconds);
+        }
+
+        public static Interval operator *(Interval a, short b)
+        {
+            var days = a.timeSpan.Days * b;
+            var hours = Math.Abs(a.timeSpan.Hours * b / 24);
+            var minutes = Math.Abs(a.timeSpan.Minutes * b / 60);
+            var seconds = Math.Abs(a.timeSpan.Seconds * b / 60);
+            var milliseconds = Math.Abs(a.timeSpan.Milliseconds * b / 60);
+            return new Interval(days, hours, minutes, seconds);
+        }
+        public static Interval operator *(short b, Interval a)
+        {
+            var days = a.timeSpan.Days * b;
+            var hours = Math.Abs(a.timeSpan.Hours * b / 24);
+            var minutes = Math.Abs(a.timeSpan.Minutes * b / 60);
+            var seconds = Math.Abs(a.timeSpan.Seconds * b / 60);
+            var milliseconds = Math.Abs(a.timeSpan.Milliseconds * b / 60);
+            return new Interval(days, hours, minutes, seconds);
+        }
+        public static Interval operator -(TimeSpan a, Interval b)
+        {
+            return new Interval(a - b.timeSpan);
+        }
+
+        public static implicit operator int(Interval a)
+        {
+            if (a.timeSpan.Equals(TimeSpan.Zero)) return 0;
+            else if (a.timeSpan.Days != 0) return a.timeSpan.Days;
+            else if (a.timeSpan.Hours != 0) return a.timeSpan.Hours;
+            else if (a.timeSpan.Minutes != 0) return a.timeSpan.Minutes;
+            else if (a.timeSpan.Seconds != 0) return a.timeSpan.Seconds;
+            else return a.timeSpan.Milliseconds;
+        }
+        public static bool operator >(Interval a, TimeSpan b) => a.timeSpan > b;
+        public static bool operator >(TimeSpan b, Interval a) => b > a.timeSpan;
+        public static bool operator <(Interval a, TimeSpan b) => a.timeSpan < b;
+        public static bool operator <(TimeSpan b, Interval a) => b < a.timeSpan;
+        public static DateTime operator -(DateTime a, Interval b) => a - b.timeSpan;
+    }
+}
+
+>>

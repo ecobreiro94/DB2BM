@@ -1,0 +1,78 @@
+gen_model(db) ::= <<
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using NpgsqlTypes;
+
+namespace <db.NameSpace; format="pascal">.Model
+{
+    <db.Table:gen_class();separator = "\n\n">
+}
+>>
+
+gen_class(entity) ::= <<
+public class <entity.Name; format="pascal">
+{
+    <entity.Fields:gen_fields(); separator = "\n">
+
+    public <entity.Name; format="pascal">(<entity.NoRelationalField:gen_ctor_params(); separator = ", ">)
+    {
+        <entity.NoRelationalField:gen_assig()>
+    }
+}
+>>
+
+gen_ctor_params(field) ::= <<
+<if(field.IsProperty || field.IsPrimaryKey || field.IsForeingKey)><field.DestinyType> <field.Name; format="camel"><endif>
+>>
+
+gen_assig(field) ::= <<
+<if(field.IsProperty || field.IsPrimaryKey || field.IsForeingKey)>
+this.<field.GenName> = <field.GenName; format="camel">;
+<endif>
+>>
+
+gen_fields(field) ::= <<
+    <if (field.IsVirtual)>
+public virtual <field.DestinyType><if (field.IsNullable)>?<endif> <field.GenName> { get; set; }
+    <else>
+public <field.DestinyType><if (field.IsNullable)>?<endif> <field.GenName> { get; set; }
+    <endif>
+>>
+
+gen_enum(db) ::= <<
+namespace <db.NameSpace; format="pascal">
+{
+    public enum <db.Enum.TypeName>{
+        <db.Enum.Options:gen_enum_option(); separator = ",\n">
+    }
+}
+>>
+
+gen_enum_option(option) ::= <<
+<option>
+>>
+
+gen_complex_type(db) ::= <<
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace <db.NameSpace; format="pascal">
+{
+    <db.UDT:gen_udt()>
+}
+>>
+
+gen_udt(entity) ::= <<
+public class <entity.TypeName>
+{
+    <entity.Fields:gen_udt_fields(); separator = "\n">
+}
+>>
+
+gen_udt_fields(field) ::= <<
+public <field.DestinyType><if (field.IsNullable)>?<endif> <field.Name; format="pascal"> { get; set; }
+>>
+
+

@@ -1,0 +1,82 @@
+delimiters "%", "%"
+gen_context(db) ::= <<
+using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using %db.Name; format="pascal"%.Model;
+
+namespace %db.Name; format="pascal"%.DAL
+{
+    public class %db.Name; format="pascal"%DbContext : DbContext
+    {
+        %db.Tables:gen_dbset(); separator = "\n"%
+
+        public string ConnectionString { get; }
+
+        public %db.Name; format="pascal"%DbContext(DbContextOptions options, string connectionString)
+        {
+            ConnectionString = connectionString;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseNpgsql(ConnectionString);
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            %db.UserDefineds:gen_config_udt_enum()%
+            %db.Tables:gen_config_entity(); separator = "\n\n"%
+        }
+    }
+}
+>>
+
+gen_sequences(s) ::= <<
+%if(s.IsInt)%
+public IEnumerable<int> %s.Name% = InternalFunctions.IntEnumerable(%s.Increment%, %s.Start%, %s.MinValue%, %s.MaxValue%);
+%else%
+public IEnumerable<long> %s.Name% = InternalFunctions.LongEnumerable(%s.Increment%, %s.Start%, %s.MinValue%, %s.MaxValue%);
+%endif%
+>>
+
+gen_config_udt_enum(udt) ::= <<
+%if (udt.IsUDTEnum)%
+modelBuilder.HasPostgresEnum<%udt.TypeName%>();
+
+%endif%
+>>
+
+gen_dbset(table) ::= <<
+public DbSet<%table.Name; format="pascal"%> %table.Name; format="pascal"%s { get; set; }
+>>
+
+gen_config_entity(table) ::= <<
+modelBuilder.Entity<%table.Name; format="pascal"%>(config =>
+{
+%if (table.MultipleKeys)%
+    config.HasKey(x => new { %table.KeysName:gen_key_name(); separator= ", "% });
+%elseif (table.HasNonKeys)%
+    config.HasNoKey();
+%else%
+    config.HasKey(x => %table.KeysName:gen_key_name()%);
+%endif%
+    %table.Fields:gen_config_field()%    config.ToTable("%table.Name%");
+});
+>>
+
+gen_key_name(name) ::= << x.%name; format = "pascal"%>>
+
+gen_config_field(field) ::= <<
+    %if (field.IsRelationManyOne)%
+config.HasOne(x => x.%field.Name; format="pascal"%).WithMany(y => y.%field.FieldRelation; format="pascal"%);
+    %elseif (field.IsRelationOneMany)%
+config.HasMany(x => x.%field.Name; format="pascal"%).WithOne(y => y.%field.FieldRelation; format="pascal"%).OnDelete(DeleteBehavior.Cascade);
+    %elseif (field.IsUDT || field.IsUDTEnum && field.OwnsMany)%
+config.OwnsMany(x => x.%field.Name; format="pascal"%).HasColumnName("%field.Name%");
+    %elseif (field.IsUDT && !field.OwnsMany)%
+config.OwnsOne(x => x.%field.Name; format="pascal"%).HasColumnName("%field.Name%");
+    %else%
+config.Property(x => x.%field.GenName%).HasColumnName("%field.Name%");
+    %endif%
+>>

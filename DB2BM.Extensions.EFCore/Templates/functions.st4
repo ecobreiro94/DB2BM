@@ -1,0 +1,73 @@
+gen_internal_functions(db) ::= <<
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace <db.NameSpace; format="pascal">
+{
+    public static class InternalFunctions
+    {
+        <db.Functions:gen_internal_function(); separator="\n">
+    } 
+}
+>>
+
+gen_functions(db) ::= <<
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using <db.NameSpace; format="pascal">.Model;
+
+namespace <db.NameSpace; format="pascal">.DAL
+{
+    public class <db.ClassName>
+    {
+        public <db.NameSpace; format="pascal">DbContext DbContext {get;}
+
+        public <db.ClassName> (<db.NameSpace; format="pascal">DbContext dbContext)
+        {
+            DbContext = dbContext;
+        }
+
+        <db.Functions:gen_function(); separator="\n">
+    } 
+}
+>>
+
+gen_internal_function(function) ::= <<
+    <if(!function.ExistsParams)>
+public static <function.ReturnType> <function.Name>() 
+{
+    throw new NotImplementedException();
+}
+    <else>
+public static <function.ReturnType> <function.Name> (<function.Params:gen_param(); separator = ", ">)
+{
+    throw new NotImplementedException();
+}
+    <endif>
+>>
+
+gen_function(function) ::= <<
+    <if(!function.ExistsParams)>
+public <function.ReturnType> <function.Name; format="pascal">() 
+{
+    <function.BMDefinition:gen_body()>
+}
+    <else>
+public <function.ReturnType> <function.Name; format="pascal"> (<function.Params:gen_param(); separator = ", ">)
+{
+    <function.TextBody:gen_body()>
+}
+    <endif>
+>>
+
+gen_param(p) ::= <<
+<if(p.OutMode)><else><p.DestinyType> <p.Name><endif>
+>>
+
+gen_body(body) ::= <<
+<body>
+>>
+

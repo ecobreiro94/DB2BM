@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreBaseField">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAAAIAQAAAAAABAAAAAAAAEAIAA=</HashCode>
+      <FileName>Entities\PostgreBaseField.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreField">
+    <Position X="3.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Entities\PostgreField.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Table" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreFunction">
+    <Position X="12" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAgAAAiAAAAAAAAAQAAAAAAAAAAQAAAAAEAAE=</HashCode>
+      <FileName>Entities\PostgreFunction.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Params" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreParams">
+    <Position X="14.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAAAACAAAYAAABAABAAAAAAAAEAAAA=</HashCode>
+      <FileName>Entities\PostgreParams.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Function" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreRelationColumnUsage">
+    <Position X="8.75" Y="3.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAAABAAAAAAAgAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Entities\PostgreRelations.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Relation" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreKeyColumnUsage">
+    <Position X="10.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAAABAAAAAAAgAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Entities\PostgreRelations.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreRelation">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gEAAAAQAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAQAAQAA=</HashCode>
+      <FileName>Entities\PostgreRelations.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="KeyColumn" />
+      <Property Name="RelationColumn" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreSequence">
+    <Position X="14.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAgAIAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Entities\PostgreSequence.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreTable">
+    <Position X="4" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAwAA=</HashCode>
+      <FileName>Entities\PostgreTable.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreUDEnumOption">
+    <Position X="12" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Entities\PostgreUDEnumOption.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreUDTField">
+    <Position X="5.5" Y="0.75" Width="1.5" />
+    <InheritanceLine Type="DB2CSharp.DAL.PgSql.Entities.PostgreBaseField" FixedToPoint="true">
+      <Path>
+        <Point X="2.5" Y="0.5" />
+        <Point X="2.5" Y="0.125" />
+        <Point X="6.188" Y="0.125" />
+        <Point X="6.188" Y="0.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entities\PostgreUDTField.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="UDT" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2CSharp.DAL.PgSql.Entities.PostgreUserDefinedType">
+    <Position X="5.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAiAA=</HashCode>
+      <FileName>Entities\PostgreUserDefinedType.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

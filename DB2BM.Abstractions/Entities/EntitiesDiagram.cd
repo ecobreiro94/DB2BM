@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2BM.Abstractions.Entities.UserDefined.BaseUserDefined">
+    <Position X="4.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAABAAgAAAAAAAAAA=</HashCode>
+      <FileName>Entities\UserDefined\BaseUserDefined.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.UserDefined.UserDefinedType">
+    <Position X="3.25" Y="4.75" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.Entities.UserDefined.BaseUserDefined" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="4.5" Y="3.188" />
+        <Point X="3.594" Y="3.188" />
+        <Point X="3.594" Y="4.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAgAAAAAAAgAA=</HashCode>
+      <FileName>Entities\UserDefined\UserDefinedType.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.UserDefined.UserDefinedTypeEnum">
+    <Position X="5.75" Y="4.75" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.Entities.UserDefined.BaseUserDefined" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="6" Y="3.188" />
+        <Point X="6.625" Y="3.188" />
+        <Point X="6.625" Y="4.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAgAAAAABAAAA=</HashCode>
+      <FileName>Entities\UserDefined\UserDefinedTypeEnum.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <AssociationLine Name="Functions" Type="DB2BM.Abstractions.Entities.Function" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="13" Y="1.312" />
+        <Point X="19.625" Y="1.312" />
+        <Point X="19.625" Y="2.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-2.262" Y="-0.249" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="InternalFunctions" Type="DB2BM.Abstractions.Entities.Function" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="13" Y="1.188" />
+        <Point X="20.688" Y="1.188" />
+        <Point X="20.688" Y="2.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="1.371" Y="-0.272" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Relations" Type="DB2BM.Abstractions.Entities.Relationship" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="12.688" Y="1.603" />
+        <Point X="12.688" Y="1.978" />
+        <Point X="15.5" Y="1.978" />
+        <Point X="15.5" Y="2.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Sequences" Type="DB2BM.Abstractions.Entities.Sequence" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="13" Y="1.062" />
+        <Point X="22.75" Y="1.062" />
+        <Point X="22.75" Y="2.5" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEBAAQAYAAAgAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Entities\DatabaseCatalog.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Functions" />
+      <Property Name="InternalFunctions" />
+      <Property Name="Relations" />
+      <Property Name="Sequences" />
+      <Property Name="Tables" />
+      <Property Name="UserDefineds" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.BaseField">
+    <Position X="8.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAIAAAQAAAAAAAIAQAAAAAECAAgAAAAAEAIAA=</HashCode>
+      <FileName>Entities\Field.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.UdtField">
+    <Position X="7.25" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entities\Field.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.TableField">
+    <Position X="9.75" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAACAAAEAAAAAAAQABIAAAAAAIIAIAAABAA=</HashCode>
+      <FileName>Entities\Field.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Attribute" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.Function">
+    <Position X="19.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAIAgAAACAAEAAAgAAQAAAAAAQAYAAAAAAAEAAA=</HashCode>
+      <FileName>Entities\Function.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Params" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.Parameter" Collapsed="true">
+    <Position X="19.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAEAACAAAwAAABAEAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Entities\Parameter.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ParameterMode" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.Relationship">
+    <Position X="14.75" Y="2.5" Width="1.5" />
+    <AssociationLine Name="ReferenceColumn" Type="DB2BM.Abstractions.Entities.TableField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="15.875" Y="3.603" />
+        <Point X="15.875" Y="9.078" />
+        <Point X="11.25" Y="9.078" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Column" Type="DB2BM.Abstractions.Entities.TableField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="15.094" Y="3.603" />
+        <Point X="15.094" Y="8.875" />
+        <Point X="11.25" Y="8.875" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Type" Type="DB2BM.Abstractions.Entities.RelationshipType" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="16.25" Y="3" />
+        <Point X="17.25" Y="3" />
+        <Point X="17.25" Y="4.25" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAEAABIQAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Entities\Relationship.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ReferenceColumn" />
+      <Property Name="ReferenceTable" />
+      <Property Name="Table" />
+      <Property Name="Column" />
+      <Property Name="Type" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.Sequence">
+    <Position X="22" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAgAIAAAAAQAAAAAAAAAAAAwAAAAAAA=</HashCode>
+      <FileName>Entities\Sequence.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.Table">
+    <Position X="11.75" Y="2.5" Width="1.5" />
+    <AssociationLine Name="Fields" Type="DB2BM.Abstractions.Entities.TableField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="13" Y="4.632" />
+        <Point X="13" Y="8.062" />
+        <Point X="11.25" Y="8.062" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="NoRelationalField" Type="DB2BM.Abstractions.Entities.TableField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="12.062" Y="4.632" />
+        <Point X="12.062" Y="7.726" />
+        <Point X="11.25" Y="7.726" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAQAgEAAAAAAQAAAAAAAAAAAAAAAAAgIA=</HashCode>
+      <FileName>Entities\Table.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+      <Property Name="NoRelationalField" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Enum Name="DB2BM.Abstractions.Entities.AttributeField">
+    <Position X="7.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAAAAAAAAEAAACAAAAAAAAAAQAAgAA=</HashCode>
+      <FileName>Entities\Field.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DB2BM.Abstractions.Entities.ParameterMode" Collapsed="true">
+    <Position X="19.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>Entities\Parameter.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DB2BM.Abstractions.Entities.RelationshipType">
+    <Position X="16.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>Entities\Relationship.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
