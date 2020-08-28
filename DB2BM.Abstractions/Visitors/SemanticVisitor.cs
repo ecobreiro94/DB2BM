@@ -117,12 +117,14 @@ namespace DB2BM.Abstractions
             VariablesTypes = new Dictionary<string, string>();
             foreach (var param in sp.Params)
                 VariablesTypes.Add(param.Name, param.DestinyType);
+            CursorTypes = new Dictionary<string, (List<string>, string)>();
         }
-        SemanticVisitor(DatabaseCatalog catalog, StoreProcedure sp, Dictionary<string, string> variablesTypes)
+        SemanticVisitor(DatabaseCatalog catalog, StoreProcedure sp, Dictionary<string, string> variablesTypes, Dictionary<string, (List<string>, string)> cursorInfo)
         {
             Catalog = catalog;
             Sp = sp;
             VariablesTypes = variablesTypes;
+            CursorTypes = new Dictionary<string, (List<string>, string)>(cursorInfo);
         }
         public override List<string> Visit(FunctionBlockNode node)
         {
@@ -178,6 +180,8 @@ namespace DB2BM.Abstractions
             {
                 var cursorDeclaration = node.TypeDeclaration as CursorDeclarationNode;
                 var newVariablesTypes = new Dictionary<string, string>(VariablesTypes);
+                if (!VariablesTypes.ContainsKey("FOUND"))
+                    VariablesTypes.Add("FOUND", "bool");
                 List<string> cursorParamsTypes = new List<string>();
                 foreach (var arg in cursorDeclaration.ArgumentList)
                 {
@@ -187,10 +191,8 @@ namespace DB2BM.Abstractions
                         newVariablesTypes.Add(arg.Identifier.Text, arg.DataType.TypeReturn);
                         cursorParamsTypes.Add(arg.DataType.TypeReturn);
                     }
-                    else
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, arg.Line, arg.Column));
                 }
-                var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(newVariablesTypes));
+                var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(newVariablesTypes), CursorTypes);
                 errors.AddRange(newSemanticVisitor.VisitNode(cursorDeclaration.SelectStmt));
                 CursorTypes.Add(node.Identifier.Text, (cursorParamsTypes, cursorDeclaration.SelectStmt.TypeReturn));
             }
@@ -214,7 +216,15 @@ namespace DB2BM.Abstractions
 
         public override List<string> Visit(OtherTypeNode node)
         {
-            throw new NotImplementedException();
+            var typeName = node.SchemaQualifiednameNonType.IdentifierNonType.Text.ToLower();
+            if (TypesMapper.ContainsKey(typeName))
+                node.TypeReturn = TypesMapper[typeName];
+            else
+                node.TypeReturn = typeName;
+            var errors = new List<string>();
+            foreach (var exp in node.Expressions)
+                errors.AddRange(VisitNode(exp));
+            return errors;
         }
 
         public override List<string> Visit(OtherOpBinaryNode node)
@@ -968,10 +978,10 @@ namespace DB2BM.Abstractions
                 {
                     if (indirection.ColLabel != null)
                     {
-                        var table = Catalog.Tables.Values.First(t => t.Name == node.TypeReturn);
+                        var table = Catalog.Tables.Values.FirstOrDefault(t => t.Name == node.TypeReturn);
                         if (table != null)
                         {
-                            var field = table.Fields.First(f => f.Name == indirection.ColLabel.Text);
+                            var field = table.Fields.FirstOrDefault(f => f.Name == indirection.ColLabel.Text);
                             if (field != null)
                                 node.TypeReturn = field.DestinyType;
                             else
@@ -980,10 +990,10 @@ namespace DB2BM.Abstractions
                         }
                         else
                         {
-                            var udt = Catalog.UserDefinedTypes.Values.First(t => t.TypeName == node.TypeReturn) as UserDefinedType;
+                            var udt = Catalog.UserDefinedTypes.Values.FirstOrDefault(t => t.TypeName == node.TypeReturn) as UserDefinedType;
                             if (table != null)
                             {
-                                var field = udt.Fields.First(f => f.Name == indirection.ColLabel.Text);
+                                var field = udt.Fields.FirstOrDefault(f => f.Name == indirection.ColLabel.Text);
                                 if (field != null)
                                     node.TypeReturn = field.DestinyType;
                                 else
@@ -1457,7 +1467,7 @@ namespace DB2BM.Abstractions
             else
             {
                 var errors = new List<string>();
-                var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(VariablesTypes));
+                var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(VariablesTypes), CursorTypes);
                 if (node.FromItems != null && node.FromItems.Count > 0)
                     foreach (var fromItem in node.FromItems)
                         errors.AddRange(newSemanticVisitor.VisitNode(fromItem));
@@ -1529,6 +1539,8 @@ namespace DB2BM.Abstractions
                 {
                     if (VariablesTypes.ContainsKey(identifier.Text))
                         initialType = VariablesTypes[identifier.Text];
+                    else if (CursorTypes.ContainsKey(identifier.Text))
+                        initialType = CursorTypes[identifier.Text].Item2;
                     else
                     {
                         table = Catalog.Tables.Values.FirstOrDefault(t => t.Name == identifier.Text);
@@ -1685,7 +1697,7 @@ namespace DB2BM.Abstractions
 
         public override List<string> Visit(FromPrimary2Node node)
         {
-            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(VariablesTypes));
+            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, new Dictionary<string, string>(VariablesTypes), CursorTypes);
             var errors = VisitNode(node.TableSubquery);
             var alias = node.AliasClause.Alias.Text;
             if (VariablesTypes.ContainsKey(alias))
@@ -1750,7 +1762,7 @@ namespace DB2BM.Abstractions
         public override List<string> Visit(PerformStmtNode node)
         {
             var errors = new List<string>();
-            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, VariablesTypes);
+            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, VariablesTypes, CursorTypes);
             if (node.FromItems != null && node.FromItems.Count > 0)
             {
                 foreach (var fromItem in node.FromItems)
@@ -1948,7 +1960,7 @@ namespace DB2BM.Abstractions
             foreach (var variable in localVariables)
                 newVariablesTypes.Add(variable.Item1, variable.Item2);
 
-            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, newVariablesTypes);
+            var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, newVariablesTypes, CursorTypes);
             if (node.Statemets != null)
                 foreach (var statement in node.Statemets)
                     errors.AddRange(newSemanticVisitor.VisitNode(statement));
@@ -2143,7 +2155,17 @@ namespace DB2BM.Abstractions
             node.TypeReturn = typeReturn;
             return errors;
         }
-
+        public bool LessEqualType(string typeA, string typeB)
+        {
+            if (typeB == "object")
+                return true;
+            else if (typeA == typeB)
+                return true;
+            else if (TypeInfo.TypesInfo.ContainsKey(typeA) && TypeInfo.TypesInfo.ContainsKey(typeB) && TypeInfo.TypesInfo[typeA].GeneralType == TypeInfo.TypesInfo[typeB].GeneralType)
+                return TypeInfo.TypesInfo[typeA].Index <= TypeInfo.TypesInfo[typeB].Index;
+            else
+                return false;
+        }
         public override List<string> Visit(CursorStatementNode node)
         {
             var errors = new List<string>();
@@ -2159,16 +2181,16 @@ namespace DB2BM.Abstractions
             else if (node.Fetch)
             {
                 errors.AddRange(VisitNode(node.Var));
-                if (!VariablesTypes.ContainsKey(node.Var.SchemaQualifield.Identifiers[0].Text))
+                if (!CursorTypes.ContainsKey(node.Var.SchemaQualifield.Identifiers[0].Text))
                     errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column));
                 else
                 {
-                    var cursorTypeReturn = VariablesTypes[node.Var.SchemaQualifield.Identifiers[0].Text].Split('_').Last();
+                    var cursorTypeReturn = CursorTypes[node.Var.SchemaQualifield.Identifiers[0].Text].Item2;
                     if (node.IntoTable != null)
                     {
                         errors.AddRange(VisitNode(node.IntoTable));
                         if (!VariablesTypes.ContainsKey(node.IntoTable.Identifiers[0].Text) &&
-                            cursorTypeReturn != VariablesTypes[node.IntoTable.Identifiers[0].Text])
+                            !LessEqualType(cursorTypeReturn, VariablesTypes[node.IntoTable.Identifiers[0].Text]))
                             errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column));
                     }
                 }
