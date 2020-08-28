@@ -87,8 +87,8 @@ namespace DB2BM
                     User = o.User
                 };
                 IServiceProvider serviceProvider;
-                try
-                {
+                //try
+                //{
                     serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
                     var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
 
@@ -134,14 +134,15 @@ namespace DB2BM
                         
                         if (o.Generate.Contains(GenerationItem.All))
                         {
-                            syntacticAnalyzer.Parser(generator.Catalog);
+                            syntacticAnalyzer.Parse(generator.Catalog);
                             generator.GenerateEntities();
                             generator.GenerateDbContext();
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                             if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                generator.GenerateAllFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName);
+                                generator.GenerateAllFunctions(
+                                    (parameters == null || parameters.ClassName == null) ? serviceName : parameters.ClassName);
                             else
                                 generator.GenerateFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName, parameters.FunctionsNames);
                         }
@@ -157,7 +158,7 @@ namespace DB2BM
                             }
                             if (o.Generate.Contains(GenerationItem.SPs))
                             {
-                                syntacticAnalyzer.Parser(generator.Catalog);
+                                syntacticAnalyzer.Parse(generator.Catalog);
                                 var parameters = string.IsNullOrEmpty(o.StoredProcedures) ? 
                                     null :
                                     JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
@@ -168,11 +169,11 @@ namespace DB2BM
                             }
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
+                //}
+                //catch (Exception e)
+                //{
+                //    Console.WriteLine(e.Message);
+                //}
                 
             });
         }

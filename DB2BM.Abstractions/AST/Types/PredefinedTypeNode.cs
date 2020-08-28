@@ -7,11 +7,13 @@ using System.Text;
 
 namespace DB2BM.Abstractions.AST.Types
 {
-    public abstract class PredefinedTypeNode : ASTNode
+    public abstract class PredefinedTypeNode : ASTNode, IResult
     {
         public PredefinedTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public abstract string TypeReturn { get; set; }
     }
 
     public class BigintTypeNode : PredefinedTypeNode
@@ -19,6 +21,8 @@ namespace DB2BM.Abstractions.AST.Types
         public BigintTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
 
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
@@ -31,6 +35,9 @@ namespace DB2BM.Abstractions.AST.Types
         public BitTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -40,6 +47,7 @@ namespace DB2BM.Abstractions.AST.Types
     public class BitVaryingTypeNode : PredefinedTypeNode
     {
         public int Length { get; set; }
+        public override string TypeReturn { get; set; }
 
         public BitVaryingTypeNode(int line, int column) : base(line, column)
         {
@@ -55,6 +63,9 @@ namespace DB2BM.Abstractions.AST.Types
         public BooleanTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -65,6 +76,8 @@ namespace DB2BM.Abstractions.AST.Types
     {
         public int Precision { get; set; }
         public int Scale { get; set; }
+        public override string TypeReturn { get; set; }
+
         public DecTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -77,6 +90,7 @@ namespace DB2BM.Abstractions.AST.Types
     {
         public int Precision { get; set; }
         public int Scale { get; set; }
+        public override string TypeReturn { get; set; }
 
         public DecimalTypeNode(int line, int column) : base(line, column)
         {
@@ -92,6 +106,9 @@ namespace DB2BM.Abstractions.AST.Types
         public DoublePrecisionTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -102,6 +119,7 @@ namespace DB2BM.Abstractions.AST.Types
     {
         public int Precision { get; set; }
         public int Scale { get; set; }
+        public override string TypeReturn { get; set; }
 
         public FloatTypeNode(int line, int column) : base(line, column)
         {
@@ -116,6 +134,9 @@ namespace DB2BM.Abstractions.AST.Types
         public IntTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -127,6 +148,9 @@ namespace DB2BM.Abstractions.AST.Types
         public IntegerTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -137,6 +161,8 @@ namespace DB2BM.Abstractions.AST.Types
     {
         public int Lenght { get; set; }
         public IntervalFieldNode Interval { get; set; }
+        public override string TypeReturn { get; set; }
+
         public IntervalTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -151,6 +177,9 @@ namespace DB2BM.Abstractions.AST.Types
         public CharTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -160,6 +189,8 @@ namespace DB2BM.Abstractions.AST.Types
     public class CharVaryingTypeNode : PredefinedTypeNode
     {
         public int Length { get; set; }
+        public override string TypeReturn { get; set; }
+
         public CharVaryingTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -174,6 +205,9 @@ namespace DB2BM.Abstractions.AST.Types
         public NCharTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -184,6 +218,8 @@ namespace DB2BM.Abstractions.AST.Types
     public class NCharVaryingTypeNode : PredefinedTypeNode
     {
         public int Length { get; set; }
+        public override string TypeReturn { get; set; }
+
         public NCharVaryingTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -197,6 +233,8 @@ namespace DB2BM.Abstractions.AST.Types
     {
         public int Precision { get; set; }
         public int Scale { get; set; }
+        public override string TypeReturn { get; set; }
+
         public NumericTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -211,6 +249,9 @@ namespace DB2BM.Abstractions.AST.Types
         public RealTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -222,6 +263,9 @@ namespace DB2BM.Abstractions.AST.Types
         public SmallintTypeNode(int line, int column) : base(line, column)
         {
         }
+
+        public override string TypeReturn { get; set; }
+
         public override TResult Accept<TResult>(ASTVisitor<TResult> visitor)
         {
             return visitor.Visit(this);
@@ -231,6 +275,8 @@ namespace DB2BM.Abstractions.AST.Types
     public class TimeTypeNode : PredefinedTypeNode
     {
         public int Length { get; set; }
+        public override string TypeReturn { get; set; }
+
         public TimeTypeNode(int line, int column) : base(line, column)
         {
         }
@@ -243,6 +289,7 @@ namespace DB2BM.Abstractions.AST.Types
     public class VarcharTypeNode : PredefinedTypeNode
     {
         public int Length { get; set; }
+        public override string TypeReturn { get; set; }
 
         public VarcharTypeNode(int line, int column) : base(line, column)
         {
@@ -258,6 +305,7 @@ namespace DB2BM.Abstractions.AST.Types
         public SchemaQualifiednameNonTypeNode SchemaQualifiednameNonType { get; set; }
 
         public List<ExpressionNode> Expressions { get; set; }
+        public override string TypeReturn { get; set; }
 
         public OtherTypeNode(int line, int column) : base(line, column)
         {

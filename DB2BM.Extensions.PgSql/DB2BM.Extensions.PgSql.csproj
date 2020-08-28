@@ -16,10 +16,4 @@
     <ProjectReference Include="..\DB2BM.Utils\DB2BM.Utils.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="typesMapper.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

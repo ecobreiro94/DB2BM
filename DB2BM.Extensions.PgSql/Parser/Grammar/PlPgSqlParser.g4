@@ -520,9 +520,9 @@ control_statement
     ;
 
 return_stmt
-    : RETURN perform_stmt?
+    : RETURN QUERY (select_stmt | execute_stmt | show_statement | explain_statement)
+    | RETURN perform_stmt?
     | RETURN NEXT vex
-    | RETURN QUERY (select_stmt | execute_stmt | show_statement | explain_statement)
     ;
 
 explain_statement

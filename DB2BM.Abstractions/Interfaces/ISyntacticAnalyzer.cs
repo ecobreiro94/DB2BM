@@ -8,8 +8,8 @@ namespace DB2BM.Abstractions.Interfaces
 {
     public interface ISyntacticAnalyzer
     {
-        void Parser(DatabaseCatalog catalog, List<string> functionNames);
+        void Parse(DatabaseCatalog catalog, List<string> functionNames);
 
-        void Parser(DatabaseCatalog catalog);
+        void Parse(DatabaseCatalog catalog);
     }
 }

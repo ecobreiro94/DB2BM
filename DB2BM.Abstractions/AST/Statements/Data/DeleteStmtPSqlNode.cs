@@ -21,7 +21,7 @@ namespace DB2BM.Abstractions.AST.Statements.Data
 
         public IdNode Cursor { get; set; }
 
-        public SelectListNode Returning { get; set; }
+        public SelectListNode SelectList { get; set; }
 
         public DeleteStmtPSqlNode(int line, int column) : base(line, column)
         {

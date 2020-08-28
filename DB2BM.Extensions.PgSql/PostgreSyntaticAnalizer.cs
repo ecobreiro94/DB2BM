@@ -18,13 +18,13 @@ namespace DB2BM.Extensions.PgSql
             sp.Definition = parser.GetAST();
         }
 
-        public void Parser(DatabaseCatalog catalog, List<string> functionNames)
+        public void Parse(DatabaseCatalog catalog, List<string> functionNames)
         {
             foreach (var function in catalog.StoreProcedures.Values.Where(f => functionNames.Contains(f.Name)))
                 SetAst(function);
         }
 
-        public void Parser(DatabaseCatalog catalog)
+        public void Parse(DatabaseCatalog catalog)
         {
             foreach (var function in catalog.StoreProcedures.Values)
                 SetAst(function);

@@ -72,7 +72,7 @@ namespace DB2BM.Extensions.PgSql
                 {
                     Name = f.Name,
                     SpecificName = f.SpecificName,
-                    LangageDefinition = f.LanguageDefinition,
+                    LanguageDefinition = f.LanguageDefinition,
                     PLDefinition = definition,
                     ReturnClause = f.ReturnClause,
                     ReturnType = f.ReturnType

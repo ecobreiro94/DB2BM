@@ -188,7 +188,7 @@ namespace DB2BM.Extensions
             if (!prepareCatalog)
             {
                 PrepareTables();
-                PrepareFunctions();
+                //PrepareFunctions();
                 PrepareUdts();
                 prepareCatalog = true;
             }
@@ -210,7 +210,6 @@ namespace DB2BM.Extensions
 
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
         {
-            PrepareCatalog();
             var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
 
             var functions = SelectFunctions(functionNames);
@@ -218,11 +217,12 @@ namespace DB2BM.Extensions
             foreach (var f in functions)
             {
                 var semanticVisitor = new SemanticVisitor(Catalog, f);
-                semanticVisitor.VisitNode(f.Definition);
-                var genCodeVisitor = new GenCodeVisitor(Catalog, f);
-                f.BMDefinition = genCodeVisitor.VisitNode(f.Definition);
+                var errors = semanticVisitor.VisitNode(f.Definition);
+                //var genCodeVisitor = new GenCodeVisitor(Catalog, f);
+                //f.BMDefinition = genCodeVisitor.VisitNode(f.Definition);
+                f.BMDefinition = "";
             }
-
+            PrepareFunctions();
             temp.Add("db", new FunctionsTemplateParams() { NameSpace = Catalog.Name, ClassName = className ,Functions = functions });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();

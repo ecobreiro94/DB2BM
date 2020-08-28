@@ -771,7 +771,7 @@ namespace DB2BM.Extensions.PgSql.Parser
                 FromItems = (context.from_item() != null)? new List<FromItemNode>() : null,
                 Expression = (context.vex() != null)? Visit(context.vex()) as ExpressionNode : null,
                 Cursor = (context.cursor != null)? Visit(context.cursor)  as IdNode : null,
-                Returning = (context.select_list() != null)? Visit(context.select_list())
+                SelectList = (context.select_list() != null)? Visit(context.select_list())
                         as SelectListNode : null
             };
             if (context.from_item() != null)
@@ -1286,7 +1286,7 @@ namespace DB2BM.Extensions.PgSql.Parser
         public override ASTNode VisitIf_statement([NotNull] PlPgSqlParser.If_statementContext context)
         {
             var statements = context.function_statements();
-            var end = statements.Length;
+            var end = statements.Length - 1;
             PlPgSqlParser.Function_statementsContext elseStmts = null;
             if (context.ELSE() != null)
                 elseStmts = statements[end--];
