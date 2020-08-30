@@ -1,14 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreBaseField">
-    <Position X="4.25" Y="0.5" Width="2.25" />
+    <Position X="3.25" Y="2" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAIAAAAAAAAAAAIAQAAAAAABAAAAAAAAEAIAA=</HashCode>
       <FileName>Entities\PostgreBaseField.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreField">
-    <Position X="3.5" Y="3.25" Width="1.5" />
+    <Position X="2.75" Y="4.5" Width="1.5" />
+    <AssociationLine Name="Table" Type="DB2BM.Extensions.PgSql.Entities.PostgreTable" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="2.75" Y="5.375" />
+        <Point X="1.562" Y="5.375" />
+        <Point X="1.562" Y="3.296" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.161" Y="0.237" />
+      </MemberNameLabel>
+    </AssociationLine>
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
       <FileName>Entities\PostgreField.cs</FileName>
@@ -18,14 +28,17 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreFunction">
-    <Position X="12" Y="0.75" Width="1.5" />
+    <Position X="10.25" Y="7" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAIAgAAAiAAAAAAgAAQAAAAAAAAAAQAAAAAEAAE=</HashCode>
       <FileName>Entities\PostgreFunction.cs</FileName>
     </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Params" />
+    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreParams">
-    <Position X="14.75" Y="0.75" Width="1.5" />
+    <Position X="13.25" Y="7" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAEAAAAAACAAAYAAABAABAAAAAAAAEAAAA=</HashCode>
       <FileName>Entities\PostgreParams.cs</FileName>
@@ -35,10 +48,10 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreRelationColumnUsage">
-    <Position X="8.75" Y="3.5" Width="2.25" />
+    <Position X="4.25" Y="8.5" Width="2.25" />
     <AssociationLine Name="Relation" Type="DB2BM.Extensions.PgSql.Entities.PostgreRelationship">
       <MemberNameLabel ManuallyPlaced="true">
-        <Position X="-0.4" Y="0.425" />
+        <Position X="0.297" Y="0.039" />
       </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
@@ -50,7 +63,17 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreKeyColumnUsage">
-    <Position X="9.75" Y="0.5" Width="2" />
+    <Position X="4.5" Y="6.25" Width="2" />
+    <AssociationLine Name="Relation" Type="DB2BM.Extensions.PgSql.Entities.PostgreRelationship" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="7.062" />
+        <Point X="2.062" Y="7.062" />
+        <Point X="2.062" Y="7.25" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.497" Y="0.211" />
+      </MemberNameLabel>
+    </AssociationLine>
     <TypeIdentifier>
       <HashCode>gAAAAAAAAAAAAAAAAABAAAAAAAgAAAAAAAAAAQAAAAA=</HashCode>
       <FileName>Entities\PostgreRelations.cs</FileName>
@@ -60,7 +83,24 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreRelationship">
-    <Position X="7" Y="0.5" Width="1.75" />
+    <Position X="1" Y="7.25" Width="1.75" />
+    <AssociationLine Name="RelationColumn" Type="DB2BM.Extensions.PgSql.Entities.PostgreRelationColumnUsage" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.75" Y="8.93" />
+        <Point X="1.75" Y="9.563" />
+        <Point X="4.25" Y="9.563" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.059" Y="0.06" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="KeyColumn" Type="DB2BM.Extensions.PgSql.Entities.PostgreKeyColumnUsage" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.75" Y="7.25" />
+        <Point X="1.75" Y="6.688" />
+        <Point X="4.5" Y="6.688" />
+      </Path>
+    </AssociationLine>
     <TypeIdentifier>
       <HashCode>gEAAAAQAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAQAAQAA=</HashCode>
       <FileName>Entities\PostgreRelations.cs</FileName>
@@ -71,34 +111,30 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreSequence">
-    <Position X="14.75" Y="3.25" Width="1.5" />
+    <Position X="10.25" Y="10.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAACAAAAgAIAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
       <FileName>Entities\PostgreSequence.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreTable">
-    <Position X="1" Y="3.25" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAwAA=</HashCode>
-      <FileName>Entities\PostgreTable.cs</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreUDEnumOption">
-    <Position X="12" Y="4.25" Width="2.25" />
+    <Position X="12.5" Y="10.25" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
       <FileName>Entities\PostgreUDEnumOption.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreUDTField">
-    <Position X="5.5" Y="3.25" Width="1.5" />
+    <Position X="4.5" Y="4.5" Width="1.5" />
     <AssociationLine Name="UDT" Type="DB2BM.Extensions.PgSql.Entities.PostgreUserDefinedType" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.41" Y="4.483" />
-        <Point X="6.41" Y="5.736" />
-        <Point X="3.25" Y="5.736" />
+        <Point X="6" Y="5.437" />
+        <Point X="7.812" Y="5.437" />
+        <Point X="7.812" Y="3.488" />
       </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.2" Y="0.287" />
+      </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
       <HashCode>IAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
@@ -109,10 +145,62 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreUserDefinedType">
-    <Position X="1.25" Y="4.75" Width="2" />
+    <Position X="6.5" Y="2" Width="2" />
+    <AssociationLine Name="Fields" Type="DB2BM.Extensions.PgSql.Entities.PostgreUDTField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.188" Y="3.488" />
+        <Point X="7.188" Y="5.116" />
+        <Point X="6" Y="5.116" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.383" Y="0.037" />
+      </MemberNameLabel>
+    </AssociationLine>
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAiAA=</HashCode>
       <FileName>Entities\PostgreUserDefinedType.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2BM.Extensions.PgSql.PostgreCatalogHandler">
+    <Position X="16" Y="6" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAEBAAAAACBAAAgRAAAABAAAgAAAAABAEAA=</HashCode>
+      <FileName>PostgreCatalogHandler.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="Catalog" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
+    <Position X="18.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Extensions.PgSql.Entities.PostgreTable">
+    <Position X="1" Y="2" Width="1.5" />
+    <AssociationLine Name="Fields" Type="DB2BM.Extensions.PgSql.Entities.PostgreField" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.938" Y="3.296" />
+        <Point X="1.938" Y="5.116" />
+        <Point X="2.75" Y="5.116" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAwAA=</HashCode>
+      <FileName>Entities\PostgreTable.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Fields" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="DB2BM.Extensions.PgSql.PostgreDbContext">
+    <Position X="10.75" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAIAAQAAAAAAAEAAQAIAEAgAAAEBACAAAAMAgAA=</HashCode>
+      <FileName>PostgreDbContext.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Font Name="Segoe UI" Size="9" />
