@@ -8,7 +8,7 @@ using DB2BM.Abstractions.Interfaces;
 
 namespace DB2BM.Extensions.PgSql
 {
-    [DbmsAttr("postgre")]
+    [Dbms("postgre")]
     public class PostgreSyntaticAnalizer : ISyntacticAnalyzer
     {
         #region ISyntacticAnalyzer implementation

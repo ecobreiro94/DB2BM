@@ -17,7 +17,7 @@ using DB2BM.Extensions.EFCore.Visitors;
 
 namespace DB2BM.Extensions
 {
-    [OrmAttr("efcore")]
+    [Orm("efcore")]
     public class ProjectGenerator : IGenerator
     {
         public DatabaseCatalog Catalog { get; set; }

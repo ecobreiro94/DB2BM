@@ -5,9 +5,9 @@ using System.Text;
 namespace DB2BM.Abstractions.Attrs
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class OrmAttr : Attribute
+    public class OrmAttribute : Attribute
     {
         public string Name { get; } 
-        public OrmAttr(string name) { Name = name; }
+        public OrmAttribute(string name) { Name = name; }
     }
 }

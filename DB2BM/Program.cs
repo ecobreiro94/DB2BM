@@ -38,15 +38,15 @@ namespace DB2BM
 
                 catalogHandlerTypes.AddRange(assembly.GetTypes().Where(
                     t => t.GetInterfaces().Contains(catalogHandlerType) &&
-                    (t.GetCustomAttribute<DbmsAttr>()?.Name == dbms)));
+                    (t.GetCustomAttribute<DbmsAttribute>()?.Name == dbms)));
 
                 generatorTypes.AddRange(assembly.GetTypes().Where(
                     t => t.GetInterfaces().Contains(generatorType) &&
-                    (t.GetCustomAttribute<OrmAttr>()?.Name == orm)));
+                    (t.GetCustomAttribute<OrmAttribute>()?.Name == orm)));
 
                 syntacticAnalizerTypes.AddRange(assembly.GetTypes().Where(
                     t => t.GetInterfaces().Contains(sintacticAnaliceType) &&
-                    (t.GetCustomAttribute<DbmsAttr>()?.Name == dbms)));
+                    (t.GetCustomAttribute<DbmsAttribute>()?.Name == dbms)));
             }
 
             var msg = "";

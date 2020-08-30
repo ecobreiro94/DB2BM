@@ -5,9 +5,9 @@ using System.Text;
 namespace DB2BM.Abstractions.Attrs
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class  DbmsAttr: Attribute
+    public class  DbmsAttribute: Attribute
     {
         public string Name { get; }
-        public DbmsAttr(string name) { Name = name; }
+        public DbmsAttribute(string name) { Name = name; }
     }
 }

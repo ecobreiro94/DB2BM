@@ -13,7 +13,7 @@ using DB2BM.Utils;
 
 namespace DB2BM.Extensions.PgSql
 {
-    [DbmsAttr("postgre")]
+    [Dbms("postgre")]
     public class PostgreCatalogHandler : ICatalogHandler
     {
         PostgreDbContext internalDbContext;
