@@ -15,9 +15,9 @@ namespace DB2BM.Abstractions.Interfaces
         
         void GenerateEntities();
 
-        void GenerateAllFunctions(string className);
+        void GenerateSPs(string className);
 
-        void GenerateFunctions(string className, List<string> functionNames);
+        void GenerateSPs(string className, List<string> functionNames);
 
         void GenerateDbContext();
     }

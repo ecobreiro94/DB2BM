@@ -17,7 +17,7 @@ namespace DB2BM.Extensions.PgSql
 
         public DbSet<PostgreParams> Params { get; set; }
 
-        public DbSet<PostgreRelation> Relations { get; set; }
+        public DbSet<PostgreRelationship> Relations { get; set; }
 
         public DbSet<PostgreUserDefinedType> UDTs { get; set; }
 
@@ -112,7 +112,7 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(p => p.Clause).HasColumnName("clause");
             });
             
-            modelBuilder.Entity<PostgreRelation>(config => 
+            modelBuilder.Entity<PostgreRelationship>(config => 
             {
                 config.HasKey(r => r.ConstraintName);
                 config.Property(r => r.ConstraintName).HasColumnName("constraint_name");

@@ -194,7 +194,7 @@ namespace DB2BM.Extensions
             }
         }
 
-        public void GenerateAllFunctions(string className)
+        public void GenerateSPs(string className)
         {
             PrepareCatalog();
             GenerateDatabaseFunctions(className, null);
@@ -310,7 +310,7 @@ namespace DB2BM.Extensions
             }
         }
 
-        public void GenerateFunctions(string className, List<string> functionNames)
+        public void GenerateSPs(string className, List<string> functionNames)
         {
             PrepareCatalog();
             GenerateDatabaseFunctions(className, functionNames);

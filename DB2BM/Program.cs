@@ -134,16 +134,16 @@ namespace DB2BM
                         
                         if (o.Generate.Contains(GenerationItem.All))
                         {
-                            syntacticAnalyzer.Parser(generator.Catalog);
+                            syntacticAnalyzer.Parse(generator.Catalog);
                             generator.GenerateEntities();
                             generator.GenerateDbContext();
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                             if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                generator.GenerateAllFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName);
+                                generator.GenerateSPs(parameters.ClassName ?? serviceName);
                             else
-                                generator.GenerateFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName, parameters.FunctionsNames);
+                                generator.GenerateSPs(parameters.ClassName ?? serviceName, parameters.FunctionsNames);
                         }
                         else
                         {
@@ -157,14 +157,14 @@ namespace DB2BM
                             }
                             if (o.Generate.Contains(GenerationItem.SPs))
                             {
-                                syntacticAnalyzer.Parser(generator.Catalog);
+                                syntacticAnalyzer.Parse(generator.Catalog);
                                 var parameters = string.IsNullOrEmpty(o.StoredProcedures) ? 
                                     null :
                                     JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                                 if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                    generator.GenerateAllFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName);
+                                    generator.GenerateSPs(parameters.ClassName ?? serviceName);
                                 else
-                                    generator.GenerateFunctions((parameters.ClassName == null) ? serviceName : parameters.ClassName, parameters.FunctionsNames);
+                                    generator.GenerateSPs(parameters.ClassName ?? serviceName, parameters.FunctionsNames);
                             }
                         }
                     }

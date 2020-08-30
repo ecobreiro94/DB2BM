@@ -18,7 +18,7 @@ namespace DB2BM.Abstractions.Entities
 
         public bool IsInternal { get; set; }
         
-        public string LangageDefinition { get; set; }
+        public string LanguageDefinition { get; set; }
 
         public AST.ASTNode Definition { get; set; }
 

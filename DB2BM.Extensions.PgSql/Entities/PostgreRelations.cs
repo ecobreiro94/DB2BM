@@ -11,7 +11,7 @@ namespace DB2BM.Extensions.PgSql.Entities
         public string TableName { get; set; }
 
         public string ColumnName { get; set; }
-        public PostgreRelation Relation { get; set; }
+        public PostgreRelationship Relation { get; set; }
     }
 
     public class PostgreKeyColumnUsage
@@ -22,10 +22,10 @@ namespace DB2BM.Extensions.PgSql.Entities
 
         public string ColumnName { get; set; }
 
-        public PostgreRelation Relation { get; set; }
+        public PostgreRelationship Relation { get; set; }
     }
 
-    public class PostgreRelation
+    public class PostgreRelationship
     {
         public string ConstraintName { get; set; }
 

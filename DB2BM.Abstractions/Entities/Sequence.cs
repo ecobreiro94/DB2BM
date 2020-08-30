@@ -15,6 +15,6 @@ namespace DB2BM.Abstractions.Entities
 
         public long MaxValue { get; set; }
 
-        public bool IsInt { get; set; }
+        public bool IsInt { get { return MaxValue <= Int32.MaxValue; }  }
     }
 }
