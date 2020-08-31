@@ -51,7 +51,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("tables");
             });
 
-            modelBuilder.Entity<PostgreSequence>(config => 
+            modelBuilder.Entity<PostgreSequence>(config =>
             {
                 config.HasKey(s => s.Name);
                 config.Property(s => s.Name).HasColumnName("sequence_name");
@@ -62,7 +62,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("sequences");
             });
 
-            modelBuilder.Entity<PostgreField>(config => 
+            modelBuilder.Entity<PostgreField>(config =>
             {
                 config.HasKey(f => new { f.Name, f.TableName });
                 config.Property(f => f.Name).HasColumnName("column_name");
@@ -76,7 +76,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("columns");
             });
 
-            modelBuilder.Entity<PostgreFunction>(config => 
+            modelBuilder.Entity<PostgreFunction>(config =>
             {
                 config.HasKey(f => f.SpecificName);
                 config.Property(f => f.Name).HasColumnName("routine_name");
@@ -96,7 +96,7 @@ namespace DB2BM.Extensions.PgSql
 
             modelBuilder.Entity<PostgreParams>(config =>
             {
-                config.HasKey(p=>new { p.OrdinalPosition , p.FunctionSpecificName});
+                config.HasKey(p => new { p.OrdinalPosition, p.FunctionSpecificName });
                 config.Property(p => p.FunctionSpecificName).HasColumnName("specific_name");
                 config.Property(p => p.OrdinalPosition).HasColumnName("ordinal_position");
                 config.HasOne(p => p.Function).WithMany(f => f.Params);
@@ -119,12 +119,12 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(r => r.SchemaName).HasColumnName("constraint_schema");
                 config.Property(r => r.TableName).HasColumnName("table_name");
                 config.Property(r => r.ConstraintType).HasColumnName("constraint_type");
-                config.HasOne(r => r.RelationColumn).WithOne(x =>x.Relation).HasForeignKey<PostgreRelationColumnUsage>(y=> y.ConstraintName);
+                config.HasOne(r => r.RelationColumn).WithOne(x => x.Relation).HasForeignKey<PostgreRelationColumnUsage>(y => y.ConstraintName);
                 config.HasOne(r => r.KeyColumn).WithOne(x => x.Relation).HasForeignKey<PostgreKeyColumnUsage>(y => y.ConstraintName);
                 config.ToTable("table_constraints");
             });
 
-            modelBuilder.Entity<PostgreRelationColumnUsage>(config => 
+            modelBuilder.Entity<PostgreRelationColumnUsage>(config =>
             {
                 config.HasKey(r => r.ConstraintName);
                 config.Property(r => r.ConstraintName).HasColumnName("constraint_name");
@@ -134,7 +134,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("constraint_column_usage");
             });
 
-            modelBuilder.Entity<PostgreKeyColumnUsage>(config => 
+            modelBuilder.Entity<PostgreKeyColumnUsage>(config =>
             {
                 config.HasKey(k => k.ConstraintName);
                 config.Property(k => k.ConstraintName).HasColumnName("constraint_name");
@@ -144,7 +144,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("key_column_usage");
             });
 
-            modelBuilder.Entity<PostgreUserDefinedType>(config => 
+            modelBuilder.Entity<PostgreUserDefinedType>(config =>
             {
                 config.HasKey(udt => udt.Name);
                 config.Property(udt => udt.Name).HasColumnName("user_defined_type_name");
@@ -154,7 +154,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("user_defined_types");
             });
 
-            modelBuilder.Entity<PostgreUDTField>(config => 
+            modelBuilder.Entity<PostgreUDTField>(config =>
             {
                 config.HasKey(udtf => new { udtf.Name, udtf.UDTName });
                 config.Property(udtf => udtf.Name).HasColumnName("attribute_name");

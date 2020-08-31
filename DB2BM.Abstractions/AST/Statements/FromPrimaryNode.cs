@@ -7,7 +7,7 @@ using DB2BM.Abstractions.Visitors;
 
 namespace DB2BM.Abstractions.AST.Statements
 {
-    public abstract class FromPrimaryNode : ASTNode
+    public abstract class FromPrimaryNode : FromItemNode
     {
         public FromPrimaryNode(int line, int column) : base(line, column)
         {

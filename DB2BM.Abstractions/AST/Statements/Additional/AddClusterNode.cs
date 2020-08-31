@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddClusterNode : AddicionalStatementNode
+    public class AddClusterNode : AdditionalStatementNode
     {
         public bool On { get; set; }
 

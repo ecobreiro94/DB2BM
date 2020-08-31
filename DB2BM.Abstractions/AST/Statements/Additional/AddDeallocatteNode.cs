@@ -1,21 +1,15 @@
 ﻿using DB2BM.Abstractions.AST.Expressions.Atomics;
-using DB2BM.Abstractions.AST.Statements.Data;
 using DB2BM.Abstractions.Visitors;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddPrepareNode : AddicionalStatementNode
+    public class AddDeallocatteNode : AdditionalStatementNode
     {
         public IdNode Identifier { get; set; }
-
-        public List<DataTypeNode> Types { get; set; }
-
-        public DataStatementNode DataStatement { get; set; }
-
-        public AddPrepareNode(int line, int column) : base(line, column)
+        public AddDeallocatteNode(int line, int column) : base(line, column)
         {
         }
 

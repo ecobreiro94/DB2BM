@@ -19,7 +19,7 @@ using DB2BM.Abstractions.AST.Expressions.Operators.Unarys;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Comparison;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Logicals;
 using DB2BM.Abstractions.AST.Statements;
-using DB2BM.Abstractions.AST.Statements.Addicional;
+using DB2BM.Abstractions.AST.Statements.Additional;
 using DB2BM.Abstractions.AST.Statements.Base;
 using DB2BM.Abstractions.AST.Statements.Control;
 using DB2BM.Abstractions.AST.Statements.Cursor;
@@ -33,7 +33,7 @@ namespace DB2BM.Extensions.PgSql.Parser
         //ok
         public override ASTNode VisitAdditional_statement([NotNull] PlPgSqlParser.Additional_statementContext context)
         {
-            AddicionalStatementNode result = null;
+            AdditionalStatementNode result = null;
             if (context.anonymous_block() != null)
                 return Visit(context.anonymous_block());
             else if (context.explain_statement() != null)
@@ -606,8 +606,11 @@ namespace DB2BM.Extensions.PgSql.Parser
                 result.Var = Visit(context.var()) as VarNode;
 
             if (context.into_table() != null)
-                result.IntoTable = Visit(context.into_table().schema_qualified_name()) as SchemaQualifieldNode;
-
+            {
+                result.IntoTable = new List<SchemaQualifieldNode>();
+                foreach (var item in context.into_table().schema_qualified_name())
+                    result.IntoTable.Add(Visit(item) as SchemaQualifieldNode);
+            }
             result.Open = context.OPEN() != null;
             result.Fetch = context.FETCH() != null;
             result.Move = context.MOVE() != null;
@@ -771,7 +774,7 @@ namespace DB2BM.Extensions.PgSql.Parser
                 FromItems = (context.from_item() != null)? new List<FromItemNode>() : null,
                 Expression = (context.vex() != null)? Visit(context.vex()) as ExpressionNode : null,
                 Cursor = (context.cursor != null)? Visit(context.cursor)  as IdNode : null,
-                Returning = (context.select_list() != null)? Visit(context.select_list())
+                SelectList = (context.select_list() != null)? Visit(context.select_list())
                         as SelectListNode : null
             };
             if (context.from_item() != null)
@@ -1286,7 +1289,7 @@ namespace DB2BM.Extensions.PgSql.Parser
         public override ASTNode VisitIf_statement([NotNull] PlPgSqlParser.If_statementContext context)
         {
             var statements = context.function_statements();
-            var end = statements.Length;
+            var end = statements.Length - 1;
             PlPgSqlParser.Function_statementsContext elseStmts = null;
             if (context.ELSE() != null)
                 elseStmts = statements[end--];
@@ -2023,7 +2026,11 @@ namespace DB2BM.Extensions.PgSql.Parser
                 }
                 if (context.into_table() != null)
                 {
-                    result.IntoTable = Visit(context.into_table().schema_qualified_name()) as SchemaQualifieldNode;
+                    result.IntoTable = new List<SchemaQualifieldNode>();
+                    foreach (var item in context.into_table().schema_qualified_name())
+                    {
+                        result.IntoTable.Add(Visit(item) as SchemaQualifieldNode);
+                    }
                 }
                 if (context.from_item() != null && context.from_item().Length > 0)
                 {
@@ -2583,7 +2590,7 @@ namespace DB2BM.Extensions.PgSql.Parser
                 };
             else if (context.select_stmt_no_parens() != null)
             {
-                var result = new ove(context.Start.Line, context.Start.Column)
+                var result = new ValueExpressionPrimaryNode(context.Start.Line, context.Start.Column)
                 {
                     SelectStmtNonParens = Visit(context.select_stmt_no_parens()) as SelectStmtNonParensNode,
                     Indirections = (context.indirection_list() != null) ? new List<IndirectionNode>() : null
@@ -3309,9 +3316,8 @@ namespace DB2BM.Extensions.PgSql.Parser
 
             if (context._column_name != null)
                 foreach (var columnName in context._column_name)
-                {
                     withQuery.Columns.Add(Visit(columnName) as IdNode);
-                }
+
             if (context.select_stmt() != null)
                 withQuery.Statement = Visit(context.select_stmt()) as SelectStatementNode;
             else if (context.insert_stmt_for_psql() != null)

@@ -25,7 +25,7 @@ namespace DB2BM.Abstractions.AST.Statements
         }
     }
 
-    public class SelectOpsNoParensNode : StatementNode
+    public class SelectOpsNoParensNode : StatementNode, IResult
     {
         public bool Intersect { get; set; }
         public bool Union { get; set; }
@@ -38,6 +38,8 @@ namespace DB2BM.Abstractions.AST.Statements
         public SelectPrimaryNode SelectPrimary { get; set; }
 
         public SelectStatementNode SelectStmt { get; set; }
+
+        public string TypeReturn { get; set; }
 
         public SelectOpsNoParensNode(int line, int column) : base(line, column)
         {

@@ -118,18 +118,19 @@ namespace DB2BM.Extensions
         {
             var userDefineds = Catalog.UserDefinedTypes.Values.ToList();
             var tables = Catalog.Tables.Values.ToList();
-            foreach (var f in Catalog.StoreProcedures.Values)
+            foreach (var sp in Catalog.StoreProcedures.Values)
             {
-                var type = new string(f.ReturnType.Skip(1).ToArray());
-                if (f.ReturnType.Length > 0 && f.ReturnType[0] == '_' && userDefineds.Exists(x => x.TypeName == type))
-                    f.ReturnType = type + "[]";
-                else if (f.ReturnType.Length > 0 && f.ReturnType[0] == '_' && tables.Exists(x => x.Name == type))
-                    f.ReturnType = type.ToPascal() + "[]";
-                else if (tables.Exists(x => x.Name == f.ReturnType))
-                    f.ReturnType = f.ReturnType.ToPascal();
-                else f.ReturnType = CSharpTools.GetCSharpType(f.ReturnType, TypesMapper);
+                var type = new string(sp.ReturnType.Skip(1).ToArray());
+                if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && userDefineds.Exists(x => x.TypeName == type))
+                    sp.ReturnType = type + "[]";
+                else if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && tables.Exists(x => x.Name == type))
+                    sp.ReturnType = type + "[]";
+                else if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && TypesMapper.ContainsKey(type))
+                    sp.ReturnType = type + "[]";
+                else if (TypesMapper.ContainsKey(sp.ReturnType))
+                    sp.ReturnType = TypesMapper[sp.ReturnType];
 
-                foreach (var p in f.Params)
+                foreach (var p in sp.Params)
                 {
                     if (p.Name == null)
                         p.Name = "p" + p.OrdinalPosition;
@@ -137,23 +138,38 @@ namespace DB2BM.Extensions
                     if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && userDefineds.Exists(x => x.TypeName == type))
                         p.DestinyType = type += "[]";
                     else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && tables.Exists(x => x.Name == type))
-                        p.DestinyType = type.ToPascal() + "[]";
-                    else p.DestinyType = CSharpTools.GetCSharpType(p.OriginType, TypesMapper);
+                        p.DestinyType = type + "[]";
+                    else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && TypesMapper.ContainsKey(type))
+                        p.DestinyType = type + "[]";
+                    else if (TypesMapper.ContainsKey(p.OriginType))
+                        p.DestinyType = TypesMapper[p.OriginType];
                 }
 
-                var paramsOutMode = f.Params.FindAll(p => p.OutMode);
+                var paramsOutMode = sp.Params.FindAll(p => p.OutMode);
                 if (paramsOutMode.Count == 1)
-                    f.ReturnType = paramsOutMode.First().DestinyType;
+                    sp.ReturnType = paramsOutMode.First().DestinyType;
                 else if (paramsOutMode.Count > 1)
                 {
                     var returnType = "";
                     foreach (var p in paramsOutMode)
                         returnType += (returnType == "") ? p.DestinyType : "," + p.DestinyType;
-                    f.ReturnType = "(" + returnType + ")";
+                    sp.ReturnType = "(" + returnType + ")";
                 }
 
-                if (f.ReturnClause.ToLower().Contains("setof "))
-                    f.ReturnType = "IEnumerable<" + f.ReturnType + ">";
+                if (sp.ReturnClause.ToLower().Contains("setof "))
+                    sp.ReturnType = sp.ReturnType + "{}";
+            }
+            foreach (var function in Catalog.InternalFunctions.Values)
+            {
+                if (TypesMapper.ContainsKey(function.ReturnType))
+                    function.ReturnType = TypesMapper[function.ReturnType];
+                foreach (var parameter in function.Params)
+                {
+                    if (TypesMapper.ContainsKey(parameter.OriginType))
+                        parameter.DestinyType = TypesMapper[parameter.OriginType];
+                    else
+                        parameter.DestinyType = parameter.OriginType;
+                }
             }
         }
         private void PrepareUdts()
@@ -188,8 +204,9 @@ namespace DB2BM.Extensions
             if (!prepareCatalog)
             {
                 PrepareTables();
-                PrepareFunctions();
+                //PrepareFunctions();
                 PrepareUdts();
+                ReviewEntities.PushRelations(Catalog);
                 prepareCatalog = true;
             }
         }
@@ -210,19 +227,19 @@ namespace DB2BM.Extensions
 
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
         {
-            PrepareCatalog();
             var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
 
             var functions = SelectFunctions(functionNames);
 
+            PrepareFunctions();
             foreach (var f in functions)
             {
                 var semanticVisitor = new SemanticVisitor(Catalog, f);
-                semanticVisitor.VisitNode(f.Definition);
+                var errors = semanticVisitor.VisitNode(f.Definition);
                 var genCodeVisitor = new GenCodeVisitor(Catalog, f);
-                f.BMDefinition = genCodeVisitor.VisitNode(f.Definition);
+                f.BMDefinition = genCodeVisitor.VisitNode(f.Definition).Code;
+                f.BMDefinition = "";
             }
-
             temp.Add("db", new FunctionsTemplateParams() { NameSpace = Catalog.Name, ClassName = className ,Functions = functions });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();

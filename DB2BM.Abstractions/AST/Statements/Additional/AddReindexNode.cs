@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using DB2BM.Abstractions.Visitors;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddReindexNode : AddicionalStatementNode
+    public class AddReindexNode : AdditionalStatementNode
     {
         public SchemaQualifieldNode SchemaQualifield { get; set; }
         public AddReindexNode(int line, int column) : base(line, column)

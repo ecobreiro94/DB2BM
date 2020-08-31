@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using DB2BM.Abstractions.Visitors;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddReassignNode : AddicionalStatementNode
+    public class AddRefreshNode : AdditionalStatementNode
     {
-        public List<UserNameNode> UserNames { get; set; }
-        public AddReassignNode(int line, int column) : base(line, column)
+        public SchemaQualifieldNode SchemaQualifield { get; set; }
+        public AddRefreshNode(int line, int column) : base(line, column)
         {
         }
 
