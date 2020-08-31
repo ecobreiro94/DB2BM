@@ -26,11 +26,11 @@ namespace DB2BM
             var generatorType = typeof(IGenerator);
             var sintacticAnaliceType = typeof(ISyntacticAnalyzer);
 
-            var files = Directory.GetFiles( Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*.dll");
+            var files = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*.dll");
 
             var catalogHandlerTypes = new List<Type>();
             var generatorTypes = new List<Type>();
-            var syntacticAnalizerTypes = new List<Type>(); 
+            var syntacticAnalizerTypes = new List<Type>();
 
             foreach (var f in files)
             {
@@ -51,13 +51,13 @@ namespace DB2BM
 
             var msg = "";
             if (catalogHandlerTypes.Count > 1 || syntacticAnalizerTypes.Count > 1)
-                msg += "Existe mas de una Extensión para " + dbms + "." ;
-            else if(catalogHandlerTypes.Count == 0 || syntacticAnalizerTypes.Count == 0)
-                msg += "No existe una Extensión para " + dbms + "." ;
+                msg += "Existe mas de una Extensión para " + dbms + ".";
+            else if (catalogHandlerTypes.Count == 0 || syntacticAnalizerTypes.Count == 0)
+                msg += "No existe una Extensión para " + dbms + ".";
             if (generatorTypes.Count > 1)
-                msg += "Existe mas de una Extensión para " + orm + "." ;
+                msg += "Existe mas de una Extensión para " + orm + ".";
             else if (generatorTypes.Count == 0)
-                msg += "No existe una Extensión para " + orm + "." ;
+                msg += "No existe una Extensión para " + orm + ".";
 
             if (msg != "") throw new Exception(msg);
 
@@ -87,97 +87,99 @@ namespace DB2BM
                     User = o.User
                 };
                 IServiceProvider serviceProvider;
+                //try
+                //{
+                serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
+                var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
+
+                catalogHandler.Options = databaseOptions;
+
+                DatabaseCatalog catalog;
                 try
                 {
-                    serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
-                    var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
+                    catalog = catalogHandler.GetCatalog();
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("No se puede establecer conexión con la Base de Datos.");
+                }
 
-                    catalogHandler.Options = databaseOptions;
-
-                    DatabaseCatalog catalog;
-                    try
+                if (o.ListCatalog.Any(i => i == CatalogItem.Tables))
+                {
+                    Console.WriteLine("Tablas y vistas");
+                    foreach (var table in catalog.Tables.Values)
                     {
-                        catalog = catalogHandler.GetCatalog();
+                        Console.WriteLine(table);
                     }
-                    catch (Exception e)
-                    {
-                        throw new Exception("No se puede establecer conexión con la Base de Datos.");
-                    }
+                }
 
-                    if (o.ListCatalog.Any(i => i == CatalogItem.Tables))
+                if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
+                {
+                    foreach (var function in catalog.StoreProcedures.Values)
                     {
-                        Console.WriteLine("Tablas y vistas");
-                        foreach (var table in catalog.Tables.Values)
+                        Console.WriteLine(function);
+                    }
+                }
+
+                if (o.Generate.Any() && o.OutputPath != null)
+                {
+                    var generator = serviceProvider.GetService<IGenerator>();
+                    generator.Catalog = catalog;
+                    generator.OutputPath = o.OutputPath;
+
+                    var syntacticAnalyzer = serviceProvider.GetService<ISyntacticAnalyzer>();
+
+                    var serviceName = $"{catalog.Name.ToPascal()}Service";
+
+
+                    if (o.Generate.Contains(GenerationItem.All))
+                    {
+                        syntacticAnalyzer.Parse(generator.Catalog);
+                        generator.GenerateEntities();
+                        generator.GenerateDbContext();
+                        var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
+                            null :
+                            JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
+                        if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
+                            generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName);
+                        else
+                            generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName,
+                                parameters.FunctionsNames);
+                    }
+                    else
+                    {
+                        if (o.Generate.Contains(GenerationItem.Entities))
                         {
-                            Console.WriteLine(table);
+                            generator.GenerateEntities();
                         }
-                    }
-
-                    if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
-                    {
-                        foreach (var function in catalog.StoreProcedures.Values)
+                        if (o.Generate.Contains(GenerationItem.DbCtx))
                         {
-                            Console.WriteLine(function);
+                            generator.GenerateDbContext();
                         }
-                    }
-
-                    if (o.Generate.Any() && o.OutputPath != null)
-                    {
-                        var generator = serviceProvider.GetService<IGenerator>();
-                        generator.Catalog = catalog;
-                        generator.OutputPath = o.OutputPath;
-
-                        var syntacticAnalyzer = serviceProvider.GetService<ISyntacticAnalyzer>();
-
-                        var serviceName = $"{catalog.Name.ToPascal()}Service";
-
-                        
-                        if (o.Generate.Contains(GenerationItem.All))
+                        if (o.Generate.Contains(GenerationItem.SPs))
                         {
                             syntacticAnalyzer.Parse(generator.Catalog);
-                            generator.GenerateEntities();
-                            generator.GenerateDbContext();
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                             if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                generator.GenerateSPs(parameters.ClassName ?? serviceName);
+                                generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName);
                             else
-                                generator.GenerateSPs(parameters.ClassName ?? serviceName, parameters.FunctionsNames);
-                        }
-                        else
-                        {
-                            if (o.Generate.Contains(GenerationItem.Entities))
-                            {
-                                generator.GenerateEntities();
-                            }
-                            if (o.Generate.Contains(GenerationItem.DbCtx))
-                            {
-                                generator.GenerateDbContext();
-                            }
-                            if (o.Generate.Contains(GenerationItem.SPs))
-                            {
-                                syntacticAnalyzer.Parse(generator.Catalog);
-                                var parameters = string.IsNullOrEmpty(o.StoredProcedures) ? 
-                                    null :
-                                    JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
-                                if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                    generator.GenerateSPs(parameters.ClassName ?? serviceName);
-                                else
-                                    generator.GenerateSPs(parameters.ClassName ?? serviceName, parameters.FunctionsNames);
-                            }
+                                generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName,
+                                    parameters.FunctionsNames);
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                
+                //}
+                //    catch (Exception e)
+                //{
+                //    Console.WriteLine(e.Message);
+                //}
+
             });
         }
 
-        
+
     }
 
 }

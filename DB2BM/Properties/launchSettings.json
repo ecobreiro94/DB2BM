@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "DB2CSharp": {
+    "DB2BM": {
       "commandName": "Project",
       "commandLineArgs": "--h localhost --db TestDb --u postgres --p kike --outpath C:\\Users\\Nesty\\Desktop\\tesis\\project\\temp --orm efcore --dbms postgre --gen all"
     }

@@ -79,6 +79,9 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
             }
         }
+
+        Dictionary<string, string> TablesAlias = new Dictionary<string, string>();
+
         public GenCodeVisitor(DatabaseCatalog catalog, StoreProcedure sp)
         {
             Catalog = catalog;
@@ -94,12 +97,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var foundDec = "var FOUND = false;/n";
             if (node.Declarations != null)
                 foreach (var dec in node.Declarations)
-                    result += VisitNode(dec) + "/n";
+                    result += VisitNode(dec).Code + "/n";
             if (node.Statements != null)
                 foreach (var stmt in node.Statements)
-                    result += VisitNode(stmt) + "/n";
+                    result += VisitNode(stmt).Code + "/n";
             if (node.ExceptionStatement != null)
-                result += VisitNode(node.ExceptionStatement);
+                result += VisitNode(node.ExceptionStatement).Code;
 
             if (Sp.LanguageDefinition.ToLower() == "sql")
                 return new CodeContext() { Code = "return " + result };
@@ -123,12 +126,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 if (typeDeclaration.Expression == null)
                     return new CodeContext()
                     {
-                        Code = $"{VisitNode(typeDeclaration.DataType)} {VisitNode(node.Identifier).Code.ToCamel()};"
+                        Code = $"{VisitNode(typeDeclaration.DataType).Code} {VisitNode(node.Identifier).Code.ToCamel()};"
                     };
                 else
                     return new CodeContext()
                     {
-                        Code = $"{VisitNode(typeDeclaration.DataType)} {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Expression)};"
+                        Code = $"{VisitNode(typeDeclaration.DataType).Code} {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Expression).Code};"
                     };
             }
             else if (node.TypeDeclaration is CursorDeclarationNode)
@@ -1317,37 +1320,33 @@ namespace DB2BM.Extensions.EFCore.Visitors
         }
         public override CodeContext Visit(SelectPrimaryNode node)
         {
-            //var result = "";
-            //if (node.FromItems != null && node.FromItems.Count > 0)
-            //{
-            //    var fromItemsCode = "";
-            //    if (node.FromItems.Count > 0)
-            //    {
-            //        var joinColumns = FindJoinColumns(node.FromItems);
-            //        var code = "";
-            //        foreach (var fromItem in node.FromItems)
-            //            code += (code == "") ? VisitNode(fromItem) : " join " + VisitNode(fromItem);
+            var result = "";
+            var tmp = TablesAlias;
+            TablesAlias = new Dictionary<string, string>();
+            if (node.FromItems != null && node.FromItems.Count > 0)
+            {
+                var fromItemsCode = "";
+                if (node.FromItems.Count > 0)
+                {
+                    var joinColumns = FindJoinColumns(node.FromItems);
+                    var code = "";
+                    foreach (var fromItem in node.FromItems)
+                        code += (code == "") ? VisitNode(fromItem).Code : " join " + VisitNode(fromItem).Code;
 
-            //        var joinColumnCode = "";
-            //        if (joinColumns.Count > 0)
-            //        {
-            //            foreach (var item in joinColumns)
-            //                joinColumnCode += (joinColumnCode == "") ?
-            //                    item.Item1 + "." + item.Item2 :
-            //                    " equals " + item.Item1 + "." + item.Item2;
-            //            fromItemsCode = $"from {code} on {joinColumnCode}";
-            //        }
-            //        else fromItemsCode = $"from {code}";
-            //    }
-
-
-            //}
-            //else
-            //{
-
-            //}
-            //return result;
-            throw new NotImplementedException();
+                    var joinColumnCode = "";
+                    if (joinColumns.Count > 0)
+                    {
+                        foreach (var item in joinColumns)
+                            joinColumnCode += (joinColumnCode == "") ?
+                                item.Item1 + "." + item.Item2 :
+                                " equals " + item.Item1 + "." + item.Item2;
+                        fromItemsCode = $"from {code} on {joinColumnCode}";
+                    }
+                    else fromItemsCode = $"from {code}";
+                }
+            }
+            TablesAlias = tmp;
+            return new CodeContext() { Code = result};
         }
 
         public override CodeContext Visit(SelectListNode node)
@@ -1377,7 +1376,14 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(IdNode node)
         {
-            return new CodeContext() { Code = node.Text };
+            var codeContext = new CodeContext();
+            if (node.Type == IdentifierType.Variable)
+                codeContext.Code = node.Text;
+            else if (node.Type == IdentifierType.TableField && TablesAlias.ContainsKey(node.TableField.Table.Name))
+            {
+                codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text;
+            }
+            return codeContext;
         }
 
         public override CodeContext Visit(SchemaQualifieldNode node)
@@ -1441,7 +1447,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         public override CodeContext Visit(FromItemSimpleNode node)
         {
             var itemCodeContext = VisitNode(node.Item);
-            return new CodeContext() { Code = GenFromItem(itemCodeContext.Code, node.Alias) };
+            return new CodeContext() { Code = itemCodeContext.Code };
         }
 
         public override CodeContext Visit(FromItemCrossJoinNode node)
@@ -1450,7 +1456,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var item2CodeContext = VisitNode(node.Item2);
             return new CodeContext()
             {
-                Code = GenFromItem(item1CodeContext.Code, node.Alias) + " " + GenFromItem(item2CodeContext.Code, node.Alias)
+                Code = item1CodeContext.Code + " " + item2CodeContext.Code
             };
         }
 
@@ -1458,13 +1464,11 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var item1CodeContext = VisitNode(node.Item1);
             var item2CodeContext = VisitNode(node.Item2);
-            var codeItem1 = GenFromItem(item1CodeContext.Code, node.Alias);
-            var codeItem2 = GenFromItem(item2CodeContext.Code, node.Alias);
-            var sItem2 = codeItem2.Split(new char[] { ' ' }, 2);
+            var sItem2 = item2CodeContext.Code.Split(new char[] { ' ' }, 2);
             var expCodeContext = VisitNode(node.Expression);
             return new CodeContext()
             {
-                Code = codeItem1 + " join " + sItem2[1] + " on " + expCodeContext.Code
+                Code = item1CodeContext.Code + " join " + sItem2[1] + " on " + expCodeContext.Code
             };
         }
 
@@ -1483,10 +1487,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var item1CodeContext = VisitNode(node.Item1);
             var item2CodeContext = VisitNode(node.Item2);
-
-            var item1 = GenFromItem(item1CodeContext.Code, null);
-            var item2 = GenFromItem(item2CodeContext.Code, null);
-            var sItem2 = item2.Split(new char[] { ' ' }, 2);
+            var sItem2 = item2CodeContext.Code.Split(new char[] { ' ' }, 2);
 
             var listJoin = (from x in node.NamesInParens select VisitNode(x).Code).ToList();
             var tablesFromJoinParams = FindTableNameByFieldName(listJoin);
@@ -1511,7 +1512,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
                 i++;
             }
-            return new CodeContext() { Code = item1 + " join " + sItem2[1] + " on " + result };
+            return new CodeContext() { Code = item1CodeContext.Code + " join " + sItem2[1] + " on " + result };
         }
     
 
@@ -1521,7 +1522,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var item2CodeContext = VisitNode(node.Item2);
             return new CodeContext()
             {
-                Code = GenFromItem(item1CodeContext.Code, node.Alias) + " " + GenFromItem(item2CodeContext.Code, node.Alias)
+                Code = item1CodeContext.Code + " " + item2CodeContext.Code
             };
         }
 
@@ -1553,17 +1554,19 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 node.Alias = (String.Concat(from x in node.SchemaQualifield.Identifiers select x.Text)).ToCamel();
             }
+            TablesAlias.Add(node.SchemaQualifield.TypeReturn, node.Alias);
             return new CodeContext()
             {
-                Code = $"from {node.Alias} in {VisitNode(node.SchemaQualifield)}"
+                Code = $"from {node.Alias} in {VisitNode(node.SchemaQualifield).Code}"
             };
         }
 
         public override CodeContext Visit(FromPrimary2Node node)
         {
+            TablesAlias.Add(node.Alias, node.TableSubquery.TypeReturn);
             return new CodeContext()
             {
-                Code = $"from {node.AliasClause.Alias.Text} in {VisitNode(node.TableSubquery)}"
+                Code = $"from {node.AliasClause.Alias.Text} in {VisitNode(node.TableSubquery).Code}"
             };
         }
 

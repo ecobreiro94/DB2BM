@@ -237,7 +237,7 @@ namespace DB2BM.Extensions
                 var semanticVisitor = new SemanticVisitor(Catalog, f);
                 var errors = semanticVisitor.VisitNode(f.Definition);
                 var genCodeVisitor = new GenCodeVisitor(Catalog, f);
-                f.BMDefinition = genCodeVisitor.VisitNode(f.Definition).Code;
+                //f.BMDefinition = genCodeVisitor.VisitNode(f.Definition).Code;
                 f.BMDefinition = "";
             }
             temp.Add("db", new FunctionsTemplateParams() { NameSpace = Catalog.Name, ClassName = className ,Functions = functions });
