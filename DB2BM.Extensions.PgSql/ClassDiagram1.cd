@@ -1,7 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ClassDiagram MajorVersion="1" MinorVersion="1">
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="DB2BM.Extensions.PgSql.PostgreCatalogHandler">
+    <Position X="2.75" Y="0.5" Width="5" />
+    <AssociationLine Name="Catalog" Type="DB2BM.Abstractions.Entities.DatabaseCatalog" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="3.25" Y="3.786" />
+        <Point X="3.25" Y="4.25" />
+        <Point X="4.75" Y="4.25" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="internalDbContext" Type="DB2BM.Extensions.PgSql.PostgreDbContext" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="2.312" />
+        <Point X="9.024" Y="2.312" />
+        <Point X="9.024" Y="5.562" />
+        <Point X="7.5" Y="5.562" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAEBAAAAACBAAAgRAAAABAAAgAAAAABAEAA=</HashCode>
+      <FileName>PostgreCatalogHandler.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="Catalog" />
+      <Field Name="internalDbContext" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog" Collapsed="true">
+    <Position X="4.75" Y="4" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Extensions.PgSql.PostgreDbContext">
+    <Position X="2.75" Y="4.75" Width="4.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAIAAQAAAAAAAEAAQAIAEAAAAAEBACAAAAMAgAA=</HashCode>
+      <FileName>PostgreDbContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
   <Class Name="DB2BM.Extensions.PgSql.PostgreSyntaticAnalizer">
-    <Position X="5.5" Y="1.75" Width="4" />
+    <Position X="10" Y="3.5" Width="4.5" />
     <TypeIdentifier>
       <HashCode>AAAgAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>PostgreSyntaticAnalizer.cs</FileName>

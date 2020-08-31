@@ -258,7 +258,7 @@ namespace DB2BM.Extensions.PgSql
 
         private IEnumerable<Relationship> GetRelations(IDictionary<string,Table> tables)
         {
-            var relations = InternalDbContext.Relations
+            var relations = InternalDbContext.Relationships
                                 .Include(x => x.KeyColumn)
                                 .Include(x => x.RelationColumn)
                                 .Where(r => r.SchemaName == "public" && r.ConstraintType != "CHECK")

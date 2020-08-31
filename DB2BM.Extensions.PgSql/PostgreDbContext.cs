@@ -17,7 +17,7 @@ namespace DB2BM.Extensions.PgSql
 
         public DbSet<PostgreParams> Params { get; set; }
 
-        public DbSet<PostgreRelationship> Relations { get; set; }
+        public DbSet<PostgreRelationship> Relationships { get; set; }
 
         public DbSet<PostgreUserDefinedType> UDTs { get; set; }
 
