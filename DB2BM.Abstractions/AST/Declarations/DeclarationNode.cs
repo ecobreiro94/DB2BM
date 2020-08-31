@@ -10,6 +10,7 @@ namespace DB2BM.Abstractions.AST.Declarations
     public class DeclarationNode : ASTNode
     {
         public IdNode Identifier { get; set; }
+
         public TypeDeclarationNode TypeDeclaration { get; set; }
 
         public DeclarationNode(int line, int column) : base(line, column)

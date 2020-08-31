@@ -381,7 +381,6 @@ namespace DB2BM.Extensions.PgSql
             catalog.Tables = catalogTables;
             catalog.UserDefinedTypes = catalogUserDefinedType;
 
-            Utils.ReviewEntities.PushRelations(catalog);
             Catalog = catalog;
             return Catalog;
         }
