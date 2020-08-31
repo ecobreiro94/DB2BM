@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.IO;
 using Newtonsoft.Json;
 using DB2BM.Utils;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Extensions;
 
 namespace DB2BM.Extensions.PgSql
 {
@@ -317,7 +318,6 @@ namespace DB2BM.Extensions.PgSql
             catalog.Tables = catalogTables;
             catalog.UserDefinedTypes = catalogUserDefinedType;
 
-            Utils.ReviewEntities.PushRelations(catalog);
             Catalog = catalog;
             return Catalog;
         }

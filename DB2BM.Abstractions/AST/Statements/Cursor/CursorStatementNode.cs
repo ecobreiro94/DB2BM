@@ -45,7 +45,8 @@ namespace DB2BM.Abstractions.AST.Statements.Cursor
 
         public StatementNode Stmt { get; set; }
 
-        public SchemaQualifieldNode IntoTable { get; set; }
+        public List<SchemaQualifieldNode> IntoTable { get; set; }
+
         public string TypeReturn { get; set; }
 
         public CursorStatementNode(int line, int column) : base(line, column)

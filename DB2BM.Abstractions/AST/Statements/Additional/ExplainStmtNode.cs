@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using DB2BM.Abstractions.Visitors;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class ExplainStmtNode : AddicionalStatementNode
+    public class ExplainStmtNode : AdditionalStatementNode
     {
         public List<string> Options { get; set; }
         public StatementNode ExplainQuery { get; set; }

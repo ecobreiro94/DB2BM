@@ -360,7 +360,7 @@ alias_clause
     ;
 
 into_table
-    : INTO (TEMPORARY | TEMP | UNLOGGED)? TABLE? schema_qualified_name
+    : INTO (TEMPORARY | TEMP | UNLOGGED)? TABLE? schema_qualified_name (COMMA schema_qualified_name)*
     ;
 
 set_qualifier
@@ -521,8 +521,8 @@ control_statement
 
 return_stmt
     : RETURN QUERY (select_stmt | execute_stmt | show_statement | explain_statement)
-    | RETURN perform_stmt?
     | RETURN NEXT vex
+    | RETURN perform_stmt?
     ;
 
 explain_statement

@@ -15,7 +15,7 @@ using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Arithmetics;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Comparison;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Logicals;
 using DB2BM.Abstractions.AST.Statements;
-using DB2BM.Abstractions.AST.Statements.Addicional;
+using DB2BM.Abstractions.AST.Statements.Additional;
 using DB2BM.Abstractions.AST.Statements.Base;
 using DB2BM.Abstractions.AST.Statements.Control;
 using DB2BM.Abstractions.AST.Statements.Cursor;
@@ -23,1128 +23,1908 @@ using DB2BM.Abstractions.AST.Statements.Data;
 using DB2BM.Abstractions.AST.Types;
 using DB2BM.Abstractions.Entities;
 using DB2BM.Abstractions.Visitors;
+using DB2BM.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 namespace DB2BM.Extensions.EFCore.Visitors
 {
-    public class GenCodeVisitor : ASTVisitor<string>
+    public class GenCodeVisitor : ASTVisitor<CodeContext>
     {
         DatabaseCatalog Catalog;
         StoreProcedure Sp;
 
+        Dictionary<string, string> TypesMapper = new Dictionary<string, string>
+        {
+            { "object" , "dynamic"},
+            { "bool", "bool" },
+            { "int", "int" },
+            { "long", "long"},
+            { "decimal", "decimal"},
+            { "float", "float" },
+            { "double", "double" },
+            { "string", "string" },
+            { "DateTime", "DateTime" },
+            { "TimeSpan", "TimeSpan" },
+        };
+        int identation;
+        string GetIdentation
+        {
+            get
+            {
+                var result = "";
+                int i = 0;
+                while (i++ < identation)
+                    result += "/t";
+                return result;
+            }
+        }
+        private void SetType(StoreProcedure sp)
+        {
+            if (TypesMapper.ContainsKey(sp.ReturnType))
+                sp.ReturnType = TypesMapper[sp.ReturnType];
+            else if (Catalog.Tables.Values.Any(t => t.Name == sp.ReturnType))
+            {
+                if (sp.ReturnClause.Contains("setof"))
+                    sp.ReturnType = $"IEnumerable<{sp.ReturnType.ToPascal()}>";
+                else
+                    sp.ReturnType = sp.ReturnType.ToPascal();
+            }
+            else if (Catalog.UserDefinedTypes.Values.Any(u => u.TypeName == sp.ReturnType))
+            {
+                if (sp.ReturnClause.Contains("setof"))
+                    sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
+            }
+        }
         public GenCodeVisitor(DatabaseCatalog catalog, StoreProcedure sp)
         {
             Catalog = catalog;
             Sp = sp;
+            identation = 0;
+            SetType(Sp);
         }
-        public override string Visit(FunctionBlockNode node)
+
+        public override CodeContext Visit(FunctionBlockNode node)
         {
-            throw new NotImplementedException();
+            identation++;
+            var result = "";
+            var foundDec = "var FOUND = false;/n";
+            if (node.Declarations != null)
+                foreach (var dec in node.Declarations)
+                    result += VisitNode(dec) + "/n";
+            if (node.Statements != null)
+                foreach (var stmt in node.Statements)
+                    result += VisitNode(stmt) + "/n";
+            if (node.ExceptionStatement != null)
+                result += VisitNode(node.ExceptionStatement);
+
+            if (Sp.LanguageDefinition.ToLower() == "sql")
+                return new CodeContext() { Code = "return " + result };
+            else
+                return new CodeContext() { Code = foundDec + result };
         }
 
-        public override string Visit(AliasDeclarationNode node)
+        public override CodeContext Visit(DeclarationNode node)
         {
-            throw new NotImplementedException();
+            if (node.TypeDeclaration is AliasDeclarationNode)
+            {
+                var typeDeclaration = node.TypeDeclaration as AliasDeclarationNode;
+                return new CodeContext()
+                {
+                    Code = $"var {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Identifier).Code.ToCamel()};"
+                };
+            }
+            else if (node.TypeDeclaration is OrdinalTypeDeclarationNode)
+            {
+                var typeDeclaration = node.TypeDeclaration as OrdinalTypeDeclarationNode;
+                if (typeDeclaration.Expression == null)
+                    return new CodeContext()
+                    {
+                        Code = $"{VisitNode(typeDeclaration.DataType)} {VisitNode(node.Identifier).Code.ToCamel()};"
+                    };
+                else
+                    return new CodeContext()
+                    {
+                        Code = $"{VisitNode(typeDeclaration.DataType)} {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Expression)};"
+                    };
+            }
+            else if (node.TypeDeclaration is CursorDeclarationNode)
+            {
+                var typeDeclaration = node.TypeDeclaration as CursorDeclarationNode;
+                var arguments = "";
+                foreach (var arg in typeDeclaration.ArgumentList)
+                    arguments += (arguments == "") ? VisitNode(arg).Code : VisitNode(arg).Code + ",";
+                
+                return new CodeContext(){
+                    Code = $"IEnumerable<dynamic> {VisitNode(node.Identifier).Code.ToPascal()} ({arguments})" +
+                        "{\n" +
+                            GetIdentation + "return" + VisitNode(typeDeclaration.SelectStmt).Code +"/n"+
+                        "}"
+                };
+            }
+            else
+                return new CodeContext();
         }
 
-        public override string Visit(CursorDeclarationNode node)
+        public override CodeContext Visit(AliasDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OrdinalTypeDeclarationNode node)
+        public override CodeContext Visit(CursorDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsNotDistinctFromNode node)
+        public override CodeContext Visit(OrdinalTypeDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AllSimpleOpNode node)
+        public override CodeContext Visit(IsNotDistinctFromNode node)
         {
-            throw new NotImplementedException();
+            var rOpCodeContext = VisitNode(node.LeftOperand);
+            var lOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = rOpCodeContext.UserFunctionCall || lOpCodeContext.UserFunctionCall,
+                Code = $"{lOpCodeContext.Code} == {rOpCodeContext.Code}"
+            };
         }
 
-        public override string Visit(OtherTypeNode node)
+        public override CodeContext Visit(AllSimpleOpNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OtherOpBinaryNode node)
+        public override CodeContext Visit(OtherTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DataTypeNode node)
+        public override CodeContext Visit(OtherOpBinaryNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(NCharTypeNode node)
+        public override CodeContext Visit(DataTypeNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            if (TypesMapper.ContainsKey(node.TypeReturn))
+                codeContext.Code = TypesMapper[node.TypeReturn];
+            else codeContext.Code = node.TypeReturn;
+            return codeContext;
         }
 
-        public override string Visit(NCharVaryingTypeNode node)
+        public override CodeContext Visit(NCharTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "string" };
         }
 
-        public override string Visit(NumericTypeNode node)
+        public override CodeContext Visit(NCharVaryingTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(RealTypeNode node)
+        public override CodeContext Visit(NumericTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "decimal" };
         }
 
-        public override string Visit(BigintTypeNode node)
+        public override CodeContext Visit(RealTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "float" };
         }
 
-        public override string Visit(SmallintTypeNode node)
+        public override CodeContext Visit(BigintTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "long" };
         }
 
-        public override string Visit(BitTypeNode node)
+        public override CodeContext Visit(SmallintTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "short" };
         }
 
-        public override string Visit(TimeTypeNode node)
+        public override CodeContext Visit(BitTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(BitVaryingTypeNode node)
+        public override CodeContext Visit(TimeTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "DateTime" };
         }
 
-        public override string Visit(VarcharTypeNode node)
+        public override CodeContext Visit(BitVaryingTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(BooleanTypeNode node)
+        public override CodeContext Visit(VarcharTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "string" };
         }
 
-        public override string Visit(DecTypeNode node)
+        public override CodeContext Visit(BooleanTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "bool" };
         }
 
-        public override string Visit(DecimalTypeNode node)
+        public override CodeContext Visit(DecTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DollarNumberNode node)
+        public override CodeContext Visit(DecimalTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "decimal" };
         }
 
-        public override string Visit(DoublePrecisionTypeNode node)
+        public override CodeContext Visit(DollarNumberNode node)
         {
-            throw new NotImplementedException();
+            int index;
+            var codeContext = new CodeContext();
+            if (int.TryParse(new string(node.Text.Skip(1).ToArray()), out index))
+                codeContext.Code = Sp.Params[index].Name;
+            codeContext.Code = "";
+            return codeContext;
         }
 
-        public override string Visit(AtTimeZoneNode node)
+        public override CodeContext Visit(DoublePrecisionTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "double" };
         }
 
-        public override string Visit(FloatTypeNode node)
+        public override CodeContext Visit(AtTimeZoneNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IntTypeNode node)
+        public override CodeContext Visit(FloatTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "float" };
         }
 
-        public override string Visit(IntegerTypeNode node)
+        public override CodeContext Visit(IntTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "int" };
         }
 
-        public override string Visit(IntervalTypeNode node)
+        public override CodeContext Visit(IntegerTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "int" };
         }
 
-        public override string Visit(CharTypeNode node)
+        public override CodeContext Visit(IntervalTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CharVaryingTypeNode node)
+        public override CodeContext Visit(CharTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "string" };
         }
 
-        public override string Visit(AddAnalizeNode node)
+        public override CodeContext Visit(CharVaryingTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "string" };
         }
 
-        public override string Visit(AddClusterNode node)
+        public override CodeContext Visit(AddAnalizeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddDeallocatteNode node)
+        public override CodeContext Visit(AddClusterNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddListenNode node)
+        public override CodeContext Visit(AddDeallocatteNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddPrepareNode node)
+        public override CodeContext Visit(AddListenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddReassignNode node)
+        public override CodeContext Visit(AddPrepareNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddRefreshNode node)
+        public override CodeContext Visit(AddReassignNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddReindexNode node)
+        public override CodeContext Visit(AddRefreshNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddResetNode node)
+        public override CodeContext Visit(AddReindexNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AddUnlistenNode node)
+        public override CodeContext Visit(AddResetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CopyStmtNode node)
+        public override CodeContext Visit(AddUnlistenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ExplainStmtNode node)
+        public override CodeContext Visit(CopyStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ShowStmtNode node)
+        public override CodeContext Visit(ExplainStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CallFunctionCallNode node)
+        public override CodeContext Visit(ShowStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(WithClauseNode node)
+        public override CodeContext Visit(CallFunctionCallNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(WithQueryNode node)
+        public override CodeContext Visit(WithClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CaseStmtNode node)
+        public override CodeContext Visit(WithQueryNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(WindowsDefinitionNode node)
+        public override CodeContext Visit(CaseStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(NullOrderingNode node)
+        public override CodeContext Visit(WindowsDefinitionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CastExpressionNode node)
+        public override CodeContext Visit(NullOrderingNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsNullNode node)
+        public override CodeContext Visit(CastExpressionNode node)
         {
-            throw new NotImplementedException();
+            var expCodeContext = VisitNode(node.Expression);
+            return new CodeContext()
+            {
+                UserFunctionCall = expCodeContext.UserFunctionCall,
+                Code = $"({VisitNode(node.DataType).Code})({expCodeContext.Code})"
+            };
         }
 
-        public override string Visit(IsNotNullNode node)
+        public override CodeContext Visit(IsNullNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = $"{opCodeContext.Code} == null", 
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(BetweenNode node)
+        public override CodeContext Visit(IsNotNullNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = $"{opCodeContext.Code} != null",
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(InNode node)
+        public override CodeContext Visit(BetweenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OfNode node)
+        public override CodeContext Visit(InNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(SelectStatementNode node)
+        public override CodeContext Visit(OfNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(SelectStmtNonParensNode node)
+        public override CodeContext Visit(SelectStatementNode node)
         {
-            throw new NotImplementedException();
+            //if (node.WithClause != null)
+            //    result += VisitNode(node.WithClause) + "/n";
+            var codeContext = new CodeContext();
+            if (node.SelectOps != null)
+            {
+                var selectOpsCodeContext = VisitNode(node.SelectOps);
+                codeContext.Code = selectOpsCodeContext.Code;
+                codeContext.UserFunctionCall = selectOpsCodeContext.UserFunctionCall;
+            }
+            if (node.AfterOps != null && node.AfterOps.Count > 0)
+                foreach (var afterOp in node.AfterOps)
+                {
+                    var afterOpCodeContext = VisitNode(afterOp);
+                    codeContext.Code += afterOpCodeContext.Code;
+                    codeContext.UserFunctionCall |= afterOpCodeContext.UserFunctionCall;
+                }
+            codeContext.Code += ";";
+            return codeContext;
         }
 
-        public override string Visit(TruncateStmtNode node)
+        public override CodeContext Visit(SelectStmtNonParensNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsTrueNode node)
+        public override CodeContext Visit(TruncateStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsNotTrueNode node)
+        public override CodeContext Visit(IsTrueNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = opCodeContext.Code,
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(IsFalseNode node)
+        public override CodeContext Visit(IsNotTrueNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = "!(" + opCodeContext.Code + ")",
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(IsNotFalseNode node)
+        public override CodeContext Visit(IsFalseNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = "!(" + opCodeContext.Code + ")",
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(CollateNode node)
+        public override CodeContext Visit(IsNotFalseNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = opCodeContext.Code,
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(LikeBinaryNode node)
+        public override CodeContext Visit(CollateNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ILikeBinaryNode node)
+        public override CodeContext Visit(LikeBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"EF.Functions.Like({lOpCodeContext.Code}, {rOpCodeContext.Code})"
+            };
+            
         }
 
-        public override string Visit(NotLikeBinaryNode node)
+        public override CodeContext Visit(ILikeBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"EF.Functions.Like(DbContext.Lower({lOpCodeContext.Code}), DbContext.Lower({rOpCodeContext.Code}))"
+            };
         }
 
-        public override string Visit(NotILikeBinaryNode node)
+        public override CodeContext Visit(NotLikeBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"!EF.Functions.Like({lOpCodeContext.Code}, {rOpCodeContext.Code})"
+            };
         }
 
-        public override string Visit(SimilarToBinaryNode node)
+        public override CodeContext Visit(NotILikeBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"!EF.Functions.Like(DbContext.Lower({lOpCodeContext.Code}), DbContext.Lower({rOpCodeContext.Code}))"
+            };
         }
 
-        public override string Visit(NotSimilarToBinaryNode node)
+        public override CodeContext Visit(SimilarToBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"DbContext.SimilarEscape({lOpCodeContext.Code}, {rOpCodeContext.Code})"
+            };
         }
 
-        public override string Visit(NotNode node)
+        public override CodeContext Visit(NotSimilarToBinaryNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"!DbContext.SimilarEscape({lOpCodeContext.Code}, {rOpCodeContext.Code})"
+            };
         }
 
-        public override string Visit(AbsoluteValueNode node)
+        public override CodeContext Visit(NotNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = $"!{opCodeContext.Code}",
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(BitwiseNotNode node)
+        public override CodeContext Visit(AbsoluteValueNode node)
         {
-            throw new NotImplementedException();
+            var opCodeContext = VisitNode(node.Operand);
+            return new CodeContext()
+            {
+                Code = $"Math.Abs({VisitNode(node.Operand)})",
+                UserFunctionCall = opCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(FactorialNode node)
+        public override CodeContext Visit(BitwiseNotNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OtherOpUnaryNode node)
+        public override CodeContext Visit(FactorialNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsDocumentNode node)
+        public override CodeContext Visit(OtherOpUnaryNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsNotDocumentNode node)
+        public override CodeContext Visit(IsDocumentNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsUnknownNode node)
+        public override CodeContext Visit(IsNotDocumentNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IsNotUnknownNode node)
+        public override CodeContext Visit(IsUnknownNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(BaseTypeCoercionNode node)
+        public override CodeContext Visit(IsNotUnknownNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IntervalTypeCoercionNode node)
+        public override CodeContext Visit(BaseTypeCoercionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(EqualNode node)
+        public override CodeContext Visit(IntervalTypeCoercionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(GreaterEqualNode node)
+        public override CodeContext Visit(EqualNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} == {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(GreaterNode node)
+        public override CodeContext Visit(GreaterEqualNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} >= {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(IsDistinctFromNode node)
+        public override CodeContext Visit(GreaterNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} > {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(LessEqualNode node)
+        public override CodeContext Visit(IsDistinctFromNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} != {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(LessNode node)
+        public override CodeContext Visit(LessEqualNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} <= {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(NotEqualNode node)
+        public override CodeContext Visit(LessNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} < {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(ExponentiationNode node)
+        public override CodeContext Visit(NotEqualNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} != {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(ModuloNode node)
+        public override CodeContext Visit(ExponentiationNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"Math.Pow({VisitNode(node.LeftOperand)},{VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(MultiplicationNode node)
+        public override CodeContext Visit(ModuloNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} % {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(StringConcatNode node)
+        public override CodeContext Visit(MultiplicationNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} * {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(SubtractionNode node)
+        public override CodeContext Visit(StringConcatNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} + {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(AdditionNode node)
+        public override CodeContext Visit(SubtractionNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} - {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(BitwiseAndNode node)
+        public override CodeContext Visit(AdditionNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} + {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(BitwiseOrNode node)
+        public override CodeContext Visit(BitwiseAndNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} & {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(BitwiseShiftLeftNode node)
+        public override CodeContext Visit(BitwiseOrNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} | {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(BitwiseShiftRightNode node)
+        public override CodeContext Visit(BitwiseShiftLeftNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} << {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(BitwiseXorNode node)
+        public override CodeContext Visit(BitwiseShiftRightNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} >> {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(DivisionNode node)
+        public override CodeContext Visit(BitwiseXorNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AndNode node)
+        public override CodeContext Visit(DivisionNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} / {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(OrNode node)
+        public override CodeContext Visit(AndNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} && {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(ExpInDirectionNode node)
+        public override CodeContext Visit(OrNode node)
         {
-            throw new NotImplementedException();
+            var lOpCodeContext = VisitNode(node.LeftOperand);
+            var rOpCodeContext = VisitNode(node.RightOperand);
+            return new CodeContext()
+            {
+                UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
+                Code = $"{VisitNode(node.LeftOperand)} || {VisitNode(node.RightOperand)}"
+            };
         }
 
-        public override string Visit(ExpressionListNode node)
+        public override CodeContext Visit(ExpInDirectionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(NullNode node)
+        public override CodeContext Visit(ExpressionListNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(MultiplyNode node)
+        public override CodeContext Visit(NullNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "null" };
         }
 
-        public override string Visit(CaseExpressionNode node)
+        public override CodeContext Visit(MultiplyNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ExistsNode node)
+        public override CodeContext Visit(CaseExpressionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IndirectionVarNode node)
+        public override CodeContext Visit(ExistsNode node)
         {
-            throw new NotImplementedException();
+            var stmtCodeContext = VisitNode(node.SelectStmt);
+            return new CodeContext()
+            {
+                Code = $"({stmtCodeContext.Code}).Any()",
+                UserFunctionCall = stmtCodeContext.UserFunctionCall
+            };
         }
 
-        public override string Visit(ove node)
+        public override CodeContext Visit(IndirectionVarNode node)
         {
-            throw new NotImplementedException();
+            var identifierCodeContext = VisitNode(node.Identifiers);
+            var codeContext = new CodeContext()
+            {
+                Code = identifierCodeContext.Code.ToCamel(),
+                UserFunctionCall = identifierCodeContext.UserFunctionCall
+            };
+            foreach (var item in node.Indirections)
+            {
+                var indirectionCodeContext = VisitNode(item);
+                codeContext.Code += indirectionCodeContext.Code;
+                codeContext.UserFunctionCall |= indirectionCodeContext.UserFunctionCall;
+            }
+            return codeContext;
         }
 
-        public override string Visit(IntervalFieldNode node)
+        public override CodeContext Visit(ValueExpressionPrimaryNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DatetimeOverlapsNode node)
+        public override CodeContext Visit(IntervalFieldNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(TableColsNode node)
+        public override CodeContext Visit(DatetimeOverlapsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(UserNameNode node)
+        public override CodeContext Visit(TableColsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(GroupByClauseNode node)
+        public override CodeContext Visit(UserNameNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ArrayTypeNode node)
+        public override CodeContext Visit(GroupByClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ArrayToSelectNode node)
+        public override CodeContext Visit(ArrayTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ArrayElementsNode node)
+        public override CodeContext Visit(ArrayToSelectNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ComparisonModNode node)
+        public override CodeContext Visit(ArrayElementsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(BasicFunctionCallNode node)
+        public override CodeContext Visit(ComparisonModNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(FunctionConstructNode node)
+        public override CodeContext Visit(BasicFunctionCallNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            var functionName = node.SchemaQualifiednameNonType.IdentifierNonType.Text;
+            var userDefinedFunctions = Catalog.StoreProcedures.Values.Where(f => f.Name == functionName);
+            var internalFunctions = Catalog.InternalFunctions.Values.Where(f => f.Name == functionName);
+            if (userDefinedFunctions != null)
+                foreach (var function in userDefinedFunctions)
+                {
+                    if ((from p in function.Params where !p.OutMode select p).ToList().Count == node.VexOrNamedNotations.Count)
+                    {
+                        codeContext.UserFunctionCall = true;
+                        
+                        codeContext.Code = functionName.ToPascal()+ "(";
+                        var first = true;
+                        foreach (var arg in node.VexOrNamedNotations)
+                        {
+                            var argCodeContext = Visit(arg);
+                            if (first)
+                                codeContext.Code += argCodeContext.Code;
+                            else
+                                codeContext.Code += ", " + argCodeContext.Code; 
+                        }
+                        codeContext.Code += ")";
+                    }
+                }
+            if(internalFunctions != null)
+                foreach (var function in internalFunctions)
+                {
+                    if ((from p in function.Params where !p.OutMode select p).ToList().Count == node.VexOrNamedNotations.Count)
+                    {
+                        codeContext.Code = "DbCatalog." + functionName.ToPascal() + "(";
+                        var first = true;
+                        foreach (var arg in node.VexOrNamedNotations)
+                        {
+                            var argCodeContext = Visit(arg);
+                            if (first)
+                                codeContext.Code += argCodeContext.Code;
+                            else
+                                codeContext.Code += ", " + argCodeContext.Code;
+                            codeContext.UserFunctionCall |= argCodeContext.UserFunctionCall;
+                        }
+                        codeContext.Code += ")";
+                    }
+                }
+            return codeContext;
         }
 
-        public override string Visit(ExtractFunctionNode node)
+        public override CodeContext Visit(FunctionConstructNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(TrimStringValueFunctionNode node)
+        public override CodeContext Visit(ExtractFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(SubstringStringValueFunctionNode node)
+        public override CodeContext Visit(TrimStringValueFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(PositionStringValueFunctionNode node)
+        public override CodeContext Visit(SubstringStringValueFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OverlayStringValueFunctionNode node)
+        public override CodeContext Visit(PositionStringValueFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CollationStringValueFunctionNode node)
+        public override CodeContext Visit(OverlayStringValueFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CastSpesificationSystemFunction node)
+        public override CodeContext Visit(CollationStringValueFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlElementFunctionNode node)
+        public override CodeContext Visit(CastSpesificationSystemFunction node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlForestFunctionNode node)
+        public override CodeContext Visit(XmlElementFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlPiFunctionNode node)
+        public override CodeContext Visit(XmlForestFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlRootFunctionNode node)
+        public override CodeContext Visit(XmlPiFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlExistsFunctionNode node)
+        public override CodeContext Visit(XmlRootFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlParseFunctionNode node)
+        public override CodeContext Visit(XmlExistsFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlSerializeFunctionNode node)
+        public override CodeContext Visit(XmlParseFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlTabletFunctionNode node)
+        public override CodeContext Visit(XmlSerializeFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(XmlTableColumnNode node)
+        public override CodeContext Visit(XmlTabletFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CurrentCatalogSystemFunctionNode node)
+        public override CodeContext Visit(XmlTableColumnNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CurrentSchemaSystemFunctionNode node)
+        public override CodeContext Visit(CurrentCatalogSystemFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CurrentUserSystemFunctionNode node)
+        public override CodeContext Visit(CurrentSchemaSystemFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(UserSystemFunctionNode node)
+        public override CodeContext Visit(CurrentUserSystemFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(SessionUserSystemFunctionNode node)
+        public override CodeContext Visit(UserSystemFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CurrentDateFunctionNode node)
+        public override CodeContext Visit(SessionUserSystemFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CurrentTimeFunctionNode node)
+        public override CodeContext Visit(CurrentDateFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "DateTime.Now()" };
         }
 
-        public override string Visit(LocalTimeFunctionNode node)
+        public override CodeContext Visit(CurrentTimeFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "DateTime.Now()" };
         }
 
-        public override string Visit(CurrentTimestampFunctionNode node)
+        public override CodeContext Visit(LocalTimeFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(LocalTimestampFunctionNode node)
+        public override CodeContext Visit(CurrentTimestampFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "DateTime.Now()" };
         }
 
-        public override string Visit(BoolNode node)
+        public override CodeContext Visit(LocalTimestampFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DefaultNode node)
+        public override CodeContext Visit(BoolNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "bool" };
         }
 
-        public override string Visit(Float4Node node)
+        public override CodeContext Visit(DefaultNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(Float8Node node)
+        public override CodeContext Visit(Float4Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "float" };
         }
 
-        public override string Visit(Int8Node node)
+        public override CodeContext Visit(Float8Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "double" };
         }
 
-        public override string Visit(IntNode node)
+        public override CodeContext Visit(Int8Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "long" };
         }
 
-        public override string Visit(VarcharNode node)
+        public override CodeContext Visit(IntNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "int" };
         }
 
-        public override string Visit(SelectOpsNoParensNode node)
+        public override CodeContext Visit(VarcharNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = "string" };
         }
 
-        public override string Visit(SelectOpsNode node)
+        public override CodeContext Visit(SelectOpsNoParensNode node)
         {
-            throw new NotImplementedException();
+            if (node.SelectOps != null)
+            {
+                var selectOpsCode = VisitNode(node.SelectOps);
+                CodeContext statementCode = null;
+                if (node.SelectStmt != null)
+                    statementCode = VisitNode(node.SelectStmt);
+                else if (node.SelectPrimary != null)
+                    statementCode = VisitNode(node.SelectPrimary);
+                if (node.Intersect)
+                    return new CodeContext()
+                    {
+                        Code = $"({selectOpsCode.Code}).Intersect({statementCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || statementCode.UserFunctionCall
+                    };
+                else if (node.Except)
+                    return new CodeContext()
+                    {
+                        Code = $"({selectOpsCode.Code}).Except({statementCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || statementCode.UserFunctionCall
+                    };
+                else
+                {
+                    if (node.Union && node.Qualifier.ToLower() == "distinct")
+                        return new CodeContext()
+                        {
+                            Code = $"({selectOpsCode}).Union({statementCode})",
+                            UserFunctionCall = selectOpsCode.UserFunctionCall || statementCode.UserFunctionCall
+                        };
+                    else if (node.Union && node.Qualifier.ToLower() == "all")
+                        return new CodeContext()
+                        {
+                            Code = $"({selectOpsCode}).Concat({statementCode})",
+                            UserFunctionCall = selectOpsCode.UserFunctionCall || statementCode.UserFunctionCall
+                        };
+                }
+            }
+            else if (node.SelectPrimary != null)
+                return VisitNode(node.SelectPrimary);
+            return null;
         }
 
-        public override string Visit(SelectPrimaryNode node)
+        public override CodeContext Visit(SelectOpsNode node)
         {
-            throw new NotImplementedException();
+            if (node.SelectStmt != null)
+            {
+                var selectCodeContext = VisitNode(node.SelectStmt);
+                return new CodeContext()
+                {
+                    Code = "(" + selectCodeContext.Code + ")",
+                    UserFunctionCall = selectCodeContext.UserFunctionCall
+                };
+            }
+            else if (node.SelectPrimary != null)
+                return VisitNode(node.SelectPrimary);
+            else
+            {
+                var selectOpCodeContext1 = VisitNode(node.SelectOps[0]);
+                var selectOpCodeContext2 = VisitNode(node.SelectOps[1]);
+                var codeContext = new CodeContext()
+                {
+                    UserFunctionCall = selectOpCodeContext1.UserFunctionCall || selectOpCodeContext2.UserFunctionCall
+                };
+                if (node.Intersect)
+                    codeContext.Code = $"({selectOpCodeContext1.Code}).Intersect({selectOpCodeContext2.Code})";
+                else if (node.Union && node.SetQualifier.ToLower() == "distinct")
+                    codeContext.Code = $"({selectOpCodeContext1.Code}).Intersect({selectOpCodeContext2.Code})";
+                else if (node.Union && node.SetQualifier.ToLower() == "all")
+                    codeContext.Code = $"({VisitNode(node.SelectOps[0])}).Concat({VisitNode(node.SelectOps[1])})";
+                else
+                    codeContext.Code = $"({VisitNode(node.SelectOps[0])}).Except({VisitNode(node.SelectOps[1])})";
+                return codeContext;
+            }
         }
+
+        private List<(string, string)> FindJoinColumns(List<FromItemNode> nodes)
+        {
+            var result = new List<(string, string)>();
+            foreach (var fromItem in nodes)
+            {
+                if (fromItem is FromPrimary1Node)
+                {
+                    var tableName = (fromItem as FromPrimary1Node).SchemaQualifield.Identifiers[0].Text;
+                    var table = Catalog.Tables.Values.FirstOrDefault(t => t.Name == tableName);
+                    if (table != null)
+                    {
+                        var field = table.Fields.FirstOrDefault(f => f.IsPrimaryKey);
+                        if(field != null)
+                            result.Add((fromItem.Alias, field.GenName));
+                    }
+                }
+                else if (fromItem is FromPrimary2Node)
+                {
+
+                }
+                else if (fromItem is FromPrimary3Node)
+                {
+
+                }
+                else if (fromItem is FromPrimary4Node)
+                {
 
-        public override string Visit(SelectListNode node)
+                }
+            }
+            return result;
+        }
+        public override CodeContext Visit(SelectPrimaryNode node)
         {
+            //var result = "";
+            //if (node.FromItems != null && node.FromItems.Count > 0)
+            //{
+            //    var fromItemsCode = "";
+            //    if (node.FromItems.Count > 0)
+            //    {
+            //        var joinColumns = FindJoinColumns(node.FromItems);
+            //        var code = "";
+            //        foreach (var fromItem in node.FromItems)
+            //            code += (code == "") ? VisitNode(fromItem) : " join " + VisitNode(fromItem);
+
+            //        var joinColumnCode = "";
+            //        if (joinColumns.Count > 0)
+            //        {
+            //            foreach (var item in joinColumns)
+            //                joinColumnCode += (joinColumnCode == "") ?
+            //                    item.Item1 + "." + item.Item2 :
+            //                    " equals " + item.Item1 + "." + item.Item2;
+            //            fromItemsCode = $"from {code} on {joinColumnCode}";
+            //        }
+            //        else fromItemsCode = $"from {code}";
+            //    }
+
+
+            //}
+            //else
+            //{
+
+            //}
+            //return result;
             throw new NotImplementedException();
         }
 
-        public override string Visit(SelectSubListNode node)
+        public override CodeContext Visit(SelectListNode node)
         {
-            throw new NotImplementedException();
+            if (node.SelectSubLists.Count > 1)
+            {
+                var codeContext = new CodeContext();
+                foreach (var item in node.SelectSubLists)
+                {
+                    var subListCodeContext = VisitNode(item);
+                    if(codeContext.Code == null || codeContext.Code == "")
+                        codeContext.Code = subListCodeContext.Code;
+                    else
+                        codeContext.Code = ", " + subListCodeContext.Code;
+                }
+                codeContext.Code = "new { " + codeContext.Code + " }";
+                return codeContext;
+            }
+            else
+                return VisitNode(node.SelectSubLists[0]);
         }
 
-        public override string Visit(IdNode node)
+        public override CodeContext Visit(SelectSubListNode node)
         {
-            throw new NotImplementedException();
+            return VisitNode(node.Expression);
         }
 
-        public override string Visit(SchemaQualifieldNode node)
+        public override CodeContext Visit(IdNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = node.Text };
         }
 
-        public override string Visit(SchemaQualifiednameNonTypeNode node)
+        public override CodeContext Visit(SchemaQualifieldNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            foreach (var identifier in node.Identifiers)
+            {
+                var idCodeContext = VisitNode(identifier);
+                if (codeContext.Code == null || codeContext.Code == "")
+                    codeContext.Code = "Catalog." + idCodeContext.Code.ToPascal() + "s.AsEnumerable()";
+                else codeContext.Code += "." + idCodeContext.Code.ToPascal();
+                codeContext.UserFunctionCall |= idCodeContext.UserFunctionCall;
+            }
+            return codeContext;
         }
 
-        public override string Visit(FrameBoundNode node)
+        public override CodeContext Visit(SchemaQualifiednameNonTypeNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            if (node.Schema != null)
+            {
+                var schemaCodeContext = VisitNode(node.Schema);
+                codeContext.Code = schemaCodeContext.Code.ToPascal();
+                codeContext.UserFunctionCall |= schemaCodeContext.UserFunctionCall;
+            }
+            var identifierCodeContext = VisitNode(node.IdentifierNonType);
+            if (codeContext.Code == null)
+                codeContext.Code = identifierCodeContext.Code.ToPascal();
+            else
+                codeContext.Code = "." + identifierCodeContext.Code.ToPascal();
+            codeContext.UserFunctionCall |= identifierCodeContext.UserFunctionCall;
+            return codeContext;
         }
 
-        public override string Visit(FrameClauseNode node)
+        public override CodeContext Visit(FrameBoundNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(FromItemSimpleNode node)
+        public override CodeContext Visit(FrameClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(FromItemCrossJoinNode node)
+        string GenFromItem(string item, string alias)
         {
-            throw new NotImplementedException();
+            if (item.StartsWith("from"))
+            {
+                if (item.Contains(" in "))
+                    return item;
+                else return "form " + alias + " in " + item.Split(new char[] { ' ' }, 2)[1];
+            }
+            else
+            {
+                if (item.Contains(" in "))
+                    return "from" + item;
+                else return "form " + alias + " in " + item;
+            }
         }
 
-        public override string Visit(FromItemOnExpressionNode node)
+        public override CodeContext Visit(FromItemSimpleNode node)
         {
-            throw new NotImplementedException();
+            var itemCodeContext = VisitNode(node.Item);
+            return new CodeContext() { Code = GenFromItem(itemCodeContext.Code, node.Alias) };
         }
 
-        public override string Visit(FromItemUsingNode node)
+        public override CodeContext Visit(FromItemCrossJoinNode node)
         {
-            throw new NotImplementedException();
+            var item1CodeContext = VisitNode(node.Item1);
+            var item2CodeContext = VisitNode(node.Item2);
+            return new CodeContext()
+            {
+                Code = GenFromItem(item1CodeContext.Code, node.Alias) + " " + GenFromItem(item2CodeContext.Code, node.Alias)
+            };
         }
 
-        public override string Visit(FromItemNaturalNode node)
+        public override CodeContext Visit(FromItemOnExpressionNode node)
         {
-            throw new NotImplementedException();
+            var item1CodeContext = VisitNode(node.Item1);
+            var item2CodeContext = VisitNode(node.Item2);
+            var codeItem1 = GenFromItem(item1CodeContext.Code, node.Alias);
+            var codeItem2 = GenFromItem(item2CodeContext.Code, node.Alias);
+            var sItem2 = codeItem2.Split(new char[] { ' ' }, 2);
+            var expCodeContext = VisitNode(node.Expression);
+            return new CodeContext()
+            {
+                Code = codeItem1 + " join " + sItem2[1] + " on " + expCodeContext.Code
+            };
         }
 
-        public override string Visit(ExceptionStatementNode node)
+        List<List<string>> FindTableNameByFieldName(List<string> fields)
         {
-            throw new NotImplementedException();
+            var result = new List<List<string>>();
+            foreach (var field in fields)
+            {
+                if (Catalog.Tables.Values.Any(t => t.Fields.Any(f => f.Name == field)))
+                    result.Add(new List<string>(from t in Catalog.Tables.Values where t.Fields.Any(f => f.Name == field) select t.Name));
+                else result.Add(null);
+            }
+            return result;
+        }
+        public override CodeContext Visit(FromItemUsingNode node)
+        {
+            var item1CodeContext = VisitNode(node.Item1);
+            var item2CodeContext = VisitNode(node.Item2);
+
+            var item1 = GenFromItem(item1CodeContext.Code, null);
+            var item2 = GenFromItem(item2CodeContext.Code, null);
+            var sItem2 = item2.Split(new char[] { ' ' }, 2);
+
+            var listJoin = (from x in node.NamesInParens select VisitNode(x).Code).ToList();
+            var tablesFromJoinParams = FindTableNameByFieldName(listJoin);
+            var result = "";
+            var i = 0;
+            foreach (var item in listJoin)
+            {
+                if (tablesFromJoinParams[i] == null)
+                {
+                    result += item;
+                    if (i < listJoin.Count - 1) result += " equals ";
+                }
+                else
+                {
+                    var j = 0;
+                    foreach (var t in tablesFromJoinParams[i])
+                    {
+                        result += t + "." + item.ToPascal();
+                        if (j < tablesFromJoinParams[i].Count - 1) result += " equals ";
+                        j++;
+                    }
+                }
+                i++;
+            }
+            return new CodeContext() { Code = item1 + " join " + sItem2[1] + " on " + result };
         }
+    
 
-        public override string Visit(ExecuteStatementNode node)
+        public override CodeContext Visit(FromItemNaturalNode node)
         {
-            throw new NotImplementedException();
+            var item1CodeContext = VisitNode(node.Item1);
+            var item2CodeContext = VisitNode(node.Item2);
+            return new CodeContext()
+            {
+                Code = GenFromItem(item1CodeContext.Code, node.Alias) + " " + GenFromItem(item2CodeContext.Code, node.Alias)
+            };
         }
 
-        public override string Visit(TransactionStatementNode node)
+        public override CodeContext Visit(ExceptionStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(FromPrimary1Node node)
+        public override CodeContext Visit(ExecuteStatementNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext()
+            {
+                Code = @"//Instruction not supported SP:" + Sp.Name + " Line:" + node.Line + " Column:" + node.Column
+            };
         }
 
-        public override string Visit(FromPrimary2Node node)
+        public override CodeContext Visit(TransactionStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(FromPrimary3Node node)
+        public override CodeContext Visit(FromPrimary1Node node)
         {
-            throw new NotImplementedException();
+            if (node.AliasClause != null)
+            {
+                node.Alias = node.AliasClause.Alias.Text;
+            }
+            else
+            {
+                node.Alias = (String.Concat(from x in node.SchemaQualifield.Identifiers select x.Text)).ToCamel();
+            }
+            return new CodeContext()
+            {
+                Code = $"from {node.Alias} in {VisitNode(node.SchemaQualifield)}"
+            };
         }
 
-        public override string Visit(FromPrimary4Node node)
+        public override CodeContext Visit(FromPrimary2Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext()
+            {
+                Code = $"from {node.AliasClause.Alias.Text} in {VisitNode(node.TableSubquery)}"
+            };
         }
 
-        public override string Visit(FromFunctionColumnDefNode node)
+        public override CodeContext Visit(FromPrimary3Node node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AliasClauseNode node)
+        public override CodeContext Visit(FromPrimary4Node node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(VexOrNamedNotationNode node)
+        public override CodeContext Visit(FromFunctionColumnDefNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ArgumentNode node)
+        public override CodeContext Visit(AliasClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IndirectionIdentifierNode node)
+        public override CodeContext Visit(VexOrNamedNotationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(IndirectionNode node)
+        public override CodeContext Visit(ArgumentNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext()
+            {
+                Code = node.DataType.TypeReturn + " " + VisitNode(node.Identifier).Code
+            };
         }
 
-        public override string Visit(ReturnStmtNode node)
+        public override CodeContext Visit(IndirectionIdentifierNode node)
         {
-            throw new NotImplementedException();
+            var identifier = VisitNode(node.Identifier).Code.ToCamel();
+            foreach (var item in node.Indirections)
+            {
+                identifier += VisitNode(item).Code;
+            }
+            return new CodeContext() { Code = identifier };
         }
 
-        public override string Visit(PerformStmtNode node)
+        public override CodeContext Visit(IndirectionNode node)
         {
-            throw new NotImplementedException();
+            if (node.ColLabel != null)
+                return new CodeContext()
+                {
+                    Code = "." + VisitNode(node.ColLabel).Code.ToPascal()
+                };
+            else
+            {
+                if (node.Expressions != null && node.Expressions.Count > 0)
+                {
+                    var codeContext = new CodeContext();
+                    foreach (var exp in node.Expressions)
+                    {
+                        var expCodeContext = VisitNode(exp);
+                        if (codeContext.Code == null)
+                            codeContext.Code = expCodeContext.Code;
+                        else codeContext.Code += "," + expCodeContext.Code;
+                        codeContext.UserFunctionCall |= expCodeContext.UserFunctionCall;
+                    }
+                    codeContext.Code = "[" + codeContext.Code + "]";
+                    return codeContext;
+                }
+                else
+                    return new CodeContext()
+                    {
+                        Code = "[]"
+                    };
+            }
         }
 
-        public override string Visit(IfStmtNode node)
+        public override CodeContext Visit(ReturnStmtNode node)
         {
-            throw new NotImplementedException();
+            if (node.Stmt is PerformStmtNode)
+            {
+                var stmtCodeContext = VisitNode(node.Stmt);
+                return new CodeContext()
+                {
+                    Code = $"{GetIdentation}return {stmtCodeContext.Code};",
+                    UserFunctionCall = stmtCodeContext.UserFunctionCall
+                };
+            }
+            else if (node.Expression != null)
+            {
+                var expCodeContext = VisitNode(node.Expression);
+                return new CodeContext()
+                {
+                    Code = $"{GetIdentation}FOUND = true;/n{GetIdentation}yield return {expCodeContext.Code};",
+                    UserFunctionCall = expCodeContext.UserFunctionCall
+                };
+            }
+            else
+            {
+                var stmtCodeContext = VisitNode(node.Stmt);
+                return new CodeContext()
+                {
+                    Code = $"{GetIdentation}FOUND = false;/n" +
+                        $"{GetIdentation}foreach (var item in {stmtCodeContext.Code})/n" +
+                        GetIdentation + "{" +
+                        $"{GetIdentation}/t FOUND = true;" +
+                        $"{GetIdentation}/t yield return item;/n" +
+                        GetIdentation + "}",
+                    UserFunctionCall = stmtCodeContext.UserFunctionCall
+                };
+            }
         }
 
-        public override string Visit(AssingStmtNode node)
+        public override CodeContext Visit(PerformStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(VarNode node)
+        public override CodeContext Visit(IfStmtNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            for (int i = 0; i < node.Expressions.Count; i++)
+            {
+                var expCodeContext = VisitNode(node.Expressions[i]);
+                if (codeContext.Code == null)
+                    codeContext.Code = $"{GetIdentation} if ({expCodeContext.Code})";
+                else
+                    codeContext.Code = $"{GetIdentation} else if ({expCodeContext.Code})";
+                codeContext.UserFunctionCall |= expCodeContext.UserFunctionCall;
+
+                codeContext.Code += GetIdentation + "{/n";
+                identation++;
+                foreach (var item in node.Statements[i])
+                {
+                    var itemCodeContext = VisitNode(item);
+                    codeContext.Code += GetIdentation + itemCodeContext.Code + "/n";
+                    codeContext.UserFunctionCall |= itemCodeContext.UserFunctionCall;
+                }
+                identation--;
+                codeContext.Code += GetIdentation + "}/n";
+            }
+            if (node.ElseStatements != null && node.ElseStatements.Count > 0)
+            {
+                codeContext.Code += "else/n" + GetIdentation + "{/n";
+                identation++;
+                foreach (var item in node.ElseStatements)
+                {
+                    var elseCodeContext = VisitNode(item);
+                    codeContext.Code += elseCodeContext.Code + "/n";
+                    codeContext.UserFunctionCall |= elseCodeContext.UserFunctionCall;
+                } 
+                identation--;
+                codeContext.Code += GetIdentation + "}";
+            }
+            return codeContext;
         }
 
-        public override string Visit(RaiseMessageStatementNode node)
+        public override CodeContext Visit(AssingStmtNode node)
         {
-            throw new NotImplementedException();
+            var varCodeContext = VisitNode(node.Var);
+            CodeContext stmtCodeContext = null;
+            var typeReturn = "";
+            if (node.Stmt is PerformStmtNode)
+            {
+                var stmt = node.Stmt as PerformStmtNode;
+                stmtCodeContext = VisitNode(stmt);
+                typeReturn = stmt.TypeReturn;
+            }
+            else
+            {
+                var stmt = node.Stmt as SelectStmtNonParensNode;
+                stmtCodeContext = VisitNode(stmt);
+                typeReturn = stmt.TypeReturn;
+            }
+            var codeContext = new CodeContext()
+            {
+                UserFunctionCall = varCodeContext.UserFunctionCall || stmtCodeContext.UserFunctionCall
+            };
+                if (node.Var.TypeReturn == typeReturn)
+                    codeContext.Code = $"{GetIdentation}{varCodeContext.Code} = {stmtCodeContext.Code};";
+                else
+                    codeContext.Code = $"{GetIdentation}{varCodeContext.Code} = ({node.Var.TypeReturn}){stmtCodeContext.Code};";
+                return codeContext;
+            
         }
 
-        public override string Visit(AssertMessageStatementNode node)
+        public override CodeContext Visit(VarNode node)
         {
-            throw new NotImplementedException();
+            var nameOfVariable = (node.SchemaQualifield == null) ? VisitNode(node.Id).Code.ToCamel():
+                VisitNode(node.SchemaQualifield).Code;
+            foreach (var expression in node.Expressions)
+                nameOfVariable += $"[{VisitNode(expression).Code}]";
+            return new CodeContext() { Code = nameOfVariable };
         }
 
-        public override string Visit(IdentifierNonTypeNode node)
+        public override CodeContext Visit(RaiseMessageStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DeleteStmtPSqlNode node)
+        public override CodeContext Visit(AssertMessageStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OpCharsNode node)
+        public override CodeContext Visit(IdentifierNonTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(LoopStmtNode node)
+        public override CodeContext Visit(DeleteStmtPSqlNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OpNode node)
+        public override CodeContext Visit(OpCharsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ConflictObjectNode node)
+        public override CodeContext Visit(LoopStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ConflictActionNode node)
+        public override CodeContext Visit(OpNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DeclarationNode node)
+        public override CodeContext Visit(ConflictObjectNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(DeclareStatementNode node)
+        public override CodeContext Visit(ConflictActionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ModularTypeDeclarationNode node)
+        public override CodeContext Visit(DeclareStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ModularRowTypeDeclarationNode node)
+        public override CodeContext Visit(ModularTypeDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext() { Code = node.TypeReturn };
+        }
+
+        public override CodeContext Visit(ModularRowTypeDeclarationNode node)
+        {
+            return new CodeContext() { Code = node.TypeReturn };
         }
 
-        public override string Visit(AnalizeModeNode node)
+        public override CodeContext Visit(AnalizeModeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(WhileLoopNode node)
+        public override CodeContext Visit(WhileLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ForAliasLoopNode node)
+        public override CodeContext Visit(ForAliasLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ForIdListLoopNode node)
+        public override CodeContext Visit(ForIdListLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ForCursorLoopNode node)
+        public override CodeContext Visit(ForCursorLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ForeachLoopNode node)
+        public override CodeContext Visit(ForeachLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(InsertStmtPSqlNode node)
+        public override CodeContext Visit(InsertStmtPSqlNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AfterOpsFetchNode node)
+        public override CodeContext Visit(AfterOpsFetchNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AfterOpsForNode node)
+        public override CodeContext Visit(AfterOpsForNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AfterOpsLimitNode node)
+        public override CodeContext Visit(AfterOpsLimitNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AfterOpsOffsetNode node)
+        public override CodeContext Visit(AfterOpsOffsetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OrderByClauseNode node)
+        public override CodeContext Visit(OrderByClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(SortSpecifierNode node)
+        public override CodeContext Visit(SortSpecifierNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OrderSpecificationNode node)
+        public override CodeContext Visit(OrderSpecificationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(AllOpRefNode node)
+        public override CodeContext Visit(AllOpRefNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ExecuteStmtNode node)
+        public override CodeContext Visit(ExecuteStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(UpdateStmtPSqlNode node)
+        public override CodeContext Visit(UpdateStmtPSqlNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ValuesStmtNode node)
+        public override CodeContext Visit(ValuesStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(UpdateSetNode node)
+        public override CodeContext Visit(UpdateSetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(ValuesValuesNode node)
+        public override CodeContext Visit(ValuesValuesNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(CursorStatementNode node)
+        public override CodeContext Visit(CursorStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override string Visit(OptionNode node)
+        public override CodeContext Visit(OptionNode node)
         {
             throw new NotImplementedException();
         }

@@ -22,7 +22,7 @@ namespace DB2BM.Abstractions.AST.Statements
 
         public SelectListNode SelectList { get; set; }
 
-        public SchemaQualifieldNode IntoTable { get; set; }
+        public List<SchemaQualifieldNode> IntoTable { get; set; }
 
         public GroupByClauseNode GroupByClause { get; set; }
 

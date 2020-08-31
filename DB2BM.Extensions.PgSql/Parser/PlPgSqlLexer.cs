@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:\Users\Nesty\Desktop\tesis\project\PlPgSqlLexer.g4 by ANTLR 4.8
+// Generated from PlPgSqlLexer.g4 by ANTLR 4.8
 
 // Unreachable code detected
 #pragma warning disable 0162

@@ -4,9 +4,9 @@ using System.Text;
 using DB2BM.Abstractions.AST.Expressions.Atomics;
 using DB2BM.Abstractions.Visitors;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddUnlistenNode : AddicionalStatementNode
+    public class AddUnlistenNode : AdditionalStatementNode
     {
         public IdNode Identifier { get; set; }
         public AddUnlistenNode(int line, int column) : base(line, column)

@@ -4,9 +4,9 @@ using System.Text;
 using DB2BM.Abstractions.AST.Expressions.Atomics;
 using DB2BM.Abstractions.Visitors;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class ShowStmtNode : AddicionalStatementNode
+    public class ShowStmtNode : AdditionalStatementNode
     {
         public IdNode PrimaryIdentifier { get; set; }
         public IdNode SecundaryIdentifier { get; set; }

@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Abstractions.AST.Statements.Addicional
+namespace DB2BM.Abstractions.AST.Statements.Additional
 {
-    public class AddDeallocatteNode : AddicionalStatementNode
+    public class AddListenNode : AdditionalStatementNode
     {
         public IdNode Identifier { get; set; }
-        public AddDeallocatteNode(int line, int column) : base(line, column)
+        public AddListenNode(int line, int column) : base(line, column)
         {
         }
 

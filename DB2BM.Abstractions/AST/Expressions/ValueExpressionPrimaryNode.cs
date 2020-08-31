@@ -6,11 +6,11 @@ using System.Text;
 
 namespace DB2BM.Abstractions.AST.Expressions
 {
-    public class ove : ExpressionNode
+    public class ValueExpressionPrimaryNode : ExpressionNode
     {
         public SelectStmtNonParensNode SelectStmtNonParens { get; set; }
         public List<IndirectionNode> Indirections { get; set; }
-        public ove(int line, int column) : base(line, column)
+        public ValueExpressionPrimaryNode(int line, int column) : base(line, column)
         {
         }
 

@@ -15,7 +15,7 @@ using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Arithmetics;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Comparison;
 using DB2BM.Abstractions.AST.Expressions.Operators.Unarys.Logicals;
 using DB2BM.Abstractions.AST.Statements;
-using DB2BM.Abstractions.AST.Statements.Addicional;
+using DB2BM.Abstractions.AST.Statements.Additional;
 using DB2BM.Abstractions.AST.Statements.Base;
 using DB2BM.Abstractions.AST.Statements.Control;
 using DB2BM.Abstractions.AST.Statements.Cursor;
@@ -253,7 +253,7 @@ namespace DB2BM.Abstractions.Visitors
 
         public abstract TResult Visit(IndirectionVarNode node);//
 
-        public abstract TResult Visit(ove node);//
+        public abstract TResult Visit(ValueExpressionPrimaryNode node);//
         
         public abstract TResult Visit(IntervalFieldNode node);//
 
