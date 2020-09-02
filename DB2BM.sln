@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DB2BM.Extensions.PgSql", "D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DB2BM", "DB2BM\DB2BM.csproj", "{DE9A66D4-8AD7-4ADC-838A-815890C3369B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB2BM.Utils", "DB2BM.Utils\DB2BM.Utils.csproj", "{551FD4D4-BDF5-4692-94A8-A0F6DF49E666}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DB2BM.Utils", "DB2BM.Utils\DB2BM.Utils.csproj", "{551FD4D4-BDF5-4692-94A8-A0F6DF49E666}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB2BM.Extensions.Semantic", "DB2BM.Extensions.Semantic\DB2BM.Extensions.Semantic.csproj", "{8BE3773D-553A-48FC-8AAA-631FA7F9D7CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{551FD4D4-BDF5-4692-94A8-A0F6DF49E666}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{551FD4D4-BDF5-4692-94A8-A0F6DF49E666}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{551FD4D4-BDF5-4692-94A8-A0F6DF49E666}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BE3773D-553A-48FC-8AAA-631FA7F9D7CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BE3773D-553A-48FC-8AAA-631FA7F9D7CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BE3773D-553A-48FC-8AAA-631FA7F9D7CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BE3773D-553A-48FC-8AAA-631FA7F9D7CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

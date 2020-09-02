@@ -20,11 +20,29 @@ namespace DB2BM.Extensions
     [Orm("efcore")]
     public class EFCoreCodeGenerator : IGenerator
     {
-        public DatabaseCatalog Catalog { get; set; }
+        private bool prepareCatalog;
+        private DatabaseCatalog catalog;
+
+        public DatabaseCatalog Catalog
+        {
+            get
+            {
+                if (!prepareCatalog && catalog != null)
+                {
+                    catalog.PrepareCatalog(TypesMapper);
+                    prepareCatalog = true;
+                }
+                return catalog;
+            }
+            set
+            {
+                catalog = value;
+                prepareCatalog = false;
+            }
+        }
 
         public string OutputPath { get; set; }
 
-        
         private TemplateGroupString functionsTemplate;
         private TemplateGroupString internalFunctionsTemplate;
         private TemplateGroupString modelTemplate;
@@ -72,12 +90,13 @@ namespace DB2BM.Extensions
 
         public Dictionary<string, string> TypesMapper
         {
-            get => SemanticVisitor.TypesMapper;
+            get => SemanticAnalizer.TypesMapper;
         }
+
+        public ISemanticAnalyzer SemanticAnalizer { get; set; }
 
         public void GenerateSPs(string className)
         {
-            Catalog.PrepareCatalog(TypesMapper);
             GenerateDatabaseFunctions(className, null);
         }
 
@@ -101,8 +120,7 @@ namespace DB2BM.Extensions
             var internalFunctionUse = new List<StoreProcedure>();
             foreach (var f in functions)
             {
-                var semanticVisitor = new SemanticVisitor(Catalog, f);
-                var errors = f.Definition.Accept(semanticVisitor);
+                var errors = SemanticAnalizer.Check(f);
                 if (errors.Count > 0)
                     InsertErrors(errors, f);
                 else
@@ -138,7 +156,6 @@ namespace DB2BM.Extensions
 
         public void GenerateDbContext()
         {
-            Catalog.PrepareCatalog(TypesMapper);
             var temp = DbContextTemplate.GetInstanceOf("gen_context");
             DbContextTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var parameters = new DbContextTemplateParam()
@@ -155,7 +172,6 @@ namespace DB2BM.Extensions
 
         public void GenerateEntities()
         {
-            Catalog.PrepareCatalog(TypesMapper);
             foreach (var item in Catalog.Tables.Values)
             {
                 var temp = ModelTemplate.GetInstanceOf("gen_model");
@@ -187,7 +203,6 @@ namespace DB2BM.Extensions
 
         public void GenerateSPs(string className, List<string> functionNames)
         {
-            Catalog.PrepareCatalog(TypesMapper);
             GenerateDatabaseFunctions(className, functionNames);
         }
     }

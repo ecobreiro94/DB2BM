@@ -19,6 +19,7 @@
     <ProjectReference Include="..\DB2BM.Extensions.PgSql\DB2BM.Extensions.PgSql.csproj" />
     <ProjectReference Include="..\DB2BM.Extensions.EFCore\DB2BM.Extensions.EFCore.csproj" />
     <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />
+    <ProjectReference Include="..\DB2BM.Extensions.Semantic\DB2BM.Extensions.Semantic.csproj" />
   </ItemGroup>
 
   <ItemGroup>

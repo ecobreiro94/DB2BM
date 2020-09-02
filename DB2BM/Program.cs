@@ -24,14 +24,14 @@ namespace DB2BM
 
             var catalogHandlerType = typeof(ICatalogHandler);
             var generatorType = typeof(IGenerator);
-            var sintacticAnaliceType = typeof(ISyntacticAnalyzer);
-
+            var syntacticAnalyzerType = typeof(ISyntacticAnalyzer);
+            var semanticAnalyzerType = typeof(ISemanticAnalyzer);
             var files = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*.dll");
 
             var catalogHandlerTypes = new List<Type>();
             var generatorTypes = new List<Type>();
-            var syntacticAnalizerTypes = new List<Type>();
-
+            var syntacticAnalyzerTypes = new List<Type>();
+            var semanticAnalyzerTypes = new List<Type>();
             foreach (var f in files)
             {
                 var assembly = Assembly.LoadFrom(f);
@@ -44,27 +44,33 @@ namespace DB2BM
                     t => t.GetInterfaces().Contains(generatorType) &&
                     (t.GetCustomAttribute<OrmAttribute>()?.Name == orm)));
 
-                syntacticAnalizerTypes.AddRange(assembly.GetTypes().Where(
-                    t => t.GetInterfaces().Contains(sintacticAnaliceType) &&
+                syntacticAnalyzerTypes.AddRange(assembly.GetTypes().Where(
+                    t => t.GetInterfaces().Contains(syntacticAnalyzerType) &&
                     (t.GetCustomAttribute<DbmsAttribute>()?.Name == dbms)));
+
+                semanticAnalyzerTypes.AddRange(assembly.GetTypes().Where(
+                    t => t.GetInterfaces().Contains(semanticAnalyzerType)));
             }
 
             var msg = "";
-            if (catalogHandlerTypes.Count > 1 || syntacticAnalizerTypes.Count > 1)
+            if (catalogHandlerTypes.Count > 1 || syntacticAnalyzerTypes.Count > 1)
                 msg += "Existe mas de una Extensión para " + dbms + ".";
-            else if (catalogHandlerTypes.Count == 0 || syntacticAnalizerTypes.Count == 0)
+            else if (catalogHandlerTypes.Count == 0 || syntacticAnalyzerTypes.Count == 0)
                 msg += "No existe una Extensión para " + dbms + ".";
             if (generatorTypes.Count > 1)
                 msg += "Existe mas de una Extensión para " + orm + ".";
             else if (generatorTypes.Count == 0)
                 msg += "No existe una Extensión para " + orm + ".";
-
+            else if (semanticAnalyzerTypes.Count > 1)
+                msg += "Existe mas de una Extension para el Análisis Semántico.";
+            else if (semanticAnalyzerTypes.Count == 0)
+                msg += "No existe una Extensión para el Análisis Semántico.";
             if (msg != "") throw new Exception(msg);
 
             serviceCollection = serviceCollection.AddSingleton(catalogHandlerType, catalogHandlerTypes.Single());
             serviceCollection = serviceCollection.AddSingleton(generatorType, generatorTypes.Single());
-            serviceCollection = serviceCollection.AddSingleton(sintacticAnaliceType, syntacticAnalizerTypes.Single());
-
+            serviceCollection = serviceCollection.AddSingleton(syntacticAnalyzerType, syntacticAnalyzerTypes.Single());
+            serviceCollection = serviceCollection.AddSingleton(semanticAnalyzerType, semanticAnalyzerTypes.Single());
             return serviceCollection.BuildServiceProvider();
         }
 
@@ -123,14 +129,17 @@ namespace DB2BM
 
                 if (o.Generate.Any() && o.OutputPath != null)
                 {
-                    var generator = serviceProvider.GetService<IGenerator>();
-                    generator.Catalog = catalog;
-                    generator.OutputPath = o.OutputPath;
-
                     var syntacticAnalyzer = serviceProvider.GetService<ISyntacticAnalyzer>();
 
-                    var serviceName = $"{catalog.Name.ToPascal()}Service";
+                    var semanticAnalyzer = serviceProvider.GetService<ISemanticAnalyzer>();
+                    semanticAnalyzer.Catalog = catalog;
 
+                    var generator = serviceProvider.GetService<IGenerator>();
+                    generator.Catalog = catalog;
+                    generator.SemanticAnalizer = semanticAnalyzer;
+                    generator.OutputPath = o.OutputPath;
+
+                    var serviceName = $"{catalog.Name.ToPascal()}Service";
 
                     if (o.Generate.Contains(GenerationItem.All))
                     {

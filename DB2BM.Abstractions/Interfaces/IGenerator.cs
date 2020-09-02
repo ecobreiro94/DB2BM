@@ -9,6 +9,8 @@ namespace DB2BM.Abstractions.Interfaces
     {
         DatabaseCatalog Catalog { get; set; }
 
+        ISemanticAnalyzer SemanticAnalizer { get; set; }
+
         string OutputPath { get; set; }
         
         void GenerateEntities();

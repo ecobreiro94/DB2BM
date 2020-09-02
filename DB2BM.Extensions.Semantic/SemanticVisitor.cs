@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DB2BM.Abstractions;
 using DB2BM.Abstractions.AST;
 using DB2BM.Abstractions.AST.AfterOps;
 using DB2BM.Abstractions.AST.Declarations;
@@ -28,14 +29,14 @@ using DB2BM.Abstractions.AST.Statements.Data;
 using DB2BM.Abstractions.AST.Types;
 using DB2BM.Abstractions.Entities;
 using DB2BM.Abstractions.Entities.UserDefined;
+using DB2BM.Abstractions.Interfaces;
 using DB2BM.Abstractions.Visitors;
 using Newtonsoft.Json;
 
-namespace DB2BM.Abstractions
+namespace DB2BM.Extensions.Semantic
 {
     public class SemanticVisitor : ASTVisitor<List<string>>
     {
-        DatabaseCatalog Catalog;
         StoreProcedure Sp;
         Dictionary<string, (string, IdentifierType, object) > VariablesTypes;
         Dictionary<string, (List<string>, string)> CursorTypes;
@@ -61,6 +62,8 @@ namespace DB2BM.Abstractions
             }
         }
 
+        DatabaseCatalog Catalog;
+
         public SemanticVisitor(DatabaseCatalog catalog, StoreProcedure sp)
         {
             Catalog = catalog;
@@ -82,6 +85,8 @@ namespace DB2BM.Abstractions
             VariablesTypes = variablesTypes;
             CursorTypes = new Dictionary<string, (List<string>, string)>(cursorInfo);
         }
+
+
 
         public override List<string> Visit(FunctionBlockNode node)
         {
@@ -2246,5 +2251,6 @@ namespace DB2BM.Abstractions
         {
             throw new NotImplementedException();
         }
+
     }
 }
