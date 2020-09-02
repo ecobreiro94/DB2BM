@@ -9,13 +9,11 @@ using DB2BM.Abstractions.Interfaces;
 namespace DB2BM.Extensions.PgSql
 {
     [Dbms("postgre")]
-    public class PostgreSyntacticAnalizer : ISyntacticAnalyzer
+    public class PostgreSyntacticAnalyzer : ISyntacticAnalyzer
     {
         #region ISyntacticAnalyzer implementation
         private void SetAst(StoreProcedure sp)
         {
-            if (sp.Name == "testselect21")
-            { }
             var parser = new Parser.FunctionDefinitionConstructor(sp.PLDefinition);
             sp.Definition = parser.GetAST();
         }

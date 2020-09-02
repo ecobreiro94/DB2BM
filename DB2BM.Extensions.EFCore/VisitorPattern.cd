@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2BM.Abstractions.Visitors.ASTVisitor&lt;TResult&gt;">
+    <Position X="15.25" Y="3.5" Width="2" />
+    <Members>
+      <Method Name="ASTVisitor" Hidden="true" />
+    </Members>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Extensions.EFCore.Visitors.EFCoreCodeGenVisitor">
+    <Position X="16.25" Y="5.75" Width="2.25" />
+    <Members>
+      <Method Name="FindJoinColumns" Hidden="true" />
+      <Method Name="FindTableNameByFieldName" Hidden="true" />
+      <Method Name="GenFromItem" Hidden="true" />
+      <Method Name="SetType" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQEAAAAAQABAEAAAAAQAAAAAACAAJA=</HashCode>
+      <FileName>Visitors\EFCoreCodeGenVisitor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.SemanticVisitor">
+    <Position X="14" Y="5.75" Width="2" />
+    <Members>
+      <Method Name="LessEqualType" Hidden="true" />
+      <Method Name="SemanticVisitor" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.ASTNode">
+    <Position X="12.25" Y="7.5" Width="1.5" />
+    <Members>
+      <Method Name="ASTNode" Hidden="true" />
+      <Property Name="Column" Hidden="true" />
+      <Property Name="Line" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Extensions.EFCoreCodeGenerator">
+    <Position X="11" Y="3.5" Width="2.25" />
+    <Members>
+      <Property Name="DbContextTemplate" Hidden="true" />
+      <Property Name="FunctionsTemplate" Hidden="true" />
+      <Method Name="GenerateDbContext" Hidden="true" />
+      <Method Name="GenerateEntities" Hidden="true" />
+      <Method Name="GenerateInternalFunctions" Hidden="true" />
+      <Method Name="GenerateSPs" Hidden="true" />
+      <Property Name="InternalFunctionsTemplate" Hidden="true" />
+      <Property Name="ModelTemplate" Hidden="true" />
+      <Property Name="OutputPath" Hidden="true" />
+      <Method Name="PrepareCatalog" Hidden="true" />
+      <Method Name="PrepareFunctions" Hidden="true" />
+      <Method Name="PrepareTables" Hidden="true" />
+      <Method Name="PrepareUdts" Hidden="true" />
+      <Method Name="SelectFunctions" Hidden="true" />
+      <Property Name="TypesMapper" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>ABCAAAAAAAQIEAAEAACAAAA5QCABMAAEIACAEACQIAA=</HashCode>
+      <FileName>EFCoreCodeGenerator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ReturnStmtNode">
+    <Position X="10.75" Y="12.75" Width="1.5" />
+    <Members>
+      <Property Name="Expression" Hidden="true" />
+      <Method Name="ReturnStmtNode" Hidden="true" />
+      <Property Name="Stmt" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ControlStatementNode" Collapsed="true">
+    <Position X="10.75" Y="11.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.StatementNode" Collapsed="true">
+    <Position X="10.75" Y="9.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.FunctionBlockNode">
+    <Position X="12.5" Y="9.5" Width="1.75" />
+    <Members>
+      <Property Name="Declarations" Hidden="true" />
+      <Property Name="ExceptionStatement" Hidden="true" />
+      <Method Name="FunctionBlockNode" Hidden="true" />
+      <Property Name="Statements" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Binarys.OtherOpBinaryNode">
+    <Position X="12.5" Y="12.75" Width="2.25" />
+    <Members>
+      <Property Name="Op" Hidden="true" />
+      <Method Name="OtherOpBinaryNode" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Binarys.BinaryExpressionNode" Collapsed="true">
+    <Position X="12.75" Y="11.5" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.ExpressionNode" Collapsed="true">
+    <Position X="14.5" Y="9.5" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.ASTNode" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="13" Y="8.604" />
+        <Point X="13" Y="9.125" />
+        <Point X="15.25" Y="9.125" />
+        <Point X="15.25" Y="9.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.VarcharNode" Collapsed="true">
+    <Position X="14.75" Y="11.5" Width="1.25" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.IndirectionVarNode" Collapsed="true">
+    <Position X="16.5" Y="11.5" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.OpNode" Collapsed="true">
+    <Position X="16.25" Y="9.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.IdNode" Collapsed="true">
+    <Position X="15.5" Y="12.75" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.Expressions.ExpressionNode" ManuallyRouted="true">
+      <Path>
+        <Point X="15.25" Y="10.191" />
+        <Point X="15.25" Y="11.124" />
+        <Point X="16.25" Y="11.124" />
+        <Point X="16.25" Y="12.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier />
+  </Class>
+  <Interface Name="DB2BM.Abstractions.Interfaces.IGenerator">
+    <Position X="11.5" Y="1" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="DB2BM.Abstractions.Visitors.IVisitable">
+    <Position X="12" Y="5.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
