@@ -102,15 +102,16 @@ namespace DB2BM.Extensions
             foreach (var f in functions)
             {
                 var semanticVisitor = new SemanticVisitor(Catalog, f);
-                var errors = semanticVisitor.VisitNode(f.Definition);
+                var errors = f.Definition.Accept(semanticVisitor);
                 if (errors.Count > 0)
                     InsertErrors(errors, f);
                 else
                 {
                     var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
-                    var codeContext = genCodeVisitor.VisitNode(f.Definition);
+                    var codeContext = f.Definition.Accept(genCodeVisitor);
                     f.BMDefinition = codeContext.Code;
                     internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
+
                 }
             }
             temp.Add("db", new FunctionsTemplateParams()
