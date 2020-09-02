@@ -141,9 +141,9 @@ namespace DB2BM
                             null :
                             JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                         if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                            generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName);
+                            generator.GenerateSPs((parameters?.ClassName != null) ? parameters.ClassName : serviceName);
                         else
-                            generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName,
+                            generator.GenerateSPs((parameters?.ClassName != null) ? parameters.ClassName : serviceName,
                                 parameters.FunctionsNames);
                     }
                     else

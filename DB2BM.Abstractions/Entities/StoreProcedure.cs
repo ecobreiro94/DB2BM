@@ -1,5 +1,7 @@
-﻿using System;
+﻿using DB2BM.Abstractions.AST;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DB2BM.Abstractions.Entities
@@ -20,13 +22,15 @@ namespace DB2BM.Abstractions.Entities
         
         public string LanguageDefinition { get; set; }
 
-        public AST.ASTNode Definition { get; set; }
+        public ASTNode Definition { get; set; }
 
         public string PLDefinition { get; set; }
 
         public string BMDefinition { get; set; }
 
         public bool ExistsParams =>  Params.Count != 0;
+
+        public List<Parameter> INParams { get => Params.Where(p => !p.OutMode).ToList(); }
 
         public override string ToString()
         {

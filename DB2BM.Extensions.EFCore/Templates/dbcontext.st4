@@ -7,7 +7,7 @@ using %db.Name; format="pascal"%.Model;
 
 namespace %db.Name; format="pascal"%.DAL
 {
-    public class %db.Name; format="pascal"%DbContext : DbContext
+    public abstract partial class %db.Name; format="pascal"%DbContext : DbContext
     {
         %db.Tables:gen_dbset(); separator = "\n"%
 
@@ -16,11 +16,6 @@ namespace %db.Name; format="pascal"%.DAL
         public %db.Name; format="pascal"%DbContext(DbContextOptions options, string connectionString)
         {
             ConnectionString = connectionString;
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseNpgsql(ConnectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -39,7 +39,6 @@ namespace DB2BM.Abstractions
         StoreProcedure Sp;
         Dictionary<string, (string, IdentifierType, object) > VariablesTypes;
         Dictionary<string, (List<string>, string)> CursorTypes;
-
         List<(string, List<string>, string)> PredefinedFunctions = new List<(string, List<string>, string)>()
         {
             { ("SUM", new List<string>(){"int"}, "int") },
@@ -51,8 +50,8 @@ namespace DB2BM.Abstractions
             { ("SUM", new List<string>(){"TimeSpan"}, "TimeSpan") }
         };
 
-        private Dictionary<string, string> typeMapper;
-        public Dictionary<string, string> TypesMapper
+        private static Dictionary<string, string> typeMapper;
+        public static Dictionary<string, string> TypesMapper
         {
             get
             {
@@ -83,6 +82,7 @@ namespace DB2BM.Abstractions
             VariablesTypes = variablesTypes;
             CursorTypes = new Dictionary<string, (List<string>, string)>(cursorInfo);
         }
+
         public override List<string> Visit(FunctionBlockNode node)
         {
             var errors = new List<string>();
@@ -114,7 +114,8 @@ namespace DB2BM.Abstractions
                 else
                     instanceName = instanceIdentifier.Text;
                 if (!VariablesTypes.ContainsKey(instanceName))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, instanceIdentifier.Line, instanceIdentifier.Column));
+                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name,
+                        instanceIdentifier.Line, instanceIdentifier.Column));
                 else
                     VariablesTypes.Add(node.Identifier.Text, VariablesTypes[instanceName]);
             }

@@ -421,8 +421,8 @@ namespace DB2BM.Extensions.PgSql.Parser
             {
                 var currentsExps = new List<ExpressionNode>();
                 while (startExpressions < expressions.Length &&
-                    (expressions[startExpressions].Start.Column < stmt[i].Start.Column &&
-                    expressions[startExpressions].Start.Line <= stmt[i].Start.Line))
+                //    (expressions[startExpressions].Start.Column < stmt[i].Start.Column ||
+                    expressions[startExpressions].Start.Line <= stmt[i].Start.Line)//)
                     currentsExps.Add(Visit(expressions[startExpressions++]) as ExpressionNode);
                 var c = new CaseElement()
                 {
@@ -1307,7 +1307,7 @@ namespace DB2BM.Extensions.PgSql.Parser
                 foreach (var s in elseStmts.function_statement())
                     result.ElseStatements.Add(Visit(s) as StatementNode);
 
-            for (int i = 0; i < end; i++)
+            for (int i = 0; i <= end; i++)
             {
                 var lStmts = new List<StatementNode>();
                 foreach (var s in statements[i].function_statement())

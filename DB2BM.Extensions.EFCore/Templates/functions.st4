@@ -56,15 +56,15 @@ public <function.ReturnType> <function.Name; format="pascal">()
     <function.BMDefinition:gen_body()>
 }
     <else>
-public <function.ReturnType> <function.Name; format="pascal"> (<function.Params:gen_param(); separator = ", ">)
+public <function.ReturnType> <function.Name; format="pascal"> (<function.INParams:gen_param(); separator = ", ">)
 {
-    <function.TextBody:gen_body()>
+    <function.BMDefinition:gen_body()>
 }
     <endif>
 >>
 
 gen_param(p) ::= <<
-<if(p.OutMode)><else><p.DestinyType> <p.Name><endif>
+<p.DestinyType> <p.Name; format="camel">
 >>
 
 gen_body(body) ::= <<

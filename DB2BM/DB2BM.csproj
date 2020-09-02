@@ -21,4 +21,10 @@
     <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="sp_list.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

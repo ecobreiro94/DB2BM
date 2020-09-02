@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DB2BM.Abstractions.Entities.UserDefined;
+using DB2BM.Utils;
 
 namespace DB2BM.Abstractions.Entities
 {

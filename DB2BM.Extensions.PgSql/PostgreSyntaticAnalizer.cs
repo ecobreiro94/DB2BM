@@ -14,6 +14,8 @@ namespace DB2BM.Extensions.PgSql
         #region ISyntacticAnalyzer implementation
         private void SetAst(StoreProcedure sp)
         {
+            if (sp.Name == "testselect21")
+            { }
             var parser = new Parser.FunctionDefinitionConstructor(sp.PLDefinition);
             sp.Definition = parser.GetAST();
         }

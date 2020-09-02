@@ -19,7 +19,7 @@ namespace DB2BM.Extensions.EFCore.Utils
                     goto default;
                 case "camel":
                     if (o is string o2_str)
-                        return o2_str.ToPascal();
+                        return o2_str.ToCamel();
                     goto default;
                 default:
                     return base.ToString(o, formatString, culture);
