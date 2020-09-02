@@ -9,7 +9,7 @@ using DB2BM.Abstractions.Interfaces;
 namespace DB2BM.Extensions.PgSql
 {
     [Dbms("postgre")]
-    public class PostgreSyntaticAnalizer : ISyntacticAnalyzer
+    public class PostgreSyntacticAnalyzer : ISyntacticAnalyzer
     {
         #region ISyntacticAnalyzer implementation
         private void SetAst(StoreProcedure sp)

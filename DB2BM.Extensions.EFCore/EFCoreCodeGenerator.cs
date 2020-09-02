@@ -18,7 +18,7 @@ using DB2BM.Extensions.EFCore.Visitors;
 namespace DB2BM.Extensions
 {
     [Orm("efcore")]
-    public class ProjectGenerator : IGenerator
+    public class EFCoreCodeGenerator : IGenerator
     {
         public DatabaseCatalog Catalog { get; set; }
 
@@ -235,10 +235,9 @@ namespace DB2BM.Extensions
             foreach (var f in functions)
             {
                 var semanticVisitor = new SemanticVisitor(Catalog, f);
-                var errors = semanticVisitor.VisitNode(f.Definition);
-                var genCodeVisitor = new GenCodeVisitor(Catalog, f);
-                f.BMDefinition = genCodeVisitor.VisitNode(f.Definition).Code;
-                f.BMDefinition = "";
+                var errors = f.Definition.Accept(semanticVisitor);
+                var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
+                f.BMDefinition = f.Definition.Accept(genCodeVisitor).Code;
             }
             temp.Add("db", new FunctionsTemplateParams() { NameSpace = Catalog.Name, ClassName = className ,Functions = functions });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);

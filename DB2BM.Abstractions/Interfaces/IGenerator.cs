@@ -10,8 +10,6 @@ namespace DB2BM.Abstractions.Interfaces
         DatabaseCatalog Catalog { get; set; }
 
         string OutputPath { get; set; }
-
-        //Dictionary<string, string> TypesMapper { get; set; }
         
         void GenerateEntities();
 

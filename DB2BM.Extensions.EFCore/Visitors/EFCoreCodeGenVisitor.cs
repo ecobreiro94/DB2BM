@@ -32,7 +32,7 @@ using System.Text;
 
 namespace DB2BM.Extensions.EFCore.Visitors
 {
-    public class GenCodeVisitor : ASTVisitor<CodeContext>
+    public class EFCoreCodeGenVisitor : ASTVisitor<CodeContext>
     {
         DatabaseCatalog Catalog;
         StoreProcedure Sp;
@@ -79,7 +79,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
             }
         }
-        public GenCodeVisitor(DatabaseCatalog catalog, StoreProcedure sp)
+        public EFCoreCodeGenVisitor(DatabaseCatalog catalog, StoreProcedure sp)
         {
             Catalog = catalog;
             Sp = sp;

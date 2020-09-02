@@ -1,68 +1,299 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="DB2BM.Abstractions.AST.ASTNode" Collapsed="true">
-    <Position X="11" Y="2.75" Width="1.5" />
+    <Position X="19" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AIAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
       <FileName>AST\ASTNode.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.BoolNode" Collapsed="true">
-    <Position X="9.75" Y="5.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\BoolNode.cs</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.DefaultNode" Collapsed="true">
-    <Position X="8" Y="5.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\DefaultNode.cs</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="DB2BM.Abstractions.AST.Expressions.ExpressionNode" Collapsed="true">
-    <Position X="11" Y="3.75" Width="1.5" />
+    <Position X="14" Y="4" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
       <FileName>AST\Expressions\ExpressionNode.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.Float4Node" Collapsed="true">
-    <Position X="15" Y="5.5" Width="1.5" />
+  <Class Name="DB2BM.Abstractions.AST.AfterOps.AfterOpsNode" Collapsed="true">
+    <Position X="16.5" Y="4" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\Float4Node.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\AfterOps\AfterOpsNode.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.Float8Node" Collapsed="true">
-    <Position X="17" Y="5.5" Width="1.5" />
+  <Class Name="DB2BM.Abstractions.AST.Declarations.DataTypeDeclarationNode" Collapsed="true">
+    <Position X="10.75" Y="4" Width="2" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.ASTNode" ManuallyRouted="true">
+      <Path>
+        <Point X="19.75" Y="2.062" />
+        <Point X="19.75" Y="3.659" />
+        <Point X="11.75" Y="3.659" />
+        <Point X="11.75" Y="4" />
+      </Path>
+    </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\Float8Node.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Declarations\DataTypeDeclarationNodes.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Declarations.TypeDeclarationNode" Collapsed="true">
+    <Position X="8.75" Y="4" Width="1.75" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.ASTNode" ManuallyRouted="true">
+      <Path>
+        <Point X="19.75" Y="2.062" />
+        <Point X="19.75" Y="3.588" />
+        <Point X="9.625" Y="3.588" />
+        <Point X="9.625" Y="4" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Declarations\TypeDeclarationNode.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.Int8Node" Collapsed="true">
-    <Position X="13.25" Y="5.5" Width="1.5" />
+  <Class Name="DB2BM.Abstractions.AST.Expressions.FunctionCalls.DataTimeFunctionNode" Collapsed="true">
+    <Position X="7.75" Y="6.5" Width="2" />
     <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\Int8Node.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\FunctionCalls\DataTimeFunctionNodes.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.IntNode" Collapsed="true">
-    <Position X="11.5" Y="5.5" Width="1.5" />
+  <Class Name="DB2BM.Abstractions.AST.Expressions.FunctionCalls.FunctionCallNode" Collapsed="true">
+    <Position X="10.5" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\IntNode.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\FunctionCalls\FunctionCallNode.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DB2BM.Abstractions.AST.Expressions.Atomics.MultiplyNode" Collapsed="true">
-    <Position X="17" Y="6.75" Width="1.5" />
+  <Class Name="DB2BM.Abstractions.AST.Expressions.FunctionCalls.StringValueFunctionNode" Collapsed="true">
+    <Position X="10" Y="6.5" Width="2" />
     <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>AST\Expressions\Atomics\MultiplyNode.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\FunctionCalls\StringValueFunctionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.FunctionCalls.SystemFunctionNode" Collapsed="true">
+    <Position X="12.25" Y="6.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\FunctionCalls\SystemFunctionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.FunctionCalls.XmlFunctionNode" Collapsed="true">
+    <Position X="14.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\FunctionCalls\XmlFunctionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Binarys.Arithmetics.ArithmeticsBinaryExpressionNode" Collapsed="true">
+    <Position X="16" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\Operators\Binarys\Arithmetics\ArithmeticsBinaryExpressionNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Binarys.BinaryExpressionNode" Collapsed="true">
+    <Position X="17" Y="5.25" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.Expressions.ExpressionNode" FixedToPoint="true">
+      <Path>
+        <Point X="14.75" Y="4.691" />
+        <Point X="14.75" Y="4.95" />
+        <Point X="17.688" Y="4.95" />
+        <Point X="17.688" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\Operators\Binarys\BinaryExpressionNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Binarys.LikeNode" Collapsed="true">
+    <Position X="18" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\Operators\Binarys\LikesNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Ternarys.TernaryExpressionNode" Collapsed="true">
+    <Position X="19.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAgAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\Operators\Ternarys\TernaryExpressionNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.Operators.Unarys.UnaryExpressionNode" Collapsed="true">
+    <Position X="13.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>AST\Expressions\Operators\Unarys\UnaryExpressionNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.ArrayExpressionNode" Collapsed="true">
+    <Position X="21.25" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\ArrayExpressionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.ArrayToSelectNode" Collapsed="true">
+    <Position X="22.25" Y="6.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>gIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\ArrayExpressionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.ArrayElementsNode" Collapsed="true">
+    <Position X="20.25" Y="6.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\ArrayExpressionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Expressions.TypeCoercionNode" Collapsed="true">
+    <Position X="23.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Expressions\TypeCoercionNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Base.BaseStatementNode" Collapsed="true">
+    <Position X="27" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Base\BaseStatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.StatementNode" Collapsed="true">
+    <Position X="30" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\StatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ControlStatementNode" Collapsed="true">
+    <Position X="29.5" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ControlStatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.LoopStartNode" Collapsed="true">
+    <Position X="28.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\LoopStartNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Data.DataStatementNode" Collapsed="true">
+    <Position X="32" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Data\DataStatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.FromItemNode" Collapsed="true">
+    <Position X="25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\FromItemNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.FromPrimaryNode" Collapsed="true">
+    <Position X="25" Y="5.25" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.FromItemNode" FixedFromPoint="true">
+      <Path>
+        <Point X="25.75" Y="4.691" />
+        <Point X="25.75" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\FromPrimaryNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.SelectBodyNode" Collapsed="true">
+    <Position X="34.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAMAQAAAAIAAAAAAAAAEAAEAAAAAAAAAAgIAAAA=</HashCode>
+      <FileName>AST\Statements\ISelectBody.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.MessageStatementNode" Collapsed="true">
+    <Position X="35.75" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\MessageStatementNodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Types.PredefinedTypeNode" Collapsed="true">
+    <Position X="6.75" Y="4" Width="1.75" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.ASTNode" ManuallyRouted="true">
+      <Path>
+        <Point X="19.75" Y="2.062" />
+        <Point X="19.75" Y="3.61" />
+        <Point X="7.625" Y="3.61" />
+        <Point X="7.625" Y="4" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Types\PredefinedTypeNode.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Base.AssingStmtNode" Collapsed="true">
+    <Position X="25.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAIAAAAACAA=</HashCode>
+      <FileName>AST\Statements\Base\AssingStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Base.ExecuteStmtNode" Collapsed="true">
+    <Position X="27.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAgAAAAAAAAAAAAAAAAAACAQAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Base\ExecuteStmtNode.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Base.PerformStmtNode" Collapsed="true">
+    <Position X="34.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AoAAACAAAAAAAAAAAAAEAAAAAABAACAAAAABASAAAAA=</HashCode>
+      <FileName>AST\Statements\Base\PerformStmtNode.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.CallFunctionCallNode" Collapsed="true">
+    <Position X="30.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>AST\Statements\Control\CallFunctionCallNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.LoopStmtNode" Collapsed="true">
+    <Position X="30.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAACAAAAAAAgAAAAAAAAAAAAAAAAAASIAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\LoopStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ReturnStmtNode" Collapsed="true">
+    <Position X="32.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAIAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ReturnStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.WhileLoopNode" Collapsed="true">
+    <Position X="28.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\WhileLoopNode.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Font Name="Segoe UI" Size="9" />
