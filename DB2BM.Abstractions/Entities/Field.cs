@@ -30,10 +30,15 @@ namespace DB2BM.Abstractions.Entities
         public bool IsUDTEnum { get; set; }
     }
 
-    public class UdtField : BaseField { }
+    public class UdtField : BaseField
+    {
+        public UserDefined.UserDefinedType Udt { get; set; }
+    }
 
     public class TableField : BaseField
     {
+        public Table Table { get; set; }
+
         public string GenName { get; set; }
 
         public AttributeField Attribute { get; set; }

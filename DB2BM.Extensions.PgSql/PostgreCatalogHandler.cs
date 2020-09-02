@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using System.IO;
 using Newtonsoft.Json;
 using DB2BM.Utils;
+using System.Linq.Expressions;
+using DB2BM.Extensions.PgSql.Entities;
 
 namespace DB2BM.Extensions.PgSql
 {
@@ -39,8 +41,15 @@ namespace DB2BM.Extensions.PgSql
             return "Host=" + options.Host + ";Username=" + options.User + ";Password=" + options.Password + ";Database=" + options.DataBaseName;
         }
 
-        private IEnumerable<StoreProcedure> GetFunctions()
-        {           
+        private IEnumerable<StoreProcedure> GetFunctions(bool internals)
+        {
+            var filter = internals ?
+                (Expression<Func<PostgreFunction, bool>>)(f => f.SpecificSchema == "pg_catalog") :
+                (Expression<Func<PostgreFunction, bool>>)
+                    (f => f.SpecificSchema == "public" && f.FunctionType == "FUNCTION" &&
+                          (f.LanguageDefinition == "SQL" || f.LanguageDefinition == "PLPGSQL") &&
+                          f.ReturnType != "trigger");
+
             var functs = InternalDbContext.Functions
                 .FromSqlRaw(
                    @"
@@ -57,10 +66,8 @@ namespace DB2BM.Extensions.PgSql
                         information_schema.routines
                    ")
                 .Include(x => x.Params)
-                .Where(
-                    f => f.SpecificSchema == "public" && f.FunctionType == "FUNCTION" &&
-                        (f.LanguageDefinition == "SQL" || f.LanguageDefinition == "PLPGSQL") &&
-                        f.ReturnType != "trigger")
+                .Where(filter)
+                .AsEnumerable()
                 .Select(f =>
                     new StoreProcedure()
                     { 
@@ -78,130 +85,11 @@ namespace DB2BM.Extensions.PgSql
                                   OrdinalPosition = p.OrdinalPosition,
                                   IsResult = p.IsResult,
                                   ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true)
-                              }).ToList()
-                    
+                              }).ToList()                    
                     });
             return functs;
-
-            //foreach (var f in functs)
-            //{
-            //    string definition = f.Definition;
-            //    if (f.LanguageDefinition == "SQL")
-            //        definition = "BEGIN " + definition;
-
-            //    var function = new StoreProcedure()
-            //    {
-            //        Name = f.Name,
-            //        SpecificName = f.SpecificName,
-            //        LanguageDefinition = f.LanguageDefinition,
-            //        PLDefinition = definition,
-            //        ReturnClause = f.ReturnClause,
-            //        ReturnType = f.ReturnType
-            //    };
-
-            //    var parms = new List<Parameter>();
-            //    var parameters = f.Params.ToList();
-
-            //    foreach (var p in parameters)
-            //        parms.Add(new Parameter()
-            //        {
-            //            Name = p.Name,
-            //            OriginType = p.TypeName,
-            //            OrdinalPosition = p.OrdinalPosition,
-            //            IsResult = p.IsResult,
-            //            ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true),
-            //        });
-
-            //    function.Params = parms;
-            //    yield return function;
-            //}
         }
-
-        private IEnumerable<StoreProcedure> GetInternalFunctions()
-        {
-            var functs = InternalDbContext.Functions
-               .FromSqlRaw(
-                  @"
-                      select 
-                        specific_name,
-                        routine_name,
-                        routine_schema,
-                        routine_type,
-                        type_udt_name,
-                        PG_GET_FUNCTION_RESULT(CAST(REPLACE(specific_name, CONCAT(routine_name, '_'), '') AS INT)) AS return_clause,
-                        routine_definition,
-                        external_language
-                      from
-                        information_schema.routines
-                   ")
-               .Include(x => x.Params)
-               .Where(f => f.SpecificSchema == "pg_catalog")
-               .Select(f =>
-                   new StoreProcedure()
-                   {
-                       Name = f.Name,
-                       SpecificName = f.SpecificName,
-                       ReturnType = f.ReturnType,
-                       IsInternal = true,
-                       Params = f.Params.Select(p =>
-                         new Parameter()
-                         {
-                             Name = p.Name,
-                             OriginType = p.TypeName,
-                             OrdinalPosition = p.OrdinalPosition,
-                             IsResult = p.IsResult,
-                             ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true)
-                         }).ToList()
-                   });
-
-            return functs;
-
-            //foreach (var f in functs)
-            //{
-            //    var function = new StoreProcedure()
-            //    {
-            //        Name = f.Name,
-            //        SpecificName = f.SpecificName,
-            //        ReturnType = f.ReturnType,
-            //        IsInternal = true
-            //    };
-
-            //    var parms = new List<Parameter>();
-            //    var parameters = f.Params.ToList();
-
-            //    foreach (var p in parameters)
-            //        parms.Add(new Parameter()
-            //        {
-            //            Name = p.Name,
-            //            OriginType = p.TypeName,
-            //            OrdinalPosition = p.OrdinalPosition,
-            //            IsResult = p.IsResult,
-            //            ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true),
-            //        });
-
-            //    function.Params = parms;
-            //    yield return function;
-            //}
-        }
-
-        private bool ValueType(string type)
-        {
-            if (type == "int" ||
-                type == "long" ||
-                type == "uint" ||
-                type == "ulong" ||
-                type == "long" ||
-                type == "short" ||
-                type == "decimal" ||
-                type == "float" ||
-                type == "double" ||
-                type == "DateTime" ||
-                type == "char" ||
-                type == "bool")
-                return true;
-            return false;
-        }
-
+        
         private IEnumerable<Table> GetTables()
         {
             var tables =
@@ -228,32 +116,6 @@ namespace DB2BM.Extensions.PgSql
                        });
 
             return tables;
-
-            //foreach (var t in tables)
-            //{
-            //    var fields = t.Fields.OrderBy(x => x.OrdinalPosition);
-
-            //    var tableFields = new List<TableField>();
-            //    var table = new Table() { Name = t.Name };
-            //    foreach (var f in fields)
-            //    {
-            //        var name = f.Name.ToPascal();
-            //        tableFields.Add(new TableField()
-            //        {
-            //            GenName = (table.Name == f.Name) ? "_" + name : name,
-            //            Name = f.Name,
-            //            IsNullable = (f.IsNullable == "SI") ? true : false,
-            //            OrdinalPosition = f.OrdinalPosition,
-            //            OriginType = f.TypeName,
-            //            Default = f.Default,
-            //            CharacterMaximumLength = f.CharacterMaximumLength,
-            //        });
-
-            //    }
-            //    tableFields.Sort((x, y) => (x.OrdinalPosition <= y.OrdinalPosition) ? -1 : 1);
-            //    table.Fields = tableFields;
-            //    yield return table;
-            //}
         }
 
         private IEnumerable<Relationship> GetRelations(IDictionary<string,Table> tables)
@@ -262,6 +124,7 @@ namespace DB2BM.Extensions.PgSql
                                 .Include(x => x.KeyColumn)
                                 .Include(x => x.RelationColumn)
                                 .Where(r => r.SchemaName == "public" && r.ConstraintType != "CHECK")
+                                .AsEnumerable()
                                 .Select(r =>
                                     new Relationship()
                                     {
@@ -270,23 +133,8 @@ namespace DB2BM.Extensions.PgSql
                                         Column = tables[r.TableName].Fields.First(c => c.Name == r.KeyColumn.ColumnName),
                                         ReferenceColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
                                         Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
-                                    });
-                                                               
+                                    });                                                            
             return relations;
-
-            //foreach (var r in relations)
-            //{
-            //    var table = tables.First(f => f.Name == r.TableName);
-            //    var rTable = tables.First(f => f.Name == r.RelationColumn.TableName);
-            //    yield return new Relationship()
-            //    {
-            //        Table = table.First(f => f.Name == r.TableName),
-            //        ReferenceTable = tables.First(f => f.Name == r.RelationColumn.TableName),
-            //        Column = table.Fields.First(c => c.Name == r.KeyColumn.ColumnName),
-            //        ReferenceColumn = rTable.Fields.First(c => c.Name == r.RelationColumn.ColumnName),
-            //        Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
-            //    };
-            //}
         }
 
         private IEnumerable<BaseUserDefinedType> GetUserDefineds()
@@ -323,7 +171,6 @@ namespace DB2BM.Extensions.PgSql
                        Options = x.Select(o => o.Option)
                    });
             return udts.Union(enumsOptions);
-
         }
 
         private IEnumerable<Sequence> GetSequences()
@@ -349,23 +196,23 @@ namespace DB2BM.Extensions.PgSql
                 Name = Options.DataBaseName,
             };
 
-            var tables = GetTables().ToList();
+            var tables = GetTables();
             var catalogTables = new Dictionary<string, Table>();
             foreach (var t in tables)
                 catalogTables.Add(t.Name, t);
             var relations = GetRelations(catalogTables).ToList();
 
-            var functions = GetFunctions().ToList();
+            var functions = GetFunctions(false);
             var catalogFunctions = new Dictionary<string, StoreProcedure>();
             foreach (var f in functions)
                 catalogFunctions.Add(f.SpecificName, f);
 
-            var internalFunctions = GetInternalFunctions().ToList();
+            var internalFunctions = GetFunctions(true);
             var catalogInternalFunctions = new Dictionary<string, StoreProcedure>();
             foreach (var f in internalFunctions)
                 catalogInternalFunctions.Add(f.SpecificName, f);
 
-            var userDefineds = GetUserDefineds().ToList();
+            var userDefineds = GetUserDefineds();
             var catalogUserDefinedType = new Dictionary<string, BaseUserDefinedType>();
             foreach (var u in userDefineds)
                 catalogUserDefinedType.Add(u.TypeName, u);

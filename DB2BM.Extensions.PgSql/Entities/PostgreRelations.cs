@@ -35,8 +35,8 @@ namespace DB2BM.Extensions.PgSql.Entities
 
         public string ConstraintType { get; set; }
 
-        public PostgreRelationColumnUsage RelationColumn { get; set; }
+        public virtual PostgreRelationColumnUsage RelationColumn { get; set; }
 
-        public PostgreKeyColumnUsage KeyColumn { get; set; }
+        public virtual PostgreKeyColumnUsage KeyColumn { get; set; }
     }
 }
