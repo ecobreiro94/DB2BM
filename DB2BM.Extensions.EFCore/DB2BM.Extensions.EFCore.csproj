@@ -16,16 +16,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="internal_functions_body.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Templates\dbcontext.st4">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Templates\functions.st4">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Templates\internal_functions.st4">
+    <None Update="Templates\model.st4">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Templates\model.st4">
+    <None Update="Templates\partial_dbcontext.st4">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -210,6 +210,7 @@ namespace DB2BM.Extensions.Utils
                 }
             }
         }
+
         public static void PrepareCatalog(this DatabaseCatalog catalog,Dictionary<string, string> typesMapper)
         {
             PrepareTables(catalog, typesMapper);

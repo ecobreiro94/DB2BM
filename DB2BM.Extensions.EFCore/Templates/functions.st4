@@ -1,17 +1,3 @@
-gen_internal_functions(db) ::= <<
-using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace <db.NameSpace; format="pascal">
-{
-    public static class InternalFunctions
-    {
-        <db.Functions:gen_internal_function(); separator="\n">
-    } 
-}
->>
-
 gen_functions(db) ::= <<
 using System;
 using System.Collections;
@@ -35,36 +21,22 @@ namespace <db.NameSpace; format="pascal">.DAL
 }
 >>
 
-gen_internal_function(function) ::= <<
-    <if(!function.ExistsParams)>
-public static <function.ReturnType> <function.Name>() 
-{
-    throw new NotImplementedException();
-}
-    <else>
-public static <function.ReturnType> <function.Name> (<function.Params:gen_param(); separator = ", ">)
-{
-    throw new NotImplementedException();
-}
-    <endif>
->>
-
 gen_function(function) ::= <<
     <if(!function.ExistsParams)>
 /*
-<function.PLDefinition>
+<function.OriginalCode>
 */
 public <function.ReturnType> <function.Name; format="pascal">() 
 {
-    <function.BMDefinition:gen_body()>
+    <function.GeneratedCode:gen_body()>
 }
     <else>
 /*
-<function.PLDefinition>
+<function.OriginalCode>
 */
 public <function.ReturnType> <function.Name; format="pascal"> (<function.INParams:gen_param(); separator = ", ">)
 {
-    <function.BMDefinition:gen_body()>
+    <function.GeneratedCode:gen_body()>
 }
     <endif>
 >>

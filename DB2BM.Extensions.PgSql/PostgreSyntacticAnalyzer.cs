@@ -14,8 +14,8 @@ namespace DB2BM.Extensions.PgSql
 
         public void Parse(StoreProcedure sp)
         {
-            var parser = new Parser.FunctionDefinitionConstructor(sp.PLDefinition);
-            sp.Definition = parser.GetAST();
+            var parser = new Parser.FunctionDefinitionConstructor(sp.OriginalCode);
+            sp.AST = parser.GetAST();
         }
     }
 }

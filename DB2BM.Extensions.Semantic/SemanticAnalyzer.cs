@@ -16,7 +16,7 @@ namespace DB2BM.Extensions.Semantic
         public List<SemanticResult> Check(StoreProcedure sp)
         {
             var semanticVisitor = new SemanticVisitor(Catalog, sp);
-            return sp.Definition.Accept(semanticVisitor);
+            return sp.AST.Accept(semanticVisitor);
         }
     }
 }

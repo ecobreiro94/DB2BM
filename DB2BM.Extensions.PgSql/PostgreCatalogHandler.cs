@@ -74,7 +74,7 @@ namespace DB2BM.Extensions.PgSql
                         Name = f.Name,
                         SpecificName = f.SpecificName,
                         LanguageDefinition = f.LanguageDefinition,
-                        PLDefinition = f.LanguageDefinition == "SQL" ? "BEGIN " + f.Definition : f.Definition,
+                        OriginalCode = f.LanguageDefinition == "SQL" ? "BEGIN " + f.Definition : f.Definition,
                         ReturnClause = f.ReturnClause,
                         ReturnType = f.ReturnType,
                         Params = f.Params.Select(p =>

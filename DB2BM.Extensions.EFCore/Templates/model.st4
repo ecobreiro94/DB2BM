@@ -28,7 +28,7 @@ gen_ctor_params(field) ::= <<
 
 gen_assig(field) ::= <<
 <if(field.IsProperty || field.IsPrimaryKey || field.IsForeingKey)>
-this.<field.GenName> = <field.GenName; format="camel">;
+<field.GenName> = <field.GenName; format="camel">;
 <endif>
 >>
 

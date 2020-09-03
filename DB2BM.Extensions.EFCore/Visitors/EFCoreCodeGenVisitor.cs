@@ -645,7 +645,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = $"EF.Functions.Like(DbContext.Lower({lOpCodeContext.Code}), DbContext.Lower({rOpCodeContext.Code}))"
+                Code = $"EF.Functions.Like(({lOpCodeContext.Code}).ToLower()), ({rOpCodeContext.Code}).ToLower())",
             };
         }
 
@@ -667,7 +667,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = $"!EF.Functions.Like(DbContext.Lower({lOpCodeContext.Code}), DbContext.Lower({rOpCodeContext.Code}))"
+                Code = $"!EF.Functions.Like(({lOpCodeContext.Code}).ToLower(), ({rOpCodeContext.Code}).ToLower())",
             };
         }
 
@@ -675,6 +675,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var lOpCodeContext = VisitNode(node.LeftOperand);
             var rOpCodeContext = VisitNode(node.RightOperand);
+            InternalFunctionUse.Add(Catalog.InternalFunctions.Values.FirstOrDefault(f => f.Name == "similar_escape"));
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
@@ -689,7 +690,11 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = $"!DbContext.SimilarEscape({lOpCodeContext.Code}, {rOpCodeContext.Code})"
+                Code = $"!DbContext.SimilarEscape({lOpCodeContext.Code}, {rOpCodeContext.Code})",
+                InternalFunctionUse = new List<StoreProcedure>()
+                {
+                    Catalog.InternalFunctions.Values.FirstOrDefault(f => f.Name == "similar_escope")
+                }
             };
         }
 
@@ -1219,12 +1224,15 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 var expsCodeContext = new List<CodeContext>();
                 foreach (var item in node.Expressions)
                     expsCodeContext.Add(VisitNode(item));
-                codeContext.Code = (node.Greatest)
-                    ? $"DbContext.Greatest" : $"DbContext.Least";
+                
                 var parametersCode = "";
                 foreach (var expCode in expsCodeContext)
                     parametersCode = (parametersCode == "") ? expCode.Code : ", " + expCode.Code;
                 codeContext.Code += $"({parametersCode})";
+                if (node.Greatest)
+                    codeContext.Code += $".Max()";
+                else
+                    codeContext.Code += $".Min()";
             }
             return codeContext;
         }

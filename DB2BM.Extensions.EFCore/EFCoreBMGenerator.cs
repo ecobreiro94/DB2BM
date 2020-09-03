@@ -65,7 +65,7 @@ namespace DB2BM.Extensions
             get
             {
                 if (internalFunctionsTemplate == null)
-                    internalFunctionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\internal_functions.st4"));
+                    internalFunctionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\partial_dbcontext.st4"));
                 return internalFunctionsTemplate;
             }
         }
@@ -109,12 +109,11 @@ namespace DB2BM.Extensions
         private void InsertErrors(IEnumerable<SemanticResult> errors, StoreProcedure Sp)
         {
             foreach (var error in errors)
-                Sp.BMDefinition += "//" + (error as ErrorResult).Menssage + "\n";
+                Sp.GeneratedCode += "//" + (error as ErrorResult).Menssage + "\n";
         }
 
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
         {
-            var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
             var functions = SelectFunctions(functionNames);
             var visitFunction = new List<StoreProcedure>();
             var internalFunctionUse = new List<StoreProcedure>();
@@ -130,8 +129,8 @@ namespace DB2BM.Extensions
                     else
                     {
                         var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
-                        var codeContext = f.Definition.Accept(genCodeVisitor);
-                        f.BMDefinition = codeContext.Code;
+                        var codeContext = f.AST.Accept(genCodeVisitor);
+                        f.GeneratedCode = codeContext.Code;
                         internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
                     }
                     visitFunction.Add(f);
@@ -159,12 +158,13 @@ namespace DB2BM.Extensions
                                 functionsQueue.Enqueue(newFunction);
                         }
                         var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
-                        var codeContext = f.Definition.Accept(genCodeVisitor);
-                        f.BMDefinition = codeContext.Code;
+                        var codeContext = f.AST.Accept(genCodeVisitor);
+                        f.GeneratedCode = codeContext.Code;
                         internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
                     }
                 }
             }
+            var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
             temp.Add("db", new FunctionsTemplateParams()
                                                 {
                                                     NameSpace = Catalog.Name,
@@ -179,12 +179,31 @@ namespace DB2BM.Extensions
 
         private void GenerateInternalFunctions(List<StoreProcedure> internalFunctions)
         {
-            //var temp = InternalFunctionsTemplate.GetInstanceOf("gen_doc");
-            //temp.Add("db", new FunctionsTemplateParams() { NameSpace = Catalog.Name, LikeBody = a });
-            //InternalFunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-            //var r = temp.Render();
-
-            //File.WriteAllText(OutputPath + @"\InternalFunctions.cs", r);
+            if (internalFunctions?.Count > 0)
+            {
+                var bodys = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("internal_functions_body.json"));
+                foreach (var function in internalFunctions)
+                {
+                    if (bodys.ContainsKey(function.Name))
+                    {
+                        if (bodys[function.Name] != null)
+                            function.GeneratedCode = bodys[function.Name];
+                        else
+                            function.GeneratedCode = "throw new NotImplementedException();";
+                    }
+                    else
+                        function.GeneratedCode = "throw new NotImplementedException();";
+                }
+                var temp = InternalFunctionsTemplate.GetInstanceOf("gen_context");
+                temp.Add("arg", new InternalFunctionTemplateParams()
+                                                {
+                                                    Functions = internalFunctions,
+                                                    Name = Catalog.Name
+                                                });
+                FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+                var r = temp.Render();
+                File.WriteAllText(OutputPath + @"\" + Catalog.Name.ToPascal() + "DbContext.cs", r);
+            }
         }
 
         public void GenerateDbContext()

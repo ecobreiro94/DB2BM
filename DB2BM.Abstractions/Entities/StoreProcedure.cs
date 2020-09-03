@@ -22,11 +22,11 @@ namespace DB2BM.Abstractions.Entities
         
         public string LanguageDefinition { get; set; }
 
-        public ASTNode Definition { get; set; }
+        public ASTNode AST { get; set; }
 
-        public string PLDefinition { get; set; }
+        public string OriginalCode { get; set; }
 
-        public string BMDefinition { get; set; }
+        public string GeneratedCode { get; set; }
 
         public bool ExistsParams =>  Params.Count != 0;
 
