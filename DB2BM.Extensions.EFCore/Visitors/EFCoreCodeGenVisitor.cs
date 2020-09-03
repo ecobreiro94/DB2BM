@@ -157,10 +157,13 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 var typeDeclaration = node.TypeDeclaration as OrdinalTypeDeclarationNode;
                 if (typeDeclaration.Expression == null)
+                {
+                    var dataTypeCode = VisitNode(typeDeclaration.DataType).Code;
                     return new CodeContext()
                     {
-                        Code = $"{VisitNode(typeDeclaration.DataType).Code} {VisitNode(node.Identifier).Code.ToCamel()};"
+                        Code = $"{dataTypeCode} {VisitNode(node.Identifier).Code.ToCamel()} = default({dataTypeCode});"
                     };
+                }
                 else
                     return new CodeContext()
                     {

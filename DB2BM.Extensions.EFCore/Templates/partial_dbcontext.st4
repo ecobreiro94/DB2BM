@@ -7,7 +7,7 @@ using %arg.Name; format="pascal"%.Model;
 
 namespace %arg.Name; format="pascal"%.DAL
 {
-    public abstract partial class %arg.Name; format="pascal"%DbContext.Service : DbContext
+    public abstract partial class %arg.Name; format="pascal"%DbContext : DbContext
     {
         %arg.Functions:gen_function(); separator="\n"%
     }
