@@ -167,7 +167,11 @@ namespace DB2BM.Extensions.Utils
                     sp.ReturnType = type + "[]";
                 else if (typesMapper.ContainsKey(sp.ReturnType))
                     sp.ReturnType = typesMapper[sp.ReturnType];
-
+                else
+                {
+                    if (tables.Any(t => t.Name == sp.ReturnType))
+                        sp.ReturnType = sp.ReturnType.ToPascal();
+                }
                 foreach (var p in sp.Params)
                 {
                     if (p.Name == null)
@@ -207,6 +211,8 @@ namespace DB2BM.Extensions.Utils
                         parameter.DestinyType = typesMapper[parameter.OriginType];
                     else
                         parameter.DestinyType = parameter.OriginType;
+                    if (parameter.Name == null || parameter.Name == "")
+                        parameter.Name = "p" + parameter.OrdinalPosition;
                 }
             }
         }

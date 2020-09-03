@@ -41,7 +41,7 @@ namespace DB2BM.Extensions.PgSql
             modelBuilder.Entity<PostgreUDEnumOption>(config => config.HasNoKey());
 
             modelBuilder.HasDefaultSchema("information_schema");
-
+            
             modelBuilder.Entity<PostgreTable>(config =>
             {
                 config.HasKey(t => t.Name);

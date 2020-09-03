@@ -3,9 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using <db.NameSpace; format="pascal">.DAL;
 using <db.NameSpace; format="pascal">.Model;
 
-namespace <db.NameSpace; format="pascal">.DAL
+namespace <db.NameSpace; format="pascal">.Service
 {
     public class <db.ClassName>
     {

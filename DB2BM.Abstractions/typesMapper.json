@@ -57,9 +57,9 @@
   "name": "string",
   "char": "char",
   "geometry": "postgisGeometry",
-  "record": "object",
-  "array": "object[]",
-  "any": "object",
-  "anyarray": "object[]",
-  "anyelement": "object"
+  "record": "dynamic",
+  "array": "dynamic[]",
+  "any": "dynamic",
+  "anyarray": "dynamic[]",
+  "anyelement": "dynamic"
 }

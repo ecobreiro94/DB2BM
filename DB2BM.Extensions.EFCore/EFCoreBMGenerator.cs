@@ -43,7 +43,9 @@ namespace DB2BM.Extensions
         public ISemanticAnalyzer SemanticAnalyzer { get; set; }
         public ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
 
-        public string OutputPath { get; set; }
+        public string OutputPathService { get; private set; }
+        public string OutputPathDAL { get; private set; }
+        public string OutputPathModel { get; private set; }
 
         private TemplateGroupString functionsTemplate;
         private TemplateGroupString internalFunctionsTemplate;
@@ -93,6 +95,22 @@ namespace DB2BM.Extensions
         public Dictionary<string, string> TypesMapper
         {
             get => SemanticAnalyzer.TypesMapper;
+        }
+
+        public void SetOutputPath(string path, bool isProject)
+        {
+            if (!isProject)
+            {
+                OutputPathDAL = path;
+                OutputPathModel = path;
+                OutputPathService = path;
+            }
+            else
+            {
+                OutputPathDAL = Path.Combine(path, "DAL");
+                OutputPathModel = Path.Combine(path, "Model");
+                OutputPathService = Path.Combine(path, "Service");
+            }
         }
 
         public void GenerateService(string className)
@@ -173,7 +191,7 @@ namespace DB2BM.Extensions
                                                 });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();
-            File.WriteAllText(OutputPath + @"\" + className +".cs", r);
+            Write(OutputPathService, className +".cs", r);
             GenerateInternalFunctions(internalFunctionUse);
         }
 
@@ -181,8 +199,9 @@ namespace DB2BM.Extensions
         {
             if (internalFunctions?.Count > 0)
             {
+                var functions = internalFunctions.Distinct();
                 var bodys = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("internal_functions_body.json"));
-                foreach (var function in internalFunctions)
+                foreach (var function in functions)
                 {
                     if (bodys.ContainsKey(function.Name))
                     {
@@ -197,12 +216,12 @@ namespace DB2BM.Extensions
                 var temp = InternalFunctionsTemplate.GetInstanceOf("gen_context");
                 temp.Add("arg", new InternalFunctionTemplateParams()
                                                 {
-                                                    Functions = internalFunctions,
+                                                    Functions = functions.ToList(),
                                                     Name = Catalog.Name
                                                 });
-                FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+                InternalFunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                 var r = temp.Render();
-                File.WriteAllText(OutputPath + @"\" + Catalog.Name.ToPascal() + "DbContext.cs", r);
+                Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.Service.cs", r);
             }
         }
 
@@ -219,7 +238,7 @@ namespace DB2BM.Extensions
             };
             temp.Add("db", parameters);
             var r = temp.Render();
-            File.WriteAllText(this.OutputPath + @"\" + Catalog.Name.ToPascal() + "DbContext.cs", r);
+            Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.cs", r);
         }
 
         public void GenerateEntities()
@@ -230,7 +249,7 @@ namespace DB2BM.Extensions
                 temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Table = item });
                 ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                 var r = temp.Render();
-                File.WriteAllText(this.OutputPath + @"\" + item.Name.ToPascal() + ".cs", r);
+                Write(OutputPathModel, item.Name.ToPascal() + ".cs", r);
             }
             foreach (var item in Catalog.UserDefinedTypes.Values)
             {
@@ -240,7 +259,7 @@ namespace DB2BM.Extensions
                     temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Enum = (UserDefinedEnumType)item });
                     ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                     var r = temp.Render();
-                    File.WriteAllText(this.OutputPath + @"\" + item.TypeName.ToPascal() + ".cs", r);
+                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
                 }
                 if (item is UserDefinedType)
                 {
@@ -248,7 +267,7 @@ namespace DB2BM.Extensions
                     temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, UDT = (UserDefinedType)item });
                     ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                     var r = temp.Render();
-                    File.WriteAllText(this.OutputPath + @"\" + item.TypeName.ToPascal() + ".cs", r);
+                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
                 }
             }
         }
@@ -257,5 +276,13 @@ namespace DB2BM.Extensions
         {
             GenerateDatabaseFunctions(className, functionNames);
         }
+
+        public void Write(string path, string csName, string code)
+        {
+            if (!File.Exists(path))
+                Directory.CreateDirectory(path);
+            File.WriteAllText(Path.Combine(path, csName), code);
+        }
+
     }
 }

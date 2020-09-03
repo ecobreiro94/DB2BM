@@ -13,7 +13,7 @@ namespace DB2BM.Abstractions.Interfaces
 
         ISemanticAnalyzer SemanticAnalyzer { get; set; }
 
-        string OutputPath { get; set; }
+        void SetOutputPath(string path, bool isProject);
         
         void GenerateEntities();
 

@@ -171,6 +171,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 var typeDeclaration = node.TypeDeclaration as CursorDeclarationNode;
                 var arguments = "";
+                UseFoundVariable = true;
                 foreach (var arg in typeDeclaration.ArgumentList)
                     arguments += (arguments == "") ? VisitNode(arg).Code : VisitNode(arg).Code + ",";
                 
@@ -237,6 +238,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var codeContext = new CodeContext();
             if (TypesMapper.ContainsKey(node.TypeReturn))
                 codeContext.Code = TypesMapper[node.TypeReturn];
+            else if(Catalog.Tables.Values.Any(t => t.Name == node.TypeReturn))
+                codeContext.Code = node.TypeReturn.ToPascal();
             else codeContext.Code = node.TypeReturn;
             return codeContext;
         }
@@ -451,7 +454,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     codeContext.Code += $"{GetIdentation}case {exp.Code}:\n" +
                                         GetIdentation + "{\n";
                     foreach (var stmt in item.Stmts)
-                        codeContext.Code += $"{GetIdentation}{VisitNode(stmt).Code}\n";
+                        codeContext.Code += $"{GetIdentation}{VisitNode(stmt).Code}\n + break;";
                     codeContext.Code += GetIdentation + "}\n";
                 }
                 if (node.ElseStmts != null)
@@ -459,7 +462,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     codeContext.Code += $"{GetIdentation}default:\n" +
                                         GetIdentation + "{\n";
                     foreach (var stmt in node.ElseStmts)
-                        codeContext.Code += $"{GetIdentation}{VisitNode(stmt).Code}\n";
+                        codeContext.Code += $"{GetIdentation}{VisitNode(stmt).Code}\n + break;";
                     codeContext.Code += GetIdentation + "}\n";
                 }
                 identation--;
@@ -703,7 +706,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var opCodeContext = VisitNode(node.Operand);
             return new CodeContext()
             {
-                Code = $"!{opCodeContext.Code}",
+                Code = $"!({opCodeContext.Code})",
                 UserFunctionCall = opCodeContext.UserFunctionCall
             };
         }
@@ -1484,9 +1487,9 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 else if (node.Union && node.SetQualifier.ToLower() == "distinct")
                     codeContext.Code = $"({selectOpCodeContext1.Code}).Intersect({selectOpCodeContext2.Code})";
                 else if (node.Union && node.SetQualifier.ToLower() == "all")
-                    codeContext.Code = $"({VisitNode(node.SelectOps[0])}).Concat({VisitNode(node.SelectOps[1])})";
+                    codeContext.Code = $"({VisitNode(node.SelectOps[0]).Code}).Concat({VisitNode(node.SelectOps[1]).Code})";
                 else
-                    codeContext.Code = $"({VisitNode(node.SelectOps[0])}).Except({VisitNode(node.SelectOps[1])})";
+                    codeContext.Code = $"({VisitNode(node.SelectOps[0]).Code}).Except({VisitNode(node.SelectOps[1]).Code})";
                 return codeContext;
             }
         }
@@ -1617,16 +1620,23 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(IdNode node)
         {
-            if (node.Text == "FOUND")
-                UseFoundVariable = true;
             var codeContext = new CodeContext();
-            if (node.Type == IdentifierType.TableField && TablesAlias.ContainsKey(node.TableField.Table.Name))
+
+            if (node.Text == "FOUND")
             {
-                codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
+                UseFoundVariable = true;
+                codeContext.Code = node.Text;
             }
-            else if(node.Type == IdentifierType.UdtField)
-                codeContext.Code = node.Text.ToPascal();
-            else codeContext.Code = node.Text.ToCamel();
+            else
+            {
+                if (node.Type == IdentifierType.TableField && TablesAlias.ContainsKey(node.TableField.Table.Name))
+                {
+                    codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
+                }
+                else if (node.Type == IdentifierType.UdtField)
+                    codeContext.Code = node.Text.ToPascal();
+                else codeContext.Code = node.Text.ToCamel();
+            }
             return codeContext;
         }
 
@@ -1905,6 +1915,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             else if (node.Expression != null)
             {
+                UseFoundVariable = true;
                 var expCodeContext = VisitNode(node.Expression);
                 return new CodeContext()
                 {
@@ -1914,6 +1925,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             else if (node.Stmt != null)
             {
+                UseFoundVariable = true;
                 var stmtCodeContext = VisitNode(node.Stmt);
                 stmtCodeContext.Code = stmtCodeContext.Code.Replace(";", "");
                 return new CodeContext()
@@ -2216,6 +2228,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForIdListLoopNode node)
         {
+            UseFoundVariable = true;
             var identifiersCodeContexts = new List<CodeContext>();
             foreach (var identifier in node.Identifiers)
                 identifiersCodeContexts.Add(VisitNode(identifier));
@@ -2229,6 +2242,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForCursorLoopNode node)
         {
+            UseFoundVariable = true;
             var cursorCodeContext = VisitNode(node.Cursor);
             var identifierCodeContext = VisitNode(node.Identifier);
             var codeContext = new CodeContext();
@@ -2242,6 +2256,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForeachLoopNode node)
         {
+            UseFoundVariable = true;
             var codeContext = new CodeContext();
             var idsCodeContext = new List<CodeContext>();
             foreach (var id in node.Identifiers)

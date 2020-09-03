@@ -7,18 +7,18 @@ using %arg.Name; format="pascal"%.Model;
 
 namespace %arg.Name; format="pascal"%.DAL
 {
-    public abstract partial class %arg.Name; format="pascal"%DbContext : DbContext
+    public abstract partial class %arg.Name; format="pascal"%DbContext.Service : DbContext
     {
-        %arg.Functions:gen_function(); separator="/n"%
+        %arg.Functions:gen_function(); separator="\n"%
     }
 }
 >>
 
 gen_function(function) ::= <<
 [DbFunction("%function.Name%")]
-public %function.ReturnType% %function.Name; format="pascal"% (%function.Params:gen_param(); separator=","%)
+public %function.ReturnType% %function.Name; format="pascal"%(%function.Params:gen_param(); separator=","%)
 {
-    %function.BMDefinition%
+    %function.GeneratedCode%
 }
 >>
 

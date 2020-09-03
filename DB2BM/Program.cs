@@ -138,7 +138,7 @@ namespace DB2BM
                     generator.Catalog = catalog;
                     generator.SyntacticAnalyzer = syntacticAnalyzer;
                     generator.SemanticAnalyzer = semanticAnalyzer;
-                    generator.OutputPath = o.OutputPath;
+                    generator.SetOutputPath(o.OutputPath, o.Project);
 
                     var serviceName = $"{catalog.Name.ToPascal()}Service";
 
