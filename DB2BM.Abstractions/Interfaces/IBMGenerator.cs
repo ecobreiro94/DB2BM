@@ -5,7 +5,7 @@ using DB2BM.Abstractions.Entities;
 
 namespace DB2BM.Abstractions.Interfaces
 {
-    public interface IGenerator
+    public interface IBMGenerator
     {
         DatabaseCatalog Catalog { get; set; }
 
@@ -17,10 +17,10 @@ namespace DB2BM.Abstractions.Interfaces
         
         void GenerateEntities();
 
-        void GenerateSPs(string className);
-
-        void GenerateSPs(string className, List<string> functionNames);
-
         void GenerateDbContext();
+
+        void GenerateService(string className);
+
+        void GenerateService(string className, List<string> functionNames);
     }
 }

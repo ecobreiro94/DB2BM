@@ -23,7 +23,7 @@ namespace DB2BM
             IServiceCollection serviceCollection = new ServiceCollection();
 
             var catalogHandlerType = typeof(ICatalogHandler);
-            var generatorType = typeof(IGenerator);
+            var generatorType = typeof(IBMGenerator);
             var syntacticAnalyzerType = typeof(ISyntacticAnalyzer);
             var semanticAnalyzerType = typeof(ISemanticAnalyzer);
             var files = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*.dll");
@@ -134,7 +134,7 @@ namespace DB2BM
                     var semanticAnalyzer = serviceProvider.GetService<ISemanticAnalyzer>();
                     semanticAnalyzer.Catalog = catalog;
 
-                    var generator = serviceProvider.GetService<IGenerator>();
+                    var generator = serviceProvider.GetService<IBMGenerator>();
                     generator.Catalog = catalog;
                     generator.SyntacticAnalyzer = syntacticAnalyzer;
                     generator.SemanticAnalyzer = semanticAnalyzer;
@@ -150,9 +150,9 @@ namespace DB2BM
                             null :
                             JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                         if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                            generator.GenerateSPs((parameters?.ClassName != null) ? parameters.ClassName : serviceName);
+                            generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName);
                         else
-                            generator.GenerateSPs((parameters?.ClassName != null) ? parameters.ClassName : serviceName,
+                            generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName,
                                 parameters.FunctionsNames);
                     }
                     else
@@ -171,9 +171,9 @@ namespace DB2BM
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                             if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName);
+                                generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName);
                             else
-                                generator.GenerateSPs((parameters != null) ? parameters.ClassName : serviceName,
+                                generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName,
                                     parameters.FunctionsNames);
                         }
                     }

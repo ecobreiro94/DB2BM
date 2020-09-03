@@ -18,7 +18,7 @@ using DB2BM.Extensions.EFCore.Visitors;
 namespace DB2BM.Extensions
 {
     [Orm("efcore")]
-    public class EFCoreCodeGenerator : IGenerator
+    public class EFCoreBMGenerator : IBMGenerator
     {
         private bool prepareCatalog;
         private DatabaseCatalog catalog;
@@ -95,7 +95,7 @@ namespace DB2BM.Extensions
             get => SemanticAnalyzer.TypesMapper;
         }
 
-        public void GenerateSPs(string className)
+        public void GenerateService(string className)
         {
             GenerateDatabaseFunctions(className, null);
         }
@@ -234,7 +234,7 @@ namespace DB2BM.Extensions
             }
         }
 
-        public void GenerateSPs(string className, List<string> functionNames)
+        public void GenerateService(string className, List<string> functionNames)
         {
             GenerateDatabaseFunctions(className, functionNames);
         }
