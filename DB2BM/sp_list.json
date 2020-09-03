@@ -1,4 +1,4 @@
 {
     ClassName: null,
-  FunctionsNames: null
+  FunctionsNames: [ "ReturnTest3" ]
 }

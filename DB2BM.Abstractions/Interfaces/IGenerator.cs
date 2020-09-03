@@ -9,7 +9,9 @@ namespace DB2BM.Abstractions.Interfaces
     {
         DatabaseCatalog Catalog { get; set; }
 
-        ISemanticAnalyzer SemanticAnalizer { get; set; }
+        ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
+
+        ISemanticAnalyzer SemanticAnalyzer { get; set; }
 
         string OutputPath { get; set; }
         

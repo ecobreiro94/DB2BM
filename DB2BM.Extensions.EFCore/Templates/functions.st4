@@ -51,11 +51,17 @@ public static <function.ReturnType> <function.Name> (<function.Params:gen_param(
 
 gen_function(function) ::= <<
     <if(!function.ExistsParams)>
+/*
+<function.PLDefinition>
+*/
 public <function.ReturnType> <function.Name; format="pascal">() 
 {
     <function.BMDefinition:gen_body()>
 }
     <else>
+/*
+<function.PLDefinition>
+*/
 public <function.ReturnType> <function.Name; format="pascal"> (<function.INParams:gen_param(); separator = ", ">)
 {
     <function.BMDefinition:gen_body()>

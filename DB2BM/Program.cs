@@ -136,14 +136,14 @@ namespace DB2BM
 
                     var generator = serviceProvider.GetService<IGenerator>();
                     generator.Catalog = catalog;
-                    generator.SemanticAnalizer = semanticAnalyzer;
+                    generator.SyntacticAnalyzer = syntacticAnalyzer;
+                    generator.SemanticAnalyzer = semanticAnalyzer;
                     generator.OutputPath = o.OutputPath;
 
                     var serviceName = $"{catalog.Name.ToPascal()}Service";
 
                     if (o.Generate.Contains(GenerationItem.All))
                     {
-                        syntacticAnalyzer.Parse(generator.Catalog);
                         generator.GenerateEntities();
                         generator.GenerateDbContext();
                         var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
@@ -167,7 +167,6 @@ namespace DB2BM
                         }
                         if (o.Generate.Contains(GenerationItem.SPs))
                         {
-                            syntacticAnalyzer.Parse(generator.Catalog);
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));

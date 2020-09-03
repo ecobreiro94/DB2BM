@@ -22,7 +22,6 @@ namespace DB2BM.Extensions
     {
         private bool prepareCatalog;
         private DatabaseCatalog catalog;
-
         public DatabaseCatalog Catalog
         {
             get
@@ -40,6 +39,9 @@ namespace DB2BM.Extensions
                 prepareCatalog = false;
             }
         }
+
+        public ISemanticAnalyzer SemanticAnalyzer { get; set; }
+        public ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
 
         public string OutputPath { get; set; }
 
@@ -90,10 +92,8 @@ namespace DB2BM.Extensions
 
         public Dictionary<string, string> TypesMapper
         {
-            get => SemanticAnalizer.TypesMapper;
+            get => SemanticAnalyzer.TypesMapper;
         }
-
-        public ISemanticAnalyzer SemanticAnalizer { get; set; }
 
         public void GenerateSPs(string className)
         {
@@ -106,37 +106,70 @@ namespace DB2BM.Extensions
                 return Catalog.StoreProcedures.Values.ToList();
             return Catalog.StoreProcedures.Values.Where(f => functionNames.Contains(f.Name)).ToList();
         }
-        private void InsertErrors(List<string> errors, StoreProcedure Sp)
+        private void InsertErrors(IEnumerable<SemanticResult> errors, StoreProcedure Sp)
         {
             foreach (var error in errors)
-                Sp.BMDefinition += error + "\n";
+                Sp.BMDefinition += "//" + (error as ErrorResult).Menssage + "\n";
         }
 
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
         {
             var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
-
             var functions = SelectFunctions(functionNames);
+            var visitFunction = new List<StoreProcedure>();
             var internalFunctionUse = new List<StoreProcedure>();
-            foreach (var f in functions)
+            if (functions.Count == Catalog.StoreProcedures.Count)
             {
-                var errors = SemanticAnalizer.Check(f);
-                if (errors.Count > 0)
-                    InsertErrors(errors, f);
-                else
+                foreach (var f in functions)
                 {
-                    var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
-                    var codeContext = f.Definition.Accept(genCodeVisitor);
-                    f.BMDefinition = codeContext.Code;
-                    internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
-
+                    SyntacticAnalyzer.Parse(f);
+                    var semanticResult = SemanticAnalyzer.Check(f);
+                    var errors = semanticResult.Where(result => result is ErrorResult).ToList();
+                    if (errors.Count > 0)
+                        InsertErrors(errors.Where(e => e is ErrorResult), f);
+                    else
+                    {
+                        var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
+                        var codeContext = f.Definition.Accept(genCodeVisitor);
+                        f.BMDefinition = codeContext.Code;
+                        internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
+                    }
+                    visitFunction.Add(f);
+                }
+            }
+            else
+            {
+                var functionsQueue = new Queue<StoreProcedure>(functions);
+                while (functionsQueue.Count > 0)
+                {
+                    var f = functionsQueue.Dequeue();
+                    visitFunction.Add(f);
+                    SyntacticAnalyzer.Parse(f);
+                    var semanticResult = SemanticAnalyzer.Check(f);
+                    var errors = semanticResult.Where(e => e is ErrorResult).ToList();
+                    if (errors.Count > 0)
+                        InsertErrors(errors, f);
+                    else
+                    {
+                        var newFunctions = semanticResult.Where(result => result is FunctionResult)
+                            .Select(result => (result as FunctionResult).Sp);
+                        foreach (var newFunction in newFunctions)
+                        {
+                            if (!visitFunction.Contains(newFunction) && !functionsQueue.Contains(newFunction))
+                                functionsQueue.Enqueue(newFunction);
+                        }
+                        var genCodeVisitor = new EFCoreCodeGenVisitor(Catalog, f);
+                        var codeContext = f.Definition.Accept(genCodeVisitor);
+                        f.BMDefinition = codeContext.Code;
+                        internalFunctionUse.AddRange(codeContext.InternalFunctionUse);
+                    }
                 }
             }
             temp.Add("db", new FunctionsTemplateParams()
                                                 {
                                                     NameSpace = Catalog.Name,
                                                     ClassName = className ,
-                                                    Functions = functions
+                                                    Functions = visitFunction
                                                 });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();

@@ -35,7 +35,7 @@ using Newtonsoft.Json;
 
 namespace DB2BM.Extensions.Semantic
 {
-    public class SemanticVisitor : ASTVisitor<List<string>>
+    public class SemanticVisitor : ASTVisitor<List<SemanticResult>>
     {
         StoreProcedure Sp;
         Dictionary<string, (string, IdentifierType, object) > VariablesTypes;
@@ -88,9 +88,9 @@ namespace DB2BM.Extensions.Semantic
 
 
 
-        public override List<string> Visit(FunctionBlockNode node)
+        public override List<SemanticResult> Visit(FunctionBlockNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.Declarations != null)
                 foreach (var dec in node.Declarations)
                     errors.AddRange(VisitNode(dec));
@@ -102,11 +102,11 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(DeclarationNode node)
+        public override List<SemanticResult> Visit(DeclarationNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (VariablesTypes.ContainsKey(node.Identifier.Text))
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             if (node.TypeDeclaration is AliasDeclarationNode)
             {
                 var instanceIdentifier = (node.TypeDeclaration as AliasDeclarationNode).Identifier;
@@ -119,8 +119,8 @@ namespace DB2BM.Extensions.Semantic
                 else
                     instanceName = instanceIdentifier.Text;
                 if (!VariablesTypes.ContainsKey(instanceName))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name,
-                        instanceIdentifier.Line, instanceIdentifier.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name,
+                        instanceIdentifier.Line, instanceIdentifier.Column)));
                 else
                     VariablesTypes.Add(node.Identifier.Text, VariablesTypes[instanceName]);
             }
@@ -137,8 +137,8 @@ namespace DB2BM.Extensions.Semantic
                            TypeInfo.TypesInfo.ContainsKey(typeDeclaration.Expression.TypeReturn) &&
                            TypeInfo.TypesInfo[typeDeclaration.DataType.TypeReturn].GeneralType == TypeInfo.TypesInfo[typeDeclaration.Expression.TypeReturn].GeneralType) &&
                            (typeDeclaration.Expression.TypeReturn != typeDeclaration.DataType.TypeReturn))
-                            errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                                Sp.Name, typeDeclaration.Expression.Line, typeDeclaration.Expression.Column));
+                            errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                                Sp.Name, typeDeclaration.Expression.Line, typeDeclaration.Expression.Column)));
                     }
                 }
                 VariablesTypes.Add(node.Identifier.Text, (typeDeclaration.DataType.TypeReturn, IdentifierType.Variable, null));
@@ -168,35 +168,35 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(AliasDeclarationNode node)
+        public override List<SemanticResult> Visit(AliasDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CursorDeclarationNode node)
+        public override List<SemanticResult> Visit(CursorDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(OrdinalTypeDeclarationNode node)
+        public override List<SemanticResult> Visit(OrdinalTypeDeclarationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(OtherTypeNode node)
+        public override List<SemanticResult> Visit(OtherTypeNode node)
         {
             var typeName = node.SchemaQualifiednameNonType.IdentifierNonType.Text.ToLower();
             if (TypesMapper.ContainsKey(typeName))
                 node.TypeReturn = TypesMapper[typeName];
             else
                 node.TypeReturn = typeName;
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
                 errors.AddRange(VisitNode(exp));
             return errors;
         }
 
-        public override List<string> Visit(OtherOpBinaryNode node)
+        public override List<SemanticResult> Visit(OtherOpBinaryNode node)
         {
             var errors = (node.LeftOperand != null) ?
                 VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList() :
@@ -207,221 +207,221 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(DataTypeNode node)
+        public override List<SemanticResult> Visit(DataTypeNode node)
         {
             var errors = VisitNode(node.Type);
             node.TypeReturn = node.Type.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(NCharTypeNode node)
+        public override List<SemanticResult> Visit(NCharTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(NCharVaryingTypeNode node)
+        public override List<SemanticResult> Visit(NCharVaryingTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(NumericTypeNode node)
+        public override List<SemanticResult> Visit(NumericTypeNode node)
         {
             node.TypeReturn = "decimal";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(RealTypeNode node)
+        public override List<SemanticResult> Visit(RealTypeNode node)
         {
             node.TypeReturn = "float";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BigintTypeNode node)
+        public override List<SemanticResult> Visit(BigintTypeNode node)
         {
             node.TypeReturn = "long";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(SmallintTypeNode node)
+        public override List<SemanticResult> Visit(SmallintTypeNode node)
         {
             node.TypeReturn = "short";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BitTypeNode node)
+        public override List<SemanticResult> Visit(BitTypeNode node)
         {
             node.TypeReturn = "short";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(TimeTypeNode node)
+        public override List<SemanticResult> Visit(TimeTypeNode node)
         {
             node.TypeReturn = "TimeSpan";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BitVaryingTypeNode node)
+        public override List<SemanticResult> Visit(BitVaryingTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(VarcharTypeNode node)
+        public override List<SemanticResult> Visit(VarcharTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BooleanTypeNode node)
+        public override List<SemanticResult> Visit(BooleanTypeNode node)
         {
             node.TypeReturn = "bool";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(DecTypeNode node)
+        public override List<SemanticResult> Visit(DecTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(DecimalTypeNode node)
+        public override List<SemanticResult> Visit(DecimalTypeNode node)
         {
             node.TypeReturn = "decimal";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(DollarNumberNode node)
+        public override List<SemanticResult> Visit(DollarNumberNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             int index;
             if (!int.TryParse(new string(node.Text.Skip(1).ToArray()), out index))
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = Sp.Params[--index].DestinyType;
             return errors;
         }
 
-        public override List<string> Visit(DoublePrecisionTypeNode node)
+        public override List<SemanticResult> Visit(DoublePrecisionTypeNode node)
         {
             node.TypeReturn = "double";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(AtTimeZoneNode node)
+        public override List<SemanticResult> Visit(AtTimeZoneNode node)
         {
             node.TypeReturn = "TimeSpan";
             return VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
         }
 
-        public override List<string> Visit(FloatTypeNode node)
+        public override List<SemanticResult> Visit(FloatTypeNode node)
         {
             node.TypeReturn = "float";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IntTypeNode node)
+        public override List<SemanticResult> Visit(IntTypeNode node)
         {
             node.TypeReturn = "int";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IntegerTypeNode node)
+        public override List<SemanticResult> Visit(IntegerTypeNode node)
         {
             node.TypeReturn = "int";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IntervalTypeNode node)
+        public override List<SemanticResult> Visit(IntervalTypeNode node)
         {
             node.TypeReturn = "interval";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CharTypeNode node)
+        public override List<SemanticResult> Visit(CharTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CharVaryingTypeNode node)
+        public override List<SemanticResult> Visit(CharVaryingTypeNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(AddAnalizeNode node)
+        public override List<SemanticResult> Visit(AddAnalizeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddClusterNode node)
+        public override List<SemanticResult> Visit(AddClusterNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddDeallocatteNode node)
+        public override List<SemanticResult> Visit(AddDeallocatteNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddListenNode node)
+        public override List<SemanticResult> Visit(AddListenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddPrepareNode node)
+        public override List<SemanticResult> Visit(AddPrepareNode node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(AddReassignNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override List<string> Visit(AddRefreshNode node)
+        public override List<SemanticResult> Visit(AddReassignNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddReindexNode node)
+        public override List<SemanticResult> Visit(AddRefreshNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddResetNode node)
+        public override List<SemanticResult> Visit(AddReindexNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AddUnlistenNode node)
+        public override List<SemanticResult> Visit(AddResetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CopyStmtNode node)
+        public override List<SemanticResult> Visit(AddUnlistenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ExplainStmtNode node)
+        public override List<SemanticResult> Visit(CopyStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ShowStmtNode node)
+        public override List<SemanticResult> Visit(ExplainStmtNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CallFunctionCallNode node)
+        public override List<SemanticResult> Visit(ShowStmtNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override List<SemanticResult> Visit(CallFunctionCallNode node)
         {
             return VisitNode(node.FunctionCall);
         }
 
-        public override List<string> Visit(WithClauseNode node)
+        public override List<SemanticResult> Visit(WithClauseNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var withQuery in node.WithQuerys)
             {
                 errors.AddRange(VisitNode(withQuery));  
@@ -429,14 +429,14 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(WithQueryNode node)
+        public override List<SemanticResult> Visit(WithQueryNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CaseStmtNode node)
+        public override List<SemanticResult> Visit(CaseStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.HeaderExpression != null)
                 errors.AddRange(VisitNode(node.HeaderExpression));
             foreach (var c in node.Cases)
@@ -452,56 +452,56 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(WindowsDefinitionNode node)
+        public override List<SemanticResult> Visit(WindowsDefinitionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(NullOrderingNode node)
+        public override List<SemanticResult> Visit(NullOrderingNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CastExpressionNode node)
+        public override List<SemanticResult> Visit(CastExpressionNode node)
         {
             var errors = VisitNode(node.DataType).Concat(VisitNode(node.Expression)).ToList();
             node.TypeReturn = node.DataType.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(IsNullNode node)
+        public override List<SemanticResult> Visit(IsNullNode node)
         {
             node.TypeReturn = "bool";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IsNotNullNode node)
+        public override List<SemanticResult> Visit(IsNotNullNode node)
         {
             node.TypeReturn = "bool";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BetweenNode node)
+        public override List<SemanticResult> Visit(BetweenNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(InNode node)
+        public override List<SemanticResult> Visit(InNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(OfNode node)
+        public override List<SemanticResult> Visit(OfNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(SelectStatementNode node)
+        public override List<SemanticResult> Visit(SelectStatementNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             if (node.WithClause != null)
-                errors.Add(String.Format("No Suport SP:{0} Line:{1} Column:{3}", Sp.Name, node.WithClause.Line, node.WithClause.Column));
+                errors.Add(new ErrorResult(String.Format("No Suport SP:{0} Line:{1} Column:{3}", Sp.Name, node.WithClause.Line, node.WithClause.Column)));
                 //    errors.AddRange(VisitNode(node.WithClause));
             errors.AddRange(VisitNode(node.SelectOps));
             if (node.SelectOps.SelectPrimary != null)
@@ -515,9 +515,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(SelectStmtNonParensNode node)
+        public override List<SemanticResult> Visit(SelectStmtNonParensNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             if (node.WithClause != null)
                 errors.AddRange(VisitNode(node.WithClause));
@@ -529,213 +529,213 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(TruncateStmtNode node)
+        public override List<SemanticResult> Visit(TruncateStmtNode node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IsTrueNode node)
-        {
-            node.TypeReturn = "bool";
-            return VisitNode(node.Operand);
-        }
-
-        public override List<string> Visit(IsNotTrueNode node)
+        public override List<SemanticResult> Visit(IsTrueNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(IsFalseNode node)
+        public override List<SemanticResult> Visit(IsNotTrueNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(IsNotFalseNode node)
+        public override List<SemanticResult> Visit(IsFalseNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(CollateNode node)
+        public override List<SemanticResult> Visit(IsNotFalseNode node)
+        {
+            node.TypeReturn = "bool";
+            return VisitNode(node.Operand);
+        }
+
+        public override List<SemanticResult> Visit(CollateNode node)
         {
             throw new NotImplementedException();
         }
-        private List<string> SemanticCheckLikeNodes(LikeNode node)
+        private List<SemanticResult> SemanticCheckLikeNodes(LikeNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = "bool";
             if (node.LeftOperand.TypeReturn != "string" && node.LeftOperand.TypeReturn != "object")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column)));
             if (node.RightOperand.TypeReturn != "string" && node.RightOperand.TypeReturn != "object")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.RightOperand.Line, node.RightOperand.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.RightOperand.Line, node.RightOperand.Column)));
             return errors;
         }
-        public override List<string> Visit(LikeBinaryNode node)
+        public override List<SemanticResult> Visit(LikeBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(ILikeBinaryNode node)
+        public override List<SemanticResult> Visit(ILikeBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(NotLikeBinaryNode node)
+        public override List<SemanticResult> Visit(NotLikeBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(NotILikeBinaryNode node)
+        public override List<SemanticResult> Visit(NotILikeBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(SimilarToBinaryNode node)
+        public override List<SemanticResult> Visit(SimilarToBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(NotSimilarToBinaryNode node)
+        public override List<SemanticResult> Visit(NotSimilarToBinaryNode node)
         {
             return SemanticCheckLikeNodes(node);
         }
 
-        public override List<string> Visit(NotNode node)
+        public override List<SemanticResult> Visit(NotNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(AbsoluteValueNode node)
+        public override List<SemanticResult> Visit(AbsoluteValueNode node)
         {
             node.TypeReturn = "int";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(BitwiseNotNode node)
+        public override List<SemanticResult> Visit(BitwiseNotNode node)
         {
             var errors = VisitNode(node.Operand);
             node.TypeReturn = node.Operand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(FactorialNode node)
+        public override List<SemanticResult> Visit(FactorialNode node)
         {
             var errors = VisitNode(node.Operand);
             node.TypeReturn = node.Operand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(OtherOpUnaryNode node)
+        public override List<SemanticResult> Visit(OtherOpUnaryNode node)
         {
             var errors = VisitNode(node.Operand);
             node.TypeReturn = node.Operand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(IsDocumentNode node)
+        public override List<SemanticResult> Visit(IsDocumentNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(IsNotDocumentNode node)
+        public override List<SemanticResult> Visit(IsNotDocumentNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(IsUnknownNode node)
+        public override List<SemanticResult> Visit(IsUnknownNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(IsNotUnknownNode node)
+        public override List<SemanticResult> Visit(IsNotUnknownNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.Operand);
         }
 
-        public override List<string> Visit(BaseTypeCoercionNode node)
+        public override List<SemanticResult> Visit(BaseTypeCoercionNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             errors.AddRange(VisitNode(node.DataType));
             node.TypeReturn = node.DataType.TypeReturn;
             return errors;
 
         }
 
-        public override List<string> Visit(IntervalTypeCoercionNode node)
+        public override List<SemanticResult> Visit(IntervalTypeCoercionNode node)
         {
             node.TypeReturn = "interval";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
 
-        private List<string> SemanticCheckComparisonBynaryOperators(ComparisonBinaryExpressionNode node)
+        private List<SemanticResult> SemanticCheckComparisonBynaryOperators(ComparisonBinaryExpressionNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = "bool";
             if (TypeInfo.TypesInfo.ContainsKey(node.RightOperand.TypeReturn) &&
                 TypeInfo.TypesInfo.ContainsKey(node.LeftOperand.TypeReturn) &&
                 TypeInfo.TypesInfo[node.RightOperand.TypeReturn].GeneralType != TypeInfo.TypesInfo[node.LeftOperand.TypeReturn].GeneralType)
-                errors.Add(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
             else if ((Catalog.Tables.Values.Any(t => t.Name == node.RightOperand.TypeReturn) ||
                 Catalog.Tables.Values.Any(t => t.Name == node.LeftOperand.TypeReturn)) &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
             else if ((Catalog.UserDefinedTypes.Values.Any(t => t.TypeName == node.RightOperand.TypeReturn) ||
                 Catalog.UserDefinedTypes.Values.Any(t => t.TypeName == node.LeftOperand.TypeReturn)) &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
             return errors;
         }
-        public override List<string> Visit(EqualNode node)
+        public override List<SemanticResult> Visit(EqualNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(GreaterEqualNode node)
+        public override List<SemanticResult> Visit(GreaterEqualNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(GreaterNode node)
+        public override List<SemanticResult> Visit(GreaterNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(IsDistinctFromNode node)
+        public override List<SemanticResult> Visit(IsDistinctFromNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(LessEqualNode node)
+        public override List<SemanticResult> Visit(LessEqualNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(LessNode node)
+        public override List<SemanticResult> Visit(LessNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(NotEqualNode node)
+        public override List<SemanticResult> Visit(NotEqualNode node)
         {
             return SemanticCheckComparisonBynaryOperators(node);
         }
 
-        public override List<string> Visit(ExponentiationNode node)
+        public override List<SemanticResult> Visit(ExponentiationNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(ModuloNode node)
+        public override List<SemanticResult> Visit(ModuloNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = "int";
@@ -749,7 +749,7 @@ namespace DB2BM.Extensions.Semantic
                 else return (TypeInfo.TypesInfo[typeA].Index < TypeInfo.TypesInfo[typeB].Index) ? typeB : typeA;
             return typeA;
         }
-        private List<string> SemanticCheckBinaryArithmeticNodes(ArithmeticsBinaryExpressionNode node)
+        private List<SemanticResult> SemanticCheckBinaryArithmeticNodes(ArithmeticsBinaryExpressionNode node)
         {
             var errors = (node.LeftOperand != null) ? VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList() :
             VisitNode(node.RightOperand);
@@ -763,105 +763,105 @@ namespace DB2BM.Extensions.Semantic
             }
             return errors;
         }
-        public override List<string> Visit(MultiplicationNode node)
+        public override List<SemanticResult> Visit(MultiplicationNode node)
         {
             return SemanticCheckBinaryArithmeticNodes(node);
         }
 
-        public override List<string> Visit(StringConcatNode node)
+        public override List<SemanticResult> Visit(StringConcatNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = "string";
             if (node.LeftOperand.TypeReturn != "string")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{0}",
-                    Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{0}",
+                    Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column)));
             if (node.RightOperand.TypeReturn != "varchar")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{0}",
-                    Sp.Name, node.RightOperand.Line, node.RightOperand.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{0}",
+                    Sp.Name, node.RightOperand.Line, node.RightOperand.Column)));
             return errors;
         }
 
-        public override List<string> Visit(SubtractionNode node)
+        public override List<SemanticResult> Visit(SubtractionNode node)
         {
             return SemanticCheckBinaryArithmeticNodes(node);
         }
 
-        public override List<string> Visit(AdditionNode node)
+        public override List<SemanticResult> Visit(AdditionNode node)
         {
             return SemanticCheckBinaryArithmeticNodes(node);
         }
 
-        public override List<string> Visit(BitwiseAndNode node)
+        public override List<SemanticResult> Visit(BitwiseAndNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(BitwiseOrNode node)
+        public override List<SemanticResult> Visit(BitwiseOrNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(BitwiseShiftLeftNode node)
+        public override List<SemanticResult> Visit(BitwiseShiftLeftNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if ((node.LeftOperand.TypeReturn != "int" || node.LeftOperand.TypeReturn != "long") &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(BitwiseShiftRightNode node)
+        public override List<SemanticResult> Visit(BitwiseShiftRightNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if ((node.LeftOperand.TypeReturn != "int" || node.LeftOperand.TypeReturn != "long") &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(BitwiseXorNode node)
+        public override List<SemanticResult> Visit(BitwiseXorNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(DivisionNode node)
+        public override List<SemanticResult> Visit(DivisionNode node)
         {
             return SemanticCheckBinaryArithmeticNodes(node);
         }
 
-        public override List<string> Visit(AndNode node)
+        public override List<SemanticResult> Visit(AndNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != "bool" && node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(OrNode node)
+        public override List<SemanticResult> Visit(OrNode node)
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != "bool" && node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(ExpInDirectionNode node)
+        public override List<SemanticResult> Visit(ExpInDirectionNode node)
         {
             var errors = VisitNode(node.Expression);
             if (node.Indirections != null)
@@ -871,9 +871,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ExpressionListNode node)
+        public override List<SemanticResult> Visit(ExpressionListNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             foreach (var exp in node.Expressions)
             {
@@ -887,20 +887,20 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(NullNode node)
+        public override List<SemanticResult> Visit(NullNode node)
         {
             node.TypeReturn = "null";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(MultiplyNode node)
+        public override List<SemanticResult> Visit(MultiplyNode node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CaseExpressionNode node)
+        public override List<SemanticResult> Visit(CaseExpressionNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
             {
                 errors.AddRange(VisitNode(exp));
@@ -918,16 +918,16 @@ namespace DB2BM.Extensions.Semantic
                 if (headCaseType != null)
                 {
                     if (headCaseType != node.Expressions[i].TypeReturn)
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                            Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column));
+                        errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                            Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column)));
                 }
                 else
                     headCaseType = node.Expressions[i].TypeReturn;
                 if (elseExpressionType != null)
                 {
                     if (elseExpressionType != node.Expressions[i + 1].TypeReturn)
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                            Sp.Name, node.Expressions[i + 1].Line, node.Expressions[i + 1].Column));
+                        errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                            Sp.Name, node.Expressions[i + 1].Line, node.Expressions[i + 1].Column)));
                 }
                 else
                     elseExpressionType = node.Expressions[i + 1].TypeReturn;
@@ -935,15 +935,15 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ExistsNode node)
+        public override List<SemanticResult> Visit(ExistsNode node)
         {
             node.TypeReturn = "bool";
             return VisitNode(node.SelectStmt);
         }
 
-        public override List<string> Visit(IndirectionVarNode node)
+        public override List<SemanticResult> Visit(IndirectionVarNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             errors.AddRange(VisitNode(node.Identifiers));
             node.TypeReturn = node.Identifiers.TypeReturn;
             
@@ -960,8 +960,8 @@ namespace DB2BM.Extensions.Semantic
                             if (field != null)
                                 node.TypeReturn = field.DestinyType;
                             else
-                                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                                    Sp.Name, indirection.Line, indirection.Column));
+                                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                                    Sp.Name, indirection.Line, indirection.Column)));
                         }
                         else
                         {
@@ -972,8 +972,8 @@ namespace DB2BM.Extensions.Semantic
                                 if (field != null)
                                     node.TypeReturn = field.DestinyType;
                                 else
-                                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                                        Sp.Name, indirection.Line, indirection.Column));
+                                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                                        Sp.Name, indirection.Line, indirection.Column)));
                             }
                         }
                     }
@@ -982,7 +982,7 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ValueExpressionPrimaryNode node)
+        public override List<SemanticResult> Visit(ValueExpressionPrimaryNode node)
         {
             var errors = VisitNode(node.SelectStmtNonParens);
             node.TypeReturn = node.SelectStmtNonParens.TypeReturn;
@@ -994,12 +994,12 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(IntervalFieldNode node)
+        public override List<SemanticResult> Visit(IntervalFieldNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(DatetimeOverlapsNode node)
+        public override List<SemanticResult> Visit(DatetimeOverlapsNode node)
         {
             var errors = VisitNode(node.Expression1)
                 .Concat(VisitNode(node.Expression2))
@@ -1009,40 +1009,40 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(TableColsNode node)
+        public override List<SemanticResult> Visit(TableColsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(UserNameNode node)
+        public override List<SemanticResult> Visit(UserNameNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(GroupByClauseNode node)
+        public override List<SemanticResult> Visit(GroupByClauseNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
                 errors.AddRange(VisitNode(exp));
             return errors;
         }
 
-        public override List<string> Visit(ArrayTypeNode node)
+        public override List<SemanticResult> Visit(ArrayTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ArrayToSelectNode node)
+        public override List<SemanticResult> Visit(ArrayToSelectNode node)
         {
             var errors = VisitNode(node.SelectStmt);
             node.TypeReturn = "object[]";
             return errors;
         }
 
-        public override List<string> Visit(ArrayElementsNode node)
+        public override List<SemanticResult> Visit(ArrayElementsNode node)
         {
             node.TypeReturn = "object[]";
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Elements)
             {
                 errors.AddRange(VisitNode(exp));
@@ -1050,9 +1050,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ComparisonModNode node)
+        public override List<SemanticResult> Visit(ComparisonModNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             if (node.Expression != null)
             {
@@ -1068,9 +1068,9 @@ namespace DB2BM.Extensions.Semantic
         }
 
 
-        public override List<string> Visit(BasicFunctionCallNode node)
+        public override List<SemanticResult> Visit(BasicFunctionCallNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             var functionName = (node.SchemaQualifiednameNonType.IdentifierNonType.Text);
             foreach (var vexOrName in node.VexOrNamedNotations)
@@ -1110,7 +1110,7 @@ namespace DB2BM.Extensions.Semantic
                 var internalFunctions = Catalog.InternalFunctions.Values.Where(f => f.Name == functionName).ToList();
 
                 if (sps.Count == 0 && internalFunctions.Count == 0)
-                    errors.Add(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                    errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
                 else
                 {
                     StoreProcedure sp = null;
@@ -1130,11 +1130,13 @@ namespace DB2BM.Extensions.Semantic
                         if (bnd)
                         {
                             sp = f;
+                            if (sps.Contains(sp))
+                                errors.Add(new FunctionResult() { Sp = sp });
                             break;
                         }
                     }
                     if (sp == null)
-                        errors.Add(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                        errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
                     else
                         node.TypeReturn = sp.ReturnType;
                 }
@@ -1143,9 +1145,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(FunctionConstructNode node)
+        public override List<SemanticResult> Visit(FunctionConstructNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var expression in node.Expressions)
                 errors.AddRange(VisitNode(expression));
 
@@ -1167,24 +1169,24 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ExtractFunctionNode node)
+        public override List<SemanticResult> Visit(ExtractFunctionNode node)
         {
             node.TypeReturn = "double";
             return VisitNode(node.Expression);
         }
 
-        public override List<string> Visit(TrimStringValueFunctionNode node)
+        public override List<SemanticResult> Visit(TrimStringValueFunctionNode node)
         {
             var errors = VisitNode(node.Chars).Concat(VisitNode(node.Str)).ToList();
             if (node.Chars.TypeReturn != "string" || node.Str.TypeReturn != "string")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             node.TypeReturn = "string";
             return errors;
         }
 
-        public override List<string> Visit(SubstringStringValueFunctionNode node)
+        public override List<SemanticResult> Visit(SubstringStringValueFunctionNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
             {
                 errors.AddRange(VisitNode(exp));
@@ -1192,42 +1194,42 @@ namespace DB2BM.Extensions.Semantic
             var end = node.Expressions.Count - 1;
             if (node.For && node.Expressions[end].TypeReturn != "int")
             {
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column)));
                 end--;
             }
             if (node.From && node.Expressions[end].TypeReturn != "int")
             {
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column)));
                 end--;
             }
             for (int i = 0; i <= end; i++)
             {
                 if (node.Expressions[i].TypeReturn != "string")
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column)));
             }
             return errors;
         }
 
-        public override List<string> Visit(PositionStringValueFunctionNode node)
+        public override List<SemanticResult> Visit(PositionStringValueFunctionNode node)
         {
             var errors = VisitNode(node.ExpressionB).Concat(VisitNode(node.Expression)).ToList();
 
             if (node.ExpressionB.TypeReturn != "string")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.ExpressionB.Line, node.ExpressionB.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.ExpressionB.Line, node.ExpressionB.Column)));
             if (node.Expression.TypeReturn != "string")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.Expression.Line, node.Expression.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Expression.Line, node.Expression.Column)));
             node.TypeReturn = "int";
             return errors;
         }
 
-        public override List<string> Visit(OverlayStringValueFunctionNode node)
+        public override List<SemanticResult> Visit(OverlayStringValueFunctionNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
             {
                 errors.AddRange(VisitNode(exp));
@@ -1235,34 +1237,34 @@ namespace DB2BM.Extensions.Semantic
             var end = node.Expressions.Count - 1;
             if (node.For && node.Expressions[end].TypeReturn != "int")
             {
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                      Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                      Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column)));
                 end--;
             }
             if (node.Expressions[end].TypeReturn != "int")
             {
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                      Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                      Sp.Name, node.Expressions[end].Line, node.Expressions[end].Column)));
                 end--;
             }
             for (int i = 0; i <= end; i++)
             {
                 if (node.Expressions[i].TypeReturn != "string")
                 {
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                          Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                          Sp.Name, node.Expressions[i].Line, node.Expressions[i].Column)));
                 }
             }
             node.TypeReturn = "string";
             return errors;
         }
 
-        public override List<string> Visit(CollationStringValueFunctionNode node)
+        public override List<SemanticResult> Visit(CollationStringValueFunctionNode node)
         {
             return VisitNode(node.Expression);
         }
 
-        public override List<string> Visit(CastSpesificationSystemFunction node)
+        public override List<SemanticResult> Visit(CastSpesificationSystemFunction node)
         {
             var errors = VisitNode(node.Expression);
             errors.AddRange(VisitNode(node.DataType));
@@ -1270,158 +1272,158 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(XmlElementFunctionNode node)
+        public override List<SemanticResult> Visit(XmlElementFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlForestFunctionNode node)
+        public override List<SemanticResult> Visit(XmlForestFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlPiFunctionNode node)
+        public override List<SemanticResult> Visit(XmlPiFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlRootFunctionNode node)
+        public override List<SemanticResult> Visit(XmlRootFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlExistsFunctionNode node)
+        public override List<SemanticResult> Visit(XmlExistsFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlParseFunctionNode node)
+        public override List<SemanticResult> Visit(XmlParseFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlSerializeFunctionNode node)
+        public override List<SemanticResult> Visit(XmlSerializeFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlTabletFunctionNode node)
+        public override List<SemanticResult> Visit(XmlTabletFunctionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(XmlTableColumnNode node)
+        public override List<SemanticResult> Visit(XmlTableColumnNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(CurrentCatalogSystemFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentCatalogSystemFunctionNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CurrentSchemaSystemFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentSchemaSystemFunctionNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CurrentUserSystemFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentUserSystemFunctionNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(UserSystemFunctionNode node)
+        public override List<SemanticResult> Visit(UserSystemFunctionNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(SessionUserSystemFunctionNode node)
+        public override List<SemanticResult> Visit(SessionUserSystemFunctionNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CurrentDateFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentDateFunctionNode node)
         {
             node.TypeReturn = "DateTime";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CurrentTimeFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentTimeFunctionNode node)
         {
             node.TypeReturn = "DateTime";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(LocalTimeFunctionNode node)
+        public override List<SemanticResult> Visit(LocalTimeFunctionNode node)
         {
             node.TypeReturn = "DateTime";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(CurrentTimestampFunctionNode node)
+        public override List<SemanticResult> Visit(CurrentTimestampFunctionNode node)
         {
             node.TypeReturn = "TimeSpan";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(LocalTimestampFunctionNode node)
+        public override List<SemanticResult> Visit(LocalTimestampFunctionNode node)
         {
             node.TypeReturn = "TimeSpan";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(BoolNode node)
+        public override List<SemanticResult> Visit(BoolNode node)
         {
             node.TypeReturn = "bool";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(DefaultNode node)
+        public override List<SemanticResult> Visit(DefaultNode node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(Float4Node node)
-        {
-            node.TypeReturn = "double";
-            return new List<string>();
-        }
-
-        public override List<string> Visit(Float8Node node)
+        public override List<SemanticResult> Visit(Float4Node node)
         {
             node.TypeReturn = "double";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(Int8Node node)
+        public override List<SemanticResult> Visit(Float8Node node)
+        {
+            node.TypeReturn = "double";
+            return new List<SemanticResult>();
+        }
+
+        public override List<SemanticResult> Visit(Int8Node node)
         {
             node.TypeReturn = "long";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(IntNode node)
+        public override List<SemanticResult> Visit(IntNode node)
         {
             node.TypeReturn = "int";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(VarcharNode node)
+        public override List<SemanticResult> Visit(VarcharNode node)
         {
             node.TypeReturn = "string";
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(SelectOpsNoParensNode node)
+        public override List<SemanticResult> Visit(SelectOpsNoParensNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(SelectOpsNode node)
+        public override List<SemanticResult> Visit(SelectOpsNode node)
         {
             if (node.SelectStmt != null)
                 return VisitNode(node.SelectStmt);
@@ -1429,14 +1431,14 @@ namespace DB2BM.Extensions.Semantic
                 return VisitNode(node.SelectPrimary);
             else
             {
-                var errors = new List<string>();
+                var errors = new List<SemanticResult>();
                 foreach (var selectOps in node.SelectOps)
                     errors.AddRange(VisitNode(selectOps));
                 return errors;
             }
         }
 
-        public override List<string> Visit(SelectPrimaryNode node)
+        public override List<SemanticResult> Visit(SelectPrimaryNode node)
         {
             if (node.SchemaQualifield != null)
             {
@@ -1446,7 +1448,7 @@ namespace DB2BM.Extensions.Semantic
             }
             else
             {
-                var errors = new List<string>();
+                var errors = new List<SemanticResult>();
                 var newSemanticVisitor = new SemanticVisitor(Catalog, Sp,
                     new Dictionary<string, (string,IdentifierType, object)>(VariablesTypes), CursorTypes);
                 if (node.FromItems != null && node.FromItems.Count > 0)
@@ -1479,9 +1481,9 @@ namespace DB2BM.Extensions.Semantic
             }
         }
 
-        public override List<string> Visit(SelectListNode node)
+        public override List<SemanticResult> Visit(SelectListNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             var type = "";
             foreach (var sublist in node.SelectSubLists)
             {
@@ -1492,16 +1494,16 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(SelectSubListNode node)
+        public override List<SemanticResult> Visit(SelectSubListNode node)
         {
             var errors = VisitNode(node.Expression);
             node.TypeReturn = node.Expression.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(IdNode node)
+        public override List<SemanticResult> Visit(IdNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (VariablesTypes.ContainsKey(node.Text))
             {
                 node.TypeReturn = VariablesTypes[node.Text].Item1;
@@ -1515,13 +1517,13 @@ namespace DB2BM.Extensions.Semantic
                     node.UdtField = VariablesTypes[node.Text].Item3 as UdtField;
             }
             else
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             return errors;
         }
 
-        public override List<string> Visit(SchemaQualifieldNode node)
+        public override List<SemanticResult> Visit(SchemaQualifieldNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             Table table = null;
             BaseUserDefinedType udt = null;
             var initialType = "";
@@ -1548,7 +1550,7 @@ namespace DB2BM.Extensions.Semantic
                             initialType = identifier.Text;
                         }
                         else
-                            errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column));
+                            errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column)));
                     }
                 }
                 else
@@ -1564,7 +1566,7 @@ namespace DB2BM.Extensions.Semantic
                             initialType = fieldT.DestinyType;
                         }
                         else
-                            errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column));
+                            errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column)));
                     }
                     else if (udt != null && udt.IsUDT)
                     {
@@ -1575,14 +1577,14 @@ namespace DB2BM.Extensions.Semantic
                             initialType = fieldUDT.DestinyType;
                         }
                         else
-                            errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column));
+                            errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column)));
                     }
                     else
                     {
                         if (VariablesTypes.ContainsKey(identifier.Text))
                             initialType = VariablesTypes[identifier.Text].Item1;
                         else
-                            errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column));
+                            errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, identifier.Line, identifier.Column)));
                     }
                 }
             }
@@ -1590,7 +1592,7 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(SchemaQualifiednameNonTypeNode node)
+        public override List<SemanticResult> Visit(SchemaQualifiednameNonTypeNode node)
         {
             var initialType = "";
             if (node.Schema != null)
@@ -1620,20 +1622,20 @@ namespace DB2BM.Extensions.Semantic
                 }
             }
             node.TypeReturn = initialType;
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(FrameBoundNode node)
+        public override List<SemanticResult> Visit(FrameBoundNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(FrameClauseNode node)
+        public override List<SemanticResult> Visit(FrameClauseNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(FromItemSimpleNode node)
+        public override List<SemanticResult> Visit(FromItemSimpleNode node)
         {
             var errors = VisitNode(node.Item);
             if (node.AliasClause != null)
@@ -1644,46 +1646,46 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(FromItemCrossJoinNode node)
+        public override List<SemanticResult> Visit(FromItemCrossJoinNode node)
         {
             var errors = VisitNode(node.Item1).Concat(VisitNode(node.Item2)).ToList();
             return errors;
         }
 
-        public override List<string> Visit(FromItemOnExpressionNode node)
+        public override List<SemanticResult> Visit(FromItemOnExpressionNode node)
         {
             var errors = VisitNode(node.Item1).Concat(VisitNode(node.Item2)).ToList();
             return errors;
         }
 
-        public override List<string> Visit(FromItemUsingNode node)
+        public override List<SemanticResult> Visit(FromItemUsingNode node)
         {
             var errors = VisitNode(node.Item1).Concat(VisitNode(node.Item2)).ToList();
             return errors;
         }
 
-        public override List<string> Visit(FromItemNaturalNode node)
+        public override List<SemanticResult> Visit(FromItemNaturalNode node)
         {
             var errors = VisitNode(node.Item1).Concat(VisitNode(node.Item2)).ToList();
             return errors;
         }
 
-        public override List<string> Visit(ExceptionStatementNode node)
+        public override List<SemanticResult> Visit(ExceptionStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ExecuteStatementNode node)
+        public override List<SemanticResult> Visit(ExecuteStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(TransactionStatementNode node)
+        public override List<SemanticResult> Visit(TransactionStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(FromPrimary1Node node)
+        public override List<SemanticResult> Visit(FromPrimary1Node node)
         {
             var errors = VisitNode(node.SchemaQualifield);
             var alias = node.SchemaQualifield.Identifiers[0].Text;
@@ -1705,14 +1707,14 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(FromPrimary2Node node)
+        public override List<SemanticResult> Visit(FromPrimary2Node node)
         {
             var newSemanticVisitor = new SemanticVisitor(Catalog, Sp,
                 new Dictionary<string, (string, IdentifierType, object)>(VariablesTypes), CursorTypes);
             var errors = VisitNode(node.TableSubquery);
             var alias = node.AliasClause.Alias.Text;
             if (VariablesTypes.ContainsKey(alias))
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             else
             {
                 var table = Catalog.Tables.Values.FirstOrDefault(t => t.Name == node.TableSubquery.TypeReturn);
@@ -1724,39 +1726,39 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(FromPrimary3Node node)
+        public override List<SemanticResult> Visit(FromPrimary3Node node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(FromPrimary4Node node)
+        public override List<SemanticResult> Visit(FromPrimary4Node node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(FromFunctionColumnDefNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override List<string> Visit(AliasClauseNode node)
+        public override List<SemanticResult> Visit(FromFunctionColumnDefNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(VexOrNamedNotationNode node)
+        public override List<SemanticResult> Visit(AliasClauseNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override List<SemanticResult> Visit(VexOrNamedNotationNode node)
         {
             var errors = VisitNode(node.Expression);
             node.TypeReturn = node.Expression.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(ArgumentNode node)
+        public override List<SemanticResult> Visit(ArgumentNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(IndirectionIdentifierNode node)
+        public override List<SemanticResult> Visit(IndirectionIdentifierNode node)
         {
             var errors = VisitNode(node.Identifier);
             foreach (var item in node.Indirections)
@@ -1771,8 +1773,8 @@ namespace DB2BM.Extensions.Semantic
                     else if (udt != null)
                         item.ColLabel.Udt = udt;
                     else if (!VariablesTypes.ContainsKey(item.ColLabel.Text))
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                            Sp.Name, item.ColLabel.Line, item.ColLabel.Column));
+                        errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                            Sp.Name, item.ColLabel.Line, item.ColLabel.Column)));
                 }
                 else errors.AddRange(VisitNode(item));
                         
@@ -1780,18 +1782,18 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(IndirectionNode node)
+        public override List<SemanticResult> Visit(IndirectionNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if(node.Expressions != null)
                 foreach (var exp in node.Expressions)
                     errors.AddRange(VisitNode(exp));
             return errors;
         }
 
-        public override List<string> Visit(ReturnStmtNode node)
+        public override List<SemanticResult> Visit(ReturnStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.Stmt != null)
                 errors.AddRange(VisitNode(node.Stmt));
             if (node.Expression != null)
@@ -1799,9 +1801,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(PerformStmtNode node)
+        public override List<SemanticResult> Visit(PerformStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             var newSemanticVisitor = new SemanticVisitor(Catalog, Sp, VariablesTypes, CursorTypes);
 
             if (node.FromItems != null && node.FromItems.Count > 0)
@@ -1838,14 +1840,14 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(IfStmtNode node)
+        public override List<SemanticResult> Visit(IfStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
             {
                 errors.AddRange(VisitNode(exp));
                 if (exp.TypeReturn != "bool")
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, exp.Line, exp.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, exp.Line, exp.Column)));
             }
             foreach (var statements in node.Statements)
                 foreach (var statement in statements)
@@ -1856,7 +1858,7 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(AssingStmtNode node)
+        public override List<SemanticResult> Visit(AssingStmtNode node)
         {
             var errors = VisitNode(node.Var).Concat(VisitNode(node.Stmt)).ToList();
             if (!(node.Stmt is PerformStmtNode &&
@@ -1867,14 +1869,14 @@ namespace DB2BM.Extensions.Semantic
                 TypeInfo.TypesInfo.ContainsKey((node.Stmt as SelectStmtNonParensNode).TypeReturn) &&
                 TypeInfo.TypesInfo.ContainsKey(node.Var.TypeReturn) &&
                 TypeInfo.TypesInfo[(node.Stmt as SelectStmtNonParensNode).TypeReturn].GeneralType == TypeInfo.TypesInfo[node.Var.TypeReturn].GeneralType))
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Stmt.Line, node.Stmt.Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Stmt.Line, node.Stmt.Column)));
 
             return errors;
         }
 
-        public override List<string> Visit(VarNode node)
+        public override List<SemanticResult> Visit(VarNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.Expressions != null)
                 foreach (var exp in node.Expressions)
                     errors.AddRange(VisitNode(exp));
@@ -1886,16 +1888,16 @@ namespace DB2BM.Extensions.Semantic
             else if (node.Id != null)
             {
                 if (!VariablesTypes.ContainsKey(node.Id.Text))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
                 else
                     node.TypeReturn = VariablesTypes[node.Id.Text].Item1;
             }
             return errors;
         }
 
-        public override List<string> Visit(RaiseMessageStatementNode node)
+        public override List<SemanticResult> Visit(RaiseMessageStatementNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.Expressions != null)
                 foreach (var exp in node.Expressions)
                     errors.AddRange(VisitNode(exp));
@@ -1905,22 +1907,22 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(AssertMessageStatementNode node)
+        public override List<SemanticResult> Visit(AssertMessageStatementNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var exp in node.Expressions)
                 errors.AddRange(VisitNode(exp));
             return errors;
         }
 
-        public override List<string> Visit(IdentifierNonTypeNode node)
+        public override List<SemanticResult> Visit(IdentifierNonTypeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(DeleteStmtPSqlNode node)
+        public override List<SemanticResult> Visit(DeleteStmtPSqlNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
 
             if (node.WithClause != null)
                 errors.AddRange(VisitNode(node.WithClause));
@@ -1938,14 +1940,14 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(OpCharsNode node)
+        public override List<SemanticResult> Visit(OpCharsNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(LoopStmtNode node)
+        public override List<SemanticResult> Visit(LoopStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             var localVariables = new List<(string, string)>();
             if (node.LoopStart != null)
             {
@@ -1966,8 +1968,8 @@ namespace DB2BM.Extensions.Semantic
                         stmtTypeReturn = (loopStart.Stmt as ExecuteStmtNode).TypeReturn.Split('_');
 
                     if (loopStart.Identifiers.Count != stmtTypeReturn.Length)
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                            Sp.Name, loopStart.Line, loopStart.Column));
+                        errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                            Sp.Name, loopStart.Line, loopStart.Column)));
                     else
                         for (int i = 0; i < loopStart.Identifiers.Count; i++)
                             localVariables.Add((loopStart.Identifiers[i].Text, stmtTypeReturn[i]));
@@ -1983,7 +1985,7 @@ namespace DB2BM.Extensions.Semantic
                     var loopStart = node.LoopStart as ForeachLoopNode;
                     var types = loopStart.Expression.TypeReturn.Split('_');
                     if (loopStart.Identifiers.Count != types.Length)
-                        errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                        errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
                 }
             }
             if (node.Statemets != null)
@@ -1994,89 +1996,89 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(OpNode node)
+        public override List<SemanticResult> Visit(OpNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ConflictObjectNode node)
+        public override List<SemanticResult> Visit(ConflictObjectNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ConflictActionNode node)
+        public override List<SemanticResult> Visit(ConflictActionNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(DeclareStatementNode node)
+        public override List<SemanticResult> Visit(DeclareStatementNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ModularTypeDeclarationNode node)
+        public override List<SemanticResult> Visit(ModularTypeDeclarationNode node)
         {
-            var errors = new List<string>(VisitNode(node.Schema));
+            var errors = new List<SemanticResult>(VisitNode(node.Schema));
             node.TypeReturn = node.Schema.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(ModularRowTypeDeclarationNode node)
+        public override List<SemanticResult> Visit(ModularRowTypeDeclarationNode node)
         {
-            var errors = new List<string>(VisitNode(node.Schema));
+            var errors = new List<SemanticResult>(VisitNode(node.Schema));
             node.TypeReturn = node.Schema.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(AnalizeModeNode node)
+        public override List<SemanticResult> Visit(AnalizeModeNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(WhileLoopNode node)
+        public override List<SemanticResult> Visit(WhileLoopNode node)
         {
             var errors = VisitNode(node.Expressions[0]);
             if (node.Expressions[0].TypeReturn != "bool")
-                errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
-                    Sp.Name, node.Expressions[0].Line, node.Expressions[0].Column));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Expressions[0].Line, node.Expressions[0].Column)));
             return errors;
         }
 
-        public override List<string> Visit(ForAliasLoopNode node)
+        public override List<SemanticResult> Visit(ForAliasLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ForIdListLoopNode node)
+        public override List<SemanticResult> Visit(ForIdListLoopNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             errors.AddRange(VisitNode(node.Stmt));
             var stmtType = (node.Stmt is SelectStatementNode) ? (node.Stmt as SelectStatementNode).TypeReturn :
                 (node.Stmt as ExecuteStmtNode).TypeReturn;
             foreach (var id in node.Identifiers)
                 if (!VariablesTypes.ContainsKey(id.Text))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             return errors;
         }
 
-        public override List<string> Visit(ForCursorLoopNode node)
+        public override List<SemanticResult> Visit(ForCursorLoopNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ForeachLoopNode node)
+        public override List<SemanticResult> Visit(ForeachLoopNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             foreach (var id in node.Identifiers)
                 if (!VariablesTypes.ContainsKey(id.Text))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
             errors.AddRange(VisitNode(node.Expression));
             return errors;
         }
 
-        public override List<string> Visit(InsertStmtPSqlNode node)
+        public override List<SemanticResult> Visit(InsertStmtPSqlNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.WithClause != null)
                 errors.AddRange(VisitNode(node.WithClause));
             if (node.SelectStmt != null)
@@ -2089,47 +2091,47 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(AfterOpsFetchNode node)
+        public override List<SemanticResult> Visit(AfterOpsFetchNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AfterOpsForNode node)
+        public override List<SemanticResult> Visit(AfterOpsForNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AfterOpsLimitNode node)
+        public override List<SemanticResult> Visit(AfterOpsLimitNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AfterOpsOffsetNode node)
+        public override List<SemanticResult> Visit(AfterOpsOffsetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(OrderByClauseNode node)
+        public override List<SemanticResult> Visit(OrderByClauseNode node)
         {
-            return new List<string>();
+            return new List<SemanticResult>();
         }
 
-        public override List<string> Visit(SortSpecifierNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override List<string> Visit(OrderSpecificationNode node)
+        public override List<SemanticResult> Visit(SortSpecifierNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AllOpRefNode node)
+        public override List<SemanticResult> Visit(OrderSpecificationNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ExecuteStmtNode node)
+        public override List<SemanticResult> Visit(AllOpRefNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override List<SemanticResult> Visit(ExecuteStmtNode node)
         {
             var errors = VisitNode(node.Expression);
             if (node.UsingExpression != null)
@@ -2139,9 +2141,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(UpdateStmtPSqlNode node)
+        public override List<SemanticResult> Visit(UpdateStmtPSqlNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.WithClause != null)
                 errors.AddRange(VisitNode(node.WithClause));
 
@@ -2161,9 +2163,9 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(ValuesStmtNode node)
+        public override List<SemanticResult> Visit(ValuesStmtNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             var returnType = "(";
             foreach (var valuesValues in node.Values)
             {
@@ -2174,14 +2176,14 @@ namespace DB2BM.Extensions.Semantic
             return errors;
         }
 
-        public override List<string> Visit(UpdateSetNode node)
+        public override List<SemanticResult> Visit(UpdateSetNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(ValuesValuesNode node)
+        public override List<SemanticResult> Visit(ValuesValuesNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             var typeReturn = "(";
             foreach (var exp in node.Expressions)
             {
@@ -2202,9 +2204,9 @@ namespace DB2BM.Extensions.Semantic
             else
                 return false;
         }
-        public override List<string> Visit(CursorStatementNode node)
+        public override List<SemanticResult> Visit(CursorStatementNode node)
         {
-            var errors = new List<string>();
+            var errors = new List<SemanticResult>();
             if (node.Open && node.Var != null)
             {
                 errors.AddRange(VisitNode(node.Var));
@@ -2218,7 +2220,7 @@ namespace DB2BM.Extensions.Semantic
             {
                 errors.AddRange(VisitNode(node.Var));
                 if (!CursorTypes.ContainsKey(node.Var.SchemaQualifield.Identifiers[0].Text))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column)));
                 else
                 {
                     var cursorTypeReturn = CursorTypes[node.Var.SchemaQualifield.Identifiers[0].Text].Item2;
@@ -2230,24 +2232,24 @@ namespace DB2BM.Extensions.Semantic
             {
                 errors.AddRange(VisitNode(node.Var));
                 if (!VariablesTypes.ContainsKey(node.Var.SchemaQualifield.Identifiers[0].Text))
-                    errors.Add(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column));
+                    errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Var.Line, node.Var.Column)));
             }
             return errors;
         }
 
-        public override List<string> Visit(OptionNode node)
+        public override List<SemanticResult> Visit(OptionNode node)
         {
             var errors = VisitNode(node.Expression);
             node.TypeReturn = node.Expression.TypeReturn;
             return errors;
         }
 
-        public override List<string> Visit(IsNotDistinctFromNode node)
+        public override List<SemanticResult> Visit(IsNotDistinctFromNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> Visit(AllSimpleOpNode node)
+        public override List<SemanticResult> Visit(AllSimpleOpNode node)
         {
             throw new NotImplementedException();
         }
