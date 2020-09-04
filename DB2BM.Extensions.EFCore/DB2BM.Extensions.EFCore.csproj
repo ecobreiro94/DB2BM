@@ -19,6 +19,9 @@
     <None Update="internal_functions_body.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Templates\additional_template.st4">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Templates\dbcontext.st4">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

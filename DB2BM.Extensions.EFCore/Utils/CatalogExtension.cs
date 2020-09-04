@@ -182,7 +182,7 @@ namespace DB2BM.Extensions.Utils
                     else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && tables.Exists(x => x.Name == type))
                         p.DestinyType = type.ToPascal() + "[]";
                     else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && typesMapper.ContainsKey(type))
-                        p.DestinyType = type + "[]";
+                        p.DestinyType = typesMapper[type] + "[]";
                     else if (typesMapper.ContainsKey(p.OriginType))
                         p.DestinyType = typesMapper[p.OriginType];
                 }

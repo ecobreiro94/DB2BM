@@ -41,7 +41,7 @@
   "tsquery": "NpgsqlTsQuery",
   "tsvector": "NpgsqlTsVector",
   "date": "DateTime",
-  "interval": "Object",
+  "interval": "TimeSpan",
   "timestamp": "DateTime",
   "timestamptz": "DateTime",
   "timestamp with time zone": "DateTime",
@@ -61,5 +61,7 @@
   "array": "dynamic[]",
   "any": "dynamic",
   "anyarray": "dynamic[]",
-  "anyelement": "dynamic"
+  "anyelement": "dynamic",
+  "int4[]": "int[]",
+  "int8[]": "long[]"
 }

@@ -51,6 +51,7 @@ namespace DB2BM.Extensions
         private TemplateGroupString internalFunctionsTemplate;
         private TemplateGroupString modelTemplate;
         private TemplateGroupString dbContextTemplate;
+        private TemplateGroupString dbContextExtensionTemplate;
 
         public TemplateGroupString FunctionsTemplate
         {
@@ -60,6 +61,15 @@ namespace DB2BM.Extensions
                     functionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\functions.st4"));
                 return functionsTemplate;
             } 
+        }
+        public TemplateGroupString DbContextExtensionTemplate
+        {
+            get
+            {
+                if (dbContextExtensionTemplate == null)
+                    functionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\additional_template.st4"));
+                return functionsTemplate;
+            }
         }
 
         public TemplateGroupString InternalFunctionsTemplate
@@ -128,6 +138,7 @@ namespace DB2BM.Extensions
         {
             foreach (var error in errors)
                 Sp.GeneratedCode += "//" + (error as ErrorResult).Menssage + "\n";
+            Sp.GeneratedCode += "throw new NotImplementedException();";
         }
 
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
@@ -195,8 +206,15 @@ namespace DB2BM.Extensions
             GenerateInternalFunctions(internalFunctionUse);
         }
 
+        
         private void GenerateInternalFunctions(List<StoreProcedure> internalFunctions)
         {
+            var temp = DbContextExtensionTemplate.GetInstanceOf("gen_context");
+            temp.Add("arg", Catalog.Name.ToPascal());
+            DbContextExtensionTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+            var r = temp.Render();
+            Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.Extensions.cs", r);
+
             if (internalFunctions?.Count > 0)
             {
                 var functions = internalFunctions.Distinct();
@@ -213,14 +231,14 @@ namespace DB2BM.Extensions
                     else
                         function.GeneratedCode = "throw new NotImplementedException();";
                 }
-                var temp = InternalFunctionsTemplate.GetInstanceOf("gen_context");
+                temp = InternalFunctionsTemplate.GetInstanceOf("gen_context");
                 temp.Add("arg", new InternalFunctionTemplateParams()
                                                 {
                                                     Functions = functions.ToList(),
                                                     Name = Catalog.Name
                                                 });
                 InternalFunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-                var r = temp.Render();
+                r = temp.Render();
                 Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.Service.cs", r);
             }
         }

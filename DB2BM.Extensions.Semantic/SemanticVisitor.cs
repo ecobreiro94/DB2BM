@@ -472,13 +472,13 @@ namespace DB2BM.Extensions.Semantic
         public override List<SemanticResult> Visit(IsNullNode node)
         {
             node.TypeReturn = "bool";
-            return new List<SemanticResult>();
+            return VisitNode(node.Operand);
         }
 
         public override List<SemanticResult> Visit(IsNotNullNode node)
         {
             node.TypeReturn = "bool";
-            return new List<SemanticResult>();
+            return VisitNode(node.Operand);
         }
 
         public override List<SemanticResult> Visit(BetweenNode node)
@@ -502,7 +502,6 @@ namespace DB2BM.Extensions.Semantic
 
             if (node.WithClause != null)
                 errors.Add(new ErrorResult(String.Format("No Suport SP:{0} Line:{1} Column:{3}", Sp.Name, node.WithClause.Line, node.WithClause.Column)));
-                //    errors.AddRange(VisitNode(node.WithClause));
             errors.AddRange(VisitNode(node.SelectOps));
             if (node.SelectOps.SelectPrimary != null)
                 node.TypeReturn = node.SelectOps.SelectPrimary.TypeReturn;
@@ -566,10 +565,12 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             node.TypeReturn = "bool";
-            if (node.LeftOperand.TypeReturn != "string" && node.LeftOperand.TypeReturn != "object")
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column)));
-            if (node.RightOperand.TypeReturn != "string" && node.RightOperand.TypeReturn != "object")
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}", Sp.Name, node.RightOperand.Line, node.RightOperand.Column)));
+            if (node.LeftOperand.TypeReturn != "string" && node.LeftOperand.TypeReturn != "dynamic")
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}",
+                    Sp.Name, node.LeftOperand.Line, node.LeftOperand.Column)));
+            if (node.RightOperand.TypeReturn != "string" && node.RightOperand.TypeReturn != "dynamic")
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column{2}",
+                    Sp.Name, node.RightOperand.Line, node.RightOperand.Column)));
             return errors;
         }
         public override List<SemanticResult> Visit(LikeBinaryNode node)
@@ -682,15 +683,18 @@ namespace DB2BM.Extensions.Semantic
             if (TypeInfo.TypesInfo.ContainsKey(node.RightOperand.TypeReturn) &&
                 TypeInfo.TypesInfo.ContainsKey(node.LeftOperand.TypeReturn) &&
                 TypeInfo.TypesInfo[node.RightOperand.TypeReturn].GeneralType != TypeInfo.TypesInfo[node.LeftOperand.TypeReturn].GeneralType)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}",
+                    Sp.Name, node.Line, node.Column)));
             else if ((Catalog.Tables.Values.Any(t => t.Name == node.RightOperand.TypeReturn) ||
                 Catalog.Tables.Values.Any(t => t.Name == node.LeftOperand.TypeReturn)) &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}",
+                    Sp.Name, node.Line, node.Column)));
             else if ((Catalog.UserDefinedTypes.Values.Any(t => t.TypeName == node.RightOperand.TypeReturn) ||
                 Catalog.UserDefinedTypes.Values.Any(t => t.TypeName == node.LeftOperand.TypeReturn)) &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line{1} Column{2}",
+                    Sp.Name, node.Line, node.Column)));
             return errors;
         }
         public override List<SemanticResult> Visit(EqualNode node)
@@ -751,7 +755,8 @@ namespace DB2BM.Extensions.Semantic
         }
         private List<SemanticResult> SemanticCheckBinaryArithmeticNodes(ArithmeticsBinaryExpressionNode node)
         {
-            var errors = (node.LeftOperand != null) ? VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList() :
+            var errors = (node.LeftOperand != null) ? VisitNode(node.LeftOperand)
+                .Concat(VisitNode(node.RightOperand)).ToList() :
             VisitNode(node.RightOperand);
             if (node.LeftOperand == null)
                 node.TypeReturn = node.RightOperand.TypeReturn;
@@ -795,7 +800,8 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -804,7 +810,8 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", 
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -814,7 +821,8 @@ namespace DB2BM.Extensions.Semantic
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if ((node.LeftOperand.TypeReturn != "int" || node.LeftOperand.TypeReturn != "long") &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -824,7 +832,8 @@ namespace DB2BM.Extensions.Semantic
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if ((node.LeftOperand.TypeReturn != "int" || node.LeftOperand.TypeReturn != "long") &&
                 node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -833,7 +842,8 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -847,7 +857,8 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != "bool" && node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -856,7 +867,8 @@ namespace DB2BM.Extensions.Semantic
         {
             var errors = VisitNode(node.LeftOperand).Concat(VisitNode(node.RightOperand)).ToList();
             if (node.LeftOperand.TypeReturn != "bool" && node.LeftOperand.TypeReturn != node.RightOperand.TypeReturn)
-                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                errors.Add(new ErrorResult(String.Format("Semantic error SP:{0} Line:{1} Column:{2}",
+                    Sp.Name, node.Line, node.Column)));
             node.TypeReturn = node.LeftOperand.TypeReturn;
             return errors;
         }
@@ -965,7 +977,8 @@ namespace DB2BM.Extensions.Semantic
                         }
                         else
                         {
-                            var udt = Catalog.UserDefinedTypes.Values.FirstOrDefault(t => t.TypeName == node.TypeReturn) as UserDefinedType;
+                            var udt = Catalog.UserDefinedTypes.Values.FirstOrDefault(
+                                t => t.TypeName == node.TypeReturn) as UserDefinedType;
                             if (table != null)
                             {
                                 var field = udt.Fields.FirstOrDefault(f => f.Name == indirection.ColLabel.Text);
@@ -1110,7 +1123,8 @@ namespace DB2BM.Extensions.Semantic
                 var internalFunctions = Catalog.InternalFunctions.Values.Where(f => f.Name == functionName).ToList();
 
                 if (sps.Count == 0 && internalFunctions.Count == 0)
-                    errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                    errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}",
+                        Sp.Name, node.Line, node.Column)));
                 else
                 {
                     StoreProcedure sp = null;
@@ -1136,7 +1150,8 @@ namespace DB2BM.Extensions.Semantic
                         }
                     }
                     if (sp == null)
-                        errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}", Sp.Name, node.Line, node.Column)));
+                        errors.Add(new ErrorResult(String.Format("Semeantic error SP:{0} Line:{1} Column:{2}",
+                            Sp.Name, node.Line, node.Column)));
                     else
                         node.TypeReturn = sp.ReturnType;
                 }
@@ -1697,13 +1712,17 @@ namespace DB2BM.Extensions.Semantic
             var table = Catalog.Tables.Values.FirstOrDefault(t => t.Name == tableName);
             var udt = Catalog.UserDefinedTypes.Values.FirstOrDefault(u => u.TypeName == tableName);
             if (table != null)
+            {
                 foreach (var field in table.Fields)
                     if (!VariablesTypes.ContainsKey(field.Name))
                         VariablesTypes.Add(field.Name, (field.DestinyType, IdentifierType.TableField, field));
+            }
             if (udt != null && udt is UserDefinedType)
+            {
                 foreach (var field in (udt as UserDefinedType).Fields)
                     if (!VariablesTypes.ContainsKey(field.Name))
                         VariablesTypes.Add(field.Name, (field.DestinyType, IdentifierType.UdtField, field));
+            }
             return errors;
         }
 
