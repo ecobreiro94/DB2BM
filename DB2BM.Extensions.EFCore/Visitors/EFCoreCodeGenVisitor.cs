@@ -1546,7 +1546,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         }
         bool IfPredefinedFunction(BasicFunctionCallNode functionCall)
         {
-            var predifined = new[] { "count", "sum" };
+            var predifined = new[] { "count", "sum", "max", "min", "avg" };
             return predifined.Contains(functionCall.SchemaQualifiednameNonType.IdentifierNonType.Text.ToLower());
         }
         string multiplaySustitution;
@@ -1581,7 +1581,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             return result;
         }
-        public override CodeContext Visit(SelectPrimaryNode node)
+
+        private CodeContext VisitQuery(SelectBodyNode node)
         {
             InQuery = true;
             var codeContext = new CodeContext();
@@ -1596,10 +1597,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 var fromItemsCode = "";
                 var addWhere = "";
                 var bnd = true;
+                var generalAlias = "";
                 if (node.FromItems.Count == 1)
                 {
                     var fromItemsCC = VisitNode(node.FromItems[0]) as CodeContextFromItemResult;
                     multiplaySustitution = node.FromItems[0].Alias;
+                    generalAlias = node.FromItems[0].Alias;
                     if (fromItemsCC.Count == 1)
                     {
                         fromItemsCode = fromItemsCC.Code;
@@ -1610,6 +1613,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 {
                     var alias = "x" + node.GetHashCode().ToString();
                     multiplaySustitution = alias;
+                    generalAlias = alias;
                     var joinExpressions = new List<ExpressionNode>();
                     var tablesName = new List<string>();
                     foreach (var fromItem in node.FromItems)
@@ -1649,6 +1653,43 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 {
                     codeContext.Code = codeContext.Code.Replace(".AsEnumerable()", "");
                 }
+
+                if (node.GroupByClause != null)
+                {
+                    var expCode = "";
+                    var oneKey = node.GroupByClause.Expressions.Count() == 1;
+                    var intoVariable = "_" + generalAlias;
+                    foreach (var exp in node.GroupByClause.Expressions)
+                    {
+                        expCode = (expCode == "") ? VisitNode(exp).Code : ", " + VisitNode(exp).Code;
+
+                        var indirection = exp as IndirectionVarNode;
+                        if (indirection.Indirections.Count > 0 &&
+                            indirection.Indirections[indirection.Indirections.Count - 1].ColLabel != null)
+                            TablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1].ColLabel.Text, "@.Key");
+                    }
+                    codeContext.Code += $" group {generalAlias} by {expCode} into {intoVariable}";
+                    var newTA = new Dictionary<string, string>();
+                    newTA.Add(generalAlias, "@" + intoVariable);
+                    foreach (var ta in TablesAlias)
+                    {
+                        if (ta.Value.StartsWith(generalAlias))
+                        {
+                            if (expCode.Contains(ta.Value + "."))
+                            {
+                                if (oneKey)
+                                    newTA.Add(ta.Key, "@" + intoVariable + ".Key");
+                                else
+                                    newTA.Add(ta.Key, ta.Value.Replace(generalAlias, intoVariable + ".Key"));
+                            }
+                            else
+                                newTA.Add(ta.Key, ta.Value.Replace(generalAlias, intoVariable));
+                        }
+                        else
+                            newTA.Add(ta.Key, ta.Value);
+                    }
+                    TablesAlias = newTA;
+                }
             }
             var flag = true;
             CodeContext selectListCodeContext = null;
@@ -1666,7 +1707,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         var argCC = VisitNode((node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode).VexOrNamedNotations[0]).Code;
                         codeContext.Code = $"({codeContext.Code} select {argCC}).{selectListCodeContext.Code}";
                     }
-                    else  codeContext.Code = $"({codeContext.Code}).{selectListCodeContext.Code}";
+                    else codeContext.Code = $"({codeContext.Code}).{selectListCodeContext.Code}";
                 }
                 else selectListCodeContext = VisitNode(node.SelectList);
             }
@@ -1700,12 +1741,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
             codeContext.UserFunctionCall |= selectListCodeContext.UserFunctionCall;
             if (codeContext.Code == null)
                 codeContext.Code = selectListCodeContext.Code;
-            if (flag && node.FromItems != null && node.FromItems.Count> 0)
+            if (flag && node.FromItems != null && node.FromItems.Count > 0)
                 codeContext.Code = codeContext.Code + " select " + selectListCodeContext.Code;
             if (firstorDefault)
                 codeContext.Code = $"({codeContext.Code}).FirstOrDefault()";
             TablesAlias = tmp;
 
+            return codeContext;
+        }
+        public override CodeContext Visit(SelectPrimaryNode node)
+        {
+            var codeContext = VisitQuery(node);
             if (node.IntoTable != null)
             {
                 if (node.IntoTable.Count == 1)
@@ -1776,13 +1822,21 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 if (node.Type == IdentifierType.Table)
                     codeContext.Code = node.Table.Name.ToPascal();
                 else if (TablesAlias.ContainsKey(node.Text))
-                    codeContext.Code = TablesAlias[node.Text];
+                {
+                    if (TablesAlias[node.Text].StartsWith("@"))
+                        codeContext.Code = new String(TablesAlias[node.Text].Skip(1).ToArray());
+                    else
+                        codeContext.Code = TablesAlias[node.Text];
+                }
                 else if (node.Type == IdentifierType.TableField && TablesAlias.ContainsKey(node.TableField.Table.Name))
                 {
-                    codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
+                    if (TablesAlias[node.TableField.Table.Name].StartsWith("@"))
+                        codeContext.Code = new String(TablesAlias[node.Text].Skip(1).ToArray());
+                    else
+                        codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
                 }
                 else if (node.Type == IdentifierType.UdtField)
-                    codeContext.Code = node.Text.ToPascal();
+                    codeContext.Code = node.Text;
                 else codeContext.Code = node.Text.ToCamel();
             }
             return codeContext;
@@ -2106,129 +2160,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(PerformStmtNode node)
         {
-            InQuery = true;
-            var codeContext = new CodeContext();
-            int expressionsIndex = 0;
-            var result = "";
-            var tmp = TablesAlias;
-            var firstorDefault = false;
-            TablesAlias = new Dictionary<string, string>();
-            if (node.FromItems != null && node.FromItems.Count > 0)
-            {
-                firstorDefault = true;
-                var fromItemsCode = "";
-                var addWhere = "";
-                var bnd = true;
-                if (node.FromItems.Count == 1)
-                {
-                    var fromItemsCC = VisitNode(node.FromItems[0]) as CodeContextFromItemResult;
-                    multiplaySustitution = node.FromItems[0].Alias;
-                    if (fromItemsCC.Count == 1)
-                    {
-                        fromItemsCode = fromItemsCC.Code;
-                        bnd = false;
-                    }
-                }
-                if (bnd)
-                {
-                    var alias = "x" + node.GetHashCode().ToString();
-                    multiplaySustitution = alias;
-                    var joinExpressions = new List<ExpressionNode>();
-                    var tablesName = new List<string>();
-                    foreach (var fromItem in node.FromItems)
-                    {
-                        var fiCodeContext = VisitNode(fromItem) as CodeContextFromItemResult;
-                        joinExpressions.AddRange(fiCodeContext.JionExpressions);
-                        tablesName.AddRange(fiCodeContext.TablesName);
-                        fromItemsCode += fiCodeContext.Code + " ";
-                    }
-                    var selectCode = "";
-                    foreach (var tn in tablesName)
-                    {
-                        selectCode += (selectCode == "") ? TablesAlias[tn] : ", " + TablesAlias[tn];
-                        if (!TablesAlias.ContainsKey(TablesAlias[tn]))
-                            TablesAlias.Add(TablesAlias[tn], alias + "." + TablesAlias[tn]);
-                        TablesAlias[tn] = alias + "." + TablesAlias[tn];
-
-                    }
-
-                    fromItemsCode = "from " + alias + " in (" + fromItemsCode + " select new {" + selectCode + "}) ";
-                    foreach (var exp in joinExpressions)
-                    {
-                        var expCode = VisitNode(exp).Code;
-                        addWhere += (addWhere == "") ? $"({expCode})" : " && " + $"({expCode})";
-                    }
-                }
-
-                codeContext.Code = fromItemsCode + ((addWhere == "") ? "" : "where " + $"({addWhere})");
-                if (node.Where)
-                {
-                    var expCodeContext = VisitNode(node.Expressions[expressionsIndex]);
-                    if (!expCodeContext.UserFunctionCall)
-                        codeContext.Code = codeContext.Code.Replace(".AsEnumerable()", "");
-                    codeContext.Code += (addWhere == "") ? $" where {expCodeContext.Code}" : $" && {expCodeContext.Code}";
-                }
-                else
-                {
-                    codeContext.Code = codeContext.Code.Replace(".AsEnumerable()", "");
-                }
-            }
-            var flag = true;
-            CodeContext selectListCodeContext = null;
-            if (node.SelectList.SelectSubLists.Count == 1)
-            {
-                if ((node.FromItems != null && node.FromItems.Count > 0) &&
-                    node.SelectList.SelectSubLists[0].Expression is BasicFunctionCallNode &&
-                    IfPredefinedFunction(node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode))
-                {
-                    flag = false;
-                    selectListCodeContext = VisitNode(node.SelectList);
-                    if (selectListCodeContext.Code.Contains("Count"))
-                    {
-                        firstorDefault = false;
-                        var argCC = VisitNode((node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode).VexOrNamedNotations[0]).Code;
-                        codeContext.Code = $"({codeContext.Code} select {argCC}).{selectListCodeContext.Code}";
-                    }
-                    else codeContext.Code = $"({codeContext.Code}).{selectListCodeContext.Code}";
-                }
-                else selectListCodeContext = VisitNode(node.SelectList);
-            }
-            else
-            {
-                var predF = false;
-
-                foreach (var item in node.SelectList.SelectSubLists)
-                {
-                    if ((node.FromItems != null || node.FromItems.Count > 0) &&
-                        item.Expression is BasicFunctionCallNode &&
-                        IfPredefinedFunction(item.Expression as BasicFunctionCallNode))
-                    {
-                        predF = true;
-                    }
-                }
-                if (!predF)
-                {
-                    selectListCodeContext = VisitNode(node.SelectList);
-                }
-                else
-                {
-                    var selection = "";
-                    foreach (var item in node.SelectList.SelectSubLists)
-                    {
-                        selection += (selection == "") ? VisitNode(item).Code : ", " + VisitNode(item).Code;
-                    }
-                    selectListCodeContext = new CodeContext() { Code = "x => new {" + selectListCodeContext + "}" };
-                }
-            }
-            codeContext.UserFunctionCall |= selectListCodeContext.UserFunctionCall;
-            if (codeContext.Code == null)
-                codeContext.Code = selectListCodeContext.Code;
-            if (flag && node.FromItems != null && node.FromItems.Count > 0)
-                codeContext.Code = codeContext.Code + " select " + selectListCodeContext.Code;
-            if (firstorDefault)
-                codeContext.Code = $"({codeContext.Code}).FirstOrDefault()";
-            TablesAlias = tmp;
-
+            var codeContext = VisitQuery(node);
             if (node.IntoTable != null)
             {
                 if (node.IntoTable.Count == 1)
