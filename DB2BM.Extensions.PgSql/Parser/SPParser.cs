@@ -7,16 +7,15 @@ using DB2BM.Abstractions.AST;
 
 namespace DB2BM.Extensions.PgSql.Parser
 {
-    public class FunctionDefinitionConstructor 
+    public class SPParser 
     {
         IParseTree tree;
         ASTGenerator astBuilder;
         bool parserErrors;
-        public FunctionDefinitionConstructor(string functionDefinition)
+
+        public SPParser(string spCode)
         {
-            var definition = functionDefinition;
-           
-            var input = new AntlrInputStream(definition);
+            var input = new AntlrInputStream(spCode);
             var lexer = new PlPgSqlLexer(input);
             var tokens = new CommonTokenStream(lexer);
             var parser = new PlPgSqlParser(tokens);

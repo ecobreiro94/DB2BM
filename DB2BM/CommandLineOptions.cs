@@ -25,7 +25,8 @@ namespace DB2BM
         [Option('l', "list", Min = 1, Max = 2, HelpText = "Listar catálogo (tables, sps: StoredProcedures")]
         public IEnumerable<CatalogItem> ListCatalog { get; set; }
 
-        [Option('g', "gen", Min = 1, Max = 3, HelpText = "Generar código (all, entities, dbctx: DB Context, sps: Stored Procedures")]
+        [Option('g', "gen", Min = 1, Max = 3, 
+            HelpText = "Generar código (all, entities, dbctx: DB Context, sps: Stored Procedures")]
         public IEnumerable<GenerationItem> Generate { get; set; }
 
         [Option("splist", HelpText = "Archivo JSON con la lista de SPs a generar")]
@@ -34,13 +35,13 @@ namespace DB2BM
         [Option("outpath", HelpText = "Directorio de salida")]
         public string OutputPath { get; set; }
 
+        [Option("project", HelpText = "Generar el BM con estructura de proyecto")]
+        public bool Project { get; set; }
+
         [Option('o', "orm", Required = true, HelpText = "ORM a implementar")]
         public string Orm { get; set; }
 
         [Option('m', "dbms", Required = true, HelpText = "Gestor de Base de datos")]
         public string Dbms { get; set; }
-
-        [Option("project", HelpText = "Generar el BM con estructura de projecto")]
-        public bool Project { get; set; }
     }
 }
