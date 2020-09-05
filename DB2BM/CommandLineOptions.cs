@@ -19,7 +19,7 @@ namespace DB2BM
         [Option('u', "user", Required = true, HelpText = "Nombre del usuario para acceder a la base de datos")]
         public string User { get; set; }
 
-        [Option('p', "pass", Required = true, HelpText = "Password del usuario para acceder a la base de datos")]
+        [Option('p', "pass", Required = true, HelpText = "Contraseña del usuario para acceder a la base de datos")]
         public string Password { get; set; }
 
         [Option('l', "list", Min = 1, Max = 2, HelpText = "Listar catálogo (tables, sps: StoredProcedures")]

@@ -12,7 +12,7 @@ namespace DB2BM.Extensions.PgSql
     [Dbms("postgre")]
     public class PostgreSyntacticAnalyzer : ISyntacticAnalyzer
     {        
-        public void Parse(StoreProcedure sp)
+        public void Parse(StoredProcedure sp)
         {
             var parser = new SPParser(sp.OriginalCode);
             sp.AST = parser.GetAST();

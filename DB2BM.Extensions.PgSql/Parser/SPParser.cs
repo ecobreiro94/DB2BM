@@ -34,7 +34,7 @@ namespace DB2BM.Extensions.PgSql.Parser
                 var result = new Abstractions.AST.Statements.FunctionBlockNode(0, 0) {
                     Statements = new List<Abstractions.AST.Statements.StatementNode>()
                 };
-                result.Statements.Add(new Abstractions.AST.Statements.RaiseMessageStatementNode(0, 0) { LogLevel = "EXCEPTION", Message = "Not supperted yet" });
+                result.Statements.Add(new Abstractions.AST.Statements.RaiseMessageStatementNode(0, 0) { LogLevel = "EXCEPTION", Message = "Not supported yet" });
                 return result;
             }
         }

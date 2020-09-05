@@ -41,7 +41,7 @@ namespace DB2BM.Extensions.PgSql
             return "Host=" + options.Host + ";Username=" + options.User + ";Password=" + options.Password + ";Database=" + options.DataBaseName;
         }
 
-        private IEnumerable<StoreProcedure> GetFunctions(bool internals)
+        private IEnumerable<StoredProcedure> GetFunctions(bool internals)
         {
             var filter = internals ?
                 (Expression<Func<PostgreFunction, bool>>)(f => f.SpecificSchema == "pg_catalog") :
@@ -69,7 +69,7 @@ namespace DB2BM.Extensions.PgSql
                 .Where(filter)
                 .AsEnumerable()
                 .Select(f =>
-                    new StoreProcedure()
+                    new StoredProcedure()
                     { 
                         Name = f.Name,
                         SpecificName = f.SpecificName,
@@ -158,10 +158,15 @@ namespace DB2BM.Extensions.PgSql
                                })
                 });
 
-            var query = $"SELECT pg_type.typname AS EnumName, pg_enum.enumlabel AS Option " +
-               $"FROM pg_type JOIN pg_enum ON pg_enum.enumtypid = pg_type.oid";
-            IEnumerable<BaseUserDefinedType> enumsOptions = InternalDbContext.Set<Entities.PostgreUDEnumOption>()
-               .FromSqlRaw(query)
+            IEnumerable<BaseUserDefinedType> enumsOptions = 
+                InternalDbContext.Set<Entities.PostgreUDEnumOption>()
+                   .FromSqlRaw(@"
+                                SELECT 
+                                    pg_type.typname AS EnumName, pg_enum.enumlabel AS Option
+                                FROM 
+                                    pg_type 
+                                    JOIN pg_enum ON pg_enum.enumtypid = pg_type.oid
+                            ")
                .AsEnumerable()
                .GroupBy(x => x.EnumName)
                .Select(x =>
@@ -203,12 +208,12 @@ namespace DB2BM.Extensions.PgSql
             var relations = GetRelations(catalogTables).ToList();
 
             var functions = GetFunctions(false);
-            var catalogFunctions = new Dictionary<string, StoreProcedure>();
+            var catalogFunctions = new Dictionary<string, StoredProcedure>();
             foreach (var f in functions)
                 catalogFunctions.Add(f.SpecificName, f);
 
             var internalFunctions = GetFunctions(true);
-            var catalogInternalFunctions = new Dictionary<string, StoreProcedure>();
+            var catalogInternalFunctions = new Dictionary<string, StoredProcedure>();
             foreach (var f in internalFunctions)
                 catalogInternalFunctions.Add(f.SpecificName, f);
 
@@ -221,7 +226,7 @@ namespace DB2BM.Extensions.PgSql
             foreach (var s in GetSequences())
                 catalogSequences.Add(s.Name, s);
 
-            catalog.StoreProcedures = catalogFunctions;
+            catalog.StoredProcedures = catalogFunctions;
             catalog.InternalFunctions = catalogInternalFunctions;
             catalog.Relationships = relations;
             catalog.Sequences = catalogSequences;

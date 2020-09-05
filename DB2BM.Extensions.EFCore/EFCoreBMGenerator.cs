@@ -128,13 +128,13 @@ namespace DB2BM.Extensions
             GenerateDatabaseFunctions(className, null);
         }
 
-        private List<StoreProcedure> SelectFunctions(List<string> functionNames)
+        private List<StoredProcedure> SelectFunctions(List<string> functionNames)
         {
             if(functionNames == null)
-                return Catalog.StoreProcedures.Values.ToList();
-            return Catalog.StoreProcedures.Values.Where(f => functionNames.Contains(f.Name)).ToList();
+                return Catalog.StoredProcedures.Values.ToList();
+            return Catalog.StoredProcedures.Values.Where(f => functionNames.Contains(f.Name)).ToList();
         }
-        private void InsertErrors(IEnumerable<SemanticResult> errors, StoreProcedure Sp)
+        private void InsertErrors(IEnumerable<SemanticResult> errors, StoredProcedure Sp)
         {
             foreach (var error in errors)
                 Sp.GeneratedCode += "//" + (error as ErrorResult).Menssage + "\n";
@@ -144,9 +144,9 @@ namespace DB2BM.Extensions
         private void GenerateDatabaseFunctions(string className, List<string> functionNames)
         {
             var functions = SelectFunctions(functionNames);
-            var visitFunction = new List<StoreProcedure>();
-            var internalFunctionUse = new List<StoreProcedure>();
-            if (functions.Count == Catalog.StoreProcedures.Count)
+            var visitFunction = new List<StoredProcedure>();
+            var internalFunctionUse = new List<StoredProcedure>();
+            if (functions.Count == Catalog.StoredProcedures.Count)
             {
                 foreach (var f in functions)
                 {
@@ -167,7 +167,7 @@ namespace DB2BM.Extensions
             }
             else
             {
-                var functionsQueue = new Queue<StoreProcedure>(functions);
+                var functionsQueue = new Queue<StoredProcedure>(functions);
                 while (functionsQueue.Count > 0)
                 {
                     var f = functionsQueue.Dequeue();
@@ -206,8 +206,7 @@ namespace DB2BM.Extensions
             GenerateInternalFunctions(internalFunctionUse);
         }
 
-        
-        private void GenerateInternalFunctions(List<StoreProcedure> internalFunctions)
+        private void GenerateInternalFunctions(List<StoredProcedure> internalFunctions)
         {
             var temp = DbContextExtensionTemplate.GetInstanceOf("gen_context");
             temp.Add("arg", Catalog.Name.ToPascal());

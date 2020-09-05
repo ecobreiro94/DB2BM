@@ -119,13 +119,13 @@ namespace DB2BM
                         }
                     }
 
-                    if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
+                if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
+                {
+                    foreach (var function in catalog.StoredProcedures.Values)
                     {
-                        foreach (var function in catalog.StoreProcedures.Values)
-                        {
-                            Console.WriteLine(function);
-                        }
+                        Console.WriteLine(function);
                     }
+                }
 
                     if (o.Generate.Any() && o.OutputPath != null)
                     {

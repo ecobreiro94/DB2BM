@@ -8,6 +8,6 @@ namespace DB2BM.Abstractions.Interfaces
 {
     public interface ISyntacticAnalyzer
     {
-        void Parse(StoreProcedure sp);
+        void Parse(StoredProcedure sp);
     }
 }

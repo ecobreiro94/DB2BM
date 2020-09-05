@@ -11,6 +11,6 @@ namespace DB2BM.Abstractions.Interfaces
 
         Dictionary<string, string> TypesMapper { get; set; }
 
-        List<SemanticResult> Check(StoreProcedure sp);
+        List<SemanticResult> Check(StoredProcedure sp);
     }
 }
