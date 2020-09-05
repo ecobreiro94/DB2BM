@@ -2328,11 +2328,11 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 conditionCode = VisitNode(node.Expression).Code;
             }
             var codeContext = new CodeContext();
-            codeContext.Code = $"foreach {alias} in {tableName}.Where(x => {conditionCode}).ToList();\n" +
-                                "{\n" +
-                                GetIdentation + "\t" + $"DbContext.Remove({alias});\n"
-                                + "}";
-
+            codeContext.Code = $"{GetIdentation}foreach {alias} in {tableName}.Where(x => {conditionCode}).ToList();\n" +
+                                 GetIdentation + "{\n" +
+                                 GetIdentation + "\t" + $"DbContext.Remove({alias});\n" +
+                                 GetIdentation + "}\n" +
+                                 GetIdentation + "DbContext.SaveChanges();";
             return codeContext;
         }
 

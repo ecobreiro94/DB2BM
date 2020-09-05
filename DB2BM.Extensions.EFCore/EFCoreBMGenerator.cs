@@ -44,7 +44,7 @@ namespace DB2BM.Extensions
         public ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
 
         public string OutputPathService { get; private set; }
-        public string OutputPathDAL { get; private set; }
+        public string OutputPathContext { get; private set; }
         public string OutputPathModel { get; private set; }
 
         private TemplateGroupString functionsTemplate;
@@ -111,13 +111,13 @@ namespace DB2BM.Extensions
         {
             if (!isProject)
             {
-                OutputPathDAL = path;
+                OutputPathContext = path;
                 OutputPathModel = path;
                 OutputPathService = path;
             }
             else
             {
-                OutputPathDAL = Path.Combine(path, "DAL");
+                OutputPathContext = Path.Combine(path, "Context");
                 OutputPathModel = Path.Combine(path, "Model");
                 OutputPathService = Path.Combine(path, "Service");
             }
@@ -213,12 +213,13 @@ namespace DB2BM.Extensions
             temp.Add("arg", Catalog.Name.ToPascal());
             DbContextExtensionTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();
-            Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.Extensions.cs", r);
+            Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.Extensions.cs", r);
 
             if (internalFunctions?.Count > 0)
             {
                 var functions = internalFunctions.Distinct();
-                var bodys = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("internal_functions_body.json"));
+                var bodys = JsonConvert.DeserializeObject<Dictionary<string, string>>
+                    (File.ReadAllText("internal_functions_body.json"));
                 foreach (var function in functions)
                 {
                     if (bodys.ContainsKey(function.Name))
@@ -239,7 +240,7 @@ namespace DB2BM.Extensions
                                                 });
                 InternalFunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                 r = temp.Render();
-                Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.Service.cs", r);
+                Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.Service.cs", r);
             }
         }
 
@@ -256,7 +257,7 @@ namespace DB2BM.Extensions
             };
             temp.Add("db", parameters);
             var r = temp.Render();
-            Write(OutputPathDAL, Catalog.Name.ToPascal() + "DbContext.cs", r);
+            Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.cs", r);
         }
 
         public void GenerateEntities()

@@ -14,22 +14,7 @@ gen_class(entity) ::= <<
 public class <entity.Name; format="pascal">
 {
     <entity.Fields:gen_fields(); separator = "\n">
-
-    public <entity.Name; format="pascal">(<entity.NoRelationalField:gen_ctor_params(); separator = ", ">)
-    {
-        <entity.NoRelationalField:gen_assig()>
-    }
 }
->>
-
-gen_ctor_params(field) ::= <<
-<if(field.IsProperty || field.IsPrimaryKey || field.IsForeingKey)><field.DestinyType> <field.Name; format="camel"><endif>
->>
-
-gen_assig(field) ::= <<
-<if(field.IsProperty || field.IsPrimaryKey || field.IsForeingKey)>
-<field.GenName> = <field.GenName; format="camel">;
-<endif>
 >>
 
 gen_fields(field) ::= <<
