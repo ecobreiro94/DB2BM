@@ -93,96 +93,96 @@ namespace DB2BM
                     User = o.User
                 };
                 IServiceProvider serviceProvider;
-                //try
-                //{
-                serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
-                var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
-
-                catalogHandler.Options = databaseOptions;
-
-                DatabaseCatalog catalog;
                 try
                 {
-                    catalog = catalogHandler.GetCatalog();
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("No se puede establecer conexión con la Base de Datos.");
-                }
+                    serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
+                    var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
 
-                if (o.ListCatalog.Any(i => i == CatalogItem.Tables))
-                {
-                    Console.WriteLine("Tablas y vistas");
-                    foreach (var table in catalog.Tables.Values)
+                    catalogHandler.Options = databaseOptions;
+
+                    DatabaseCatalog catalog;
+                    try
                     {
-                        Console.WriteLine(table);
+                        catalog = catalogHandler.GetCatalog();
                     }
-                }
-
-                if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
-                {
-                    foreach (var function in catalog.StoreProcedures.Values)
+                    catch (Exception e)
                     {
-                        Console.WriteLine(function);
+                        throw new Exception("No se puede establecer conexión con la Base de Datos.");
                     }
-                }
 
-                if (o.Generate.Any() && o.OutputPath != null)
-                {
-                    var syntacticAnalyzer = serviceProvider.GetService<ISyntacticAnalyzer>();
-
-                    var semanticAnalyzer = serviceProvider.GetService<ISemanticAnalyzer>();
-                    semanticAnalyzer.Catalog = catalog;
-
-                    var generator = serviceProvider.GetService<IBMGenerator>();
-                    generator.Catalog = catalog;
-                    generator.SyntacticAnalyzer = syntacticAnalyzer;
-                    generator.SemanticAnalyzer = semanticAnalyzer;
-                    generator.SetOutputPath(o.OutputPath, o.Project);
-
-                    var serviceName = $"{catalog.Name.ToPascal()}Service";
-
-                    if (o.Generate.Contains(GenerationItem.All))
+                    if (o.ListCatalog.Any(i => i == CatalogItem.Tables))
                     {
-                        generator.GenerateEntities();
-                        generator.GenerateDbContext();
-                        var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
-                            null :
-                            JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
-                        if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                            generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName);
-                        else
-                            generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName,
-                                parameters.FunctionsNames);
+                        Console.WriteLine("Tablas y vistas");
+                        foreach (var table in catalog.Tables.Values)
+                        {
+                            Console.WriteLine(table);
+                        }
                     }
-                    else
+
+                    if (o.ListCatalog.Any(i => i == CatalogItem.SPs))
                     {
-                        if (o.Generate.Contains(GenerationItem.Entities))
+                        foreach (var function in catalog.StoreProcedures.Values)
+                        {
+                            Console.WriteLine(function);
+                        }
+                    }
+
+                    if (o.Generate.Any() && o.OutputPath != null)
+                    {
+                        var syntacticAnalyzer = serviceProvider.GetService<ISyntacticAnalyzer>();
+
+                        var semanticAnalyzer = serviceProvider.GetService<ISemanticAnalyzer>();
+                        semanticAnalyzer.Catalog = catalog;
+
+                        var generator = serviceProvider.GetService<IBMGenerator>();
+                        generator.Catalog = catalog;
+                        generator.SyntacticAnalyzer = syntacticAnalyzer;
+                        generator.SemanticAnalyzer = semanticAnalyzer;
+                        generator.SetOutputPath(o.OutputPath, o.Project);
+
+                        var serviceName = $"{catalog.Name.ToPascal()}Service";
+
+                        if (o.Generate.Contains(GenerationItem.All))
                         {
                             generator.GenerateEntities();
-                        }
-                        if (o.Generate.Contains(GenerationItem.DbCtx))
-                        {
                             generator.GenerateDbContext();
-                        }
-                        if (o.Generate.Contains(GenerationItem.SPs))
-                        {
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
                             if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
-                                generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName);
+                                generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName);
                             else
-                                generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName,
+                                generator.GenerateService((parameters?.ClassName != null) ? parameters.ClassName : serviceName,
                                     parameters.FunctionsNames);
+                        }
+                        else
+                        {
+                            if (o.Generate.Contains(GenerationItem.Entities))
+                            {
+                                generator.GenerateEntities();
+                            }
+                            if (o.Generate.Contains(GenerationItem.DbCtx))
+                            {
+                                generator.GenerateDbContext();
+                            }
+                            if (o.Generate.Contains(GenerationItem.SPs))
+                            {
+                                var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
+                                    null :
+                                    JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
+                                if (parameters?.FunctionsNames == null || parameters.FunctionsNames.Count == 0)
+                                    generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName);
+                                else
+                                    generator.GenerateService((parameters != null) ? parameters.ClassName : serviceName,
+                                        parameters.FunctionsNames);
+                            }
                         }
                     }
                 }
-                //}
-                //    catch (Exception e)
-                //{
-                //    Console.WriteLine(e.Message);
-                //}
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
             });
         }
