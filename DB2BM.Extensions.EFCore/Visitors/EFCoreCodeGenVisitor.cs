@@ -198,17 +198,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AliasDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CursorDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OrdinalTypeDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsNotDistinctFromNode node)
@@ -224,12 +224,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AllSimpleOpNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OtherTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OtherOpBinaryNode node)
@@ -261,7 +261,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(NCharVaryingTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(NumericTypeNode node)
@@ -286,7 +286,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(BitTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(TimeTypeNode node)
@@ -296,7 +296,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(BitVaryingTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(VarcharTypeNode node)
@@ -311,7 +311,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(DecTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(DecimalTypeNode node)
@@ -336,7 +336,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AtTimeZoneNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FloatTypeNode node)
@@ -356,7 +356,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(IntervalTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CharTypeNode node)
@@ -371,82 +371,82 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AddAnalizeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddClusterNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddDeallocatteNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddListenNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddPrepareNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddReassignNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddRefreshNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddReindexNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddResetNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AddUnlistenNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CopyStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ExplainStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ShowStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CallFunctionCallNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(WithClauseNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(WithQueryNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CaseStmtNode node)
@@ -512,12 +512,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(WindowsDefinitionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(NullOrderingNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CastExpressionNode node)
@@ -552,17 +552,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(BetweenNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(InNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OfNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(SelectStatementNode node)
@@ -592,12 +592,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectStmtNonParensNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(TruncateStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsTrueNode node)
@@ -642,7 +642,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(CollateNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(LikeBinaryNode node)
@@ -759,37 +759,37 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(BitwiseNotNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FactorialNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OtherOpUnaryNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsDocumentNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsNotDocumentNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsUnknownNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IsNotUnknownNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(BaseTypeCoercionNode node)
@@ -807,7 +807,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(IntervalTypeCoercionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(EqualNode node)
@@ -1141,52 +1141,52 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ValueExpressionPrimaryNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IntervalFieldNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(DatetimeOverlapsNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(TableColsNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(UserNameNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(GroupByClauseNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ArrayTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ArrayToSelectNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ArrayElementsNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ComparisonModNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(BasicFunctionCallNode node)
@@ -1310,102 +1310,102 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(TrimStringValueFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(SubstringStringValueFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(PositionStringValueFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OverlayStringValueFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CollationStringValueFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CastSpesificationSystemFunction node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlElementFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlForestFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlPiFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlRootFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlExistsFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlParseFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlSerializeFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlTabletFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(XmlTableColumnNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CurrentCatalogSystemFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CurrentSchemaSystemFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CurrentUserSystemFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(UserSystemFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(SessionUserSystemFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CurrentDateFunctionNode node)
@@ -1420,7 +1420,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(LocalTimeFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(CurrentTimestampFunctionNode node)
@@ -1430,7 +1430,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(LocalTimestampFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(BoolNode node)
@@ -1440,7 +1440,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(DefaultNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(Float4Node node)
@@ -1899,12 +1899,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(FrameBoundNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FrameClauseNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         string GenFromItem(string item, string alias)
@@ -2012,7 +2012,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ExceptionStatementNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ExecuteStatementNode node)
@@ -2025,7 +2025,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(TransactionStatementNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FromPrimary1Node node)
@@ -2065,22 +2065,22 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(FromPrimary3Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FromPrimary4Node node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(FromFunctionColumnDefNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AliasClauseNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(VexOrNamedNotationNode node)
@@ -2302,12 +2302,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AssertMessageStatementNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(IdentifierNonTypeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(DeleteStmtPSqlNode node)
@@ -2338,7 +2338,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(OpCharsNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(LoopStmtNode node)
@@ -2409,17 +2409,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ConflictObjectNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ConflictActionNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(DeclareStatementNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ModularTypeDeclarationNode node)
@@ -2434,7 +2434,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(AnalizeModeNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(WhileLoopNode node)
@@ -2447,7 +2447,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForAliasLoopNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ForIdListLoopNode node)
@@ -2492,27 +2492,57 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(InsertStmtPSqlNode node)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var codeContext = new CodeContext();
+                var table = node.InsertTableName.Identifiers[0].Text.ToPascal();
+                var tableName = "x" + node.GetHashCode();
+                ValuesStmtNode valuesStmt = null;
+                if (node.SelectStmt?.SelectOps?.SelectPrimary != null)
+                    valuesStmt = node.SelectStmt.SelectOps.SelectPrimary as ValuesStmtNode;
+                var valuesValues = new List<CodeContext>();
+                var columns = new List<CodeContext>();
+                if(node.InsertColumns != null)
+                    foreach (var c in node.InsertColumns)
+                       columns.Add(VisitNode(c));
+                foreach (var v in valuesStmt?.Values)
+                    valuesValues.Add(VisitNode(v));
+                codeContext.Code = $"{GetIdentation}var {tableName} = new {table}()\n" +
+                                    GetIdentation + "{\n";
+                if (valuesValues.Count >= columns.Count)
+                    for (int i = 0; i < columns.Count; i++)
+                        codeContext.Code += $"{GetIdentation}\t{columns[i].Code.ToPascal()} = {valuesValues[i].Code}\n";
+
+                codeContext.Code += GetIdentation + "}\n";
+                codeContext.Code += $"{GetIdentation}DbContext.Add({tableName});\n";
+                codeContext.Code += $"{GetIdentation}DbContext.SaveChanges();\n";
+                return codeContext;
+            }
+            catch (Exception)
+            {
+                return new CodeContext();
+            }
+             
         }
 
         public override CodeContext Visit(AfterOpsFetchNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AfterOpsForNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AfterOpsLimitNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AfterOpsOffsetNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(OrderByClauseNode node)
@@ -2571,37 +2601,149 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(OrderSpecificationNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(AllOpRefNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(ExecuteStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(UpdateStmtPSqlNode node)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var codeContext = new CodeContext();
+                var generalAlias = "";
+                var table = VisitNode(node.UpdateTableName).Code;
+                var alias = "";
+                if (node.Alias != null)
+                    alias = VisitNode(node.Alias).Code;
+                else
+                    alias = node.UpdateTableName.Identifiers[0].Text.ToCamel();
+                InQuery = true;
+                var query = "";
+
+                var tmp = TablesAlias;
+                TablesAlias = new Dictionary<string, string>();
+
+                var fromItemsCodeContext = new CodeContextFromItemResult();
+                foreach (var item in node.FromItems)
+                {
+                    var itemCodeContext = VisitNode(item) as CodeContextFromItemResult;
+                    fromItemsCodeContext.Code += $" {itemCodeContext.Code}";
+                    fromItemsCodeContext.JionExpressions.AddRange(itemCodeContext.JionExpressions);
+                    fromItemsCodeContext.Count += itemCodeContext.Count;
+                    fromItemsCodeContext.TablesName.AddRange(itemCodeContext.TablesName);
+                }
+                CodeContext expCodeContext = null;
+                if(node.Expression != null)
+                    expCodeContext = VisitNode(node.Expression);
+
+                if (expCodeContext != null && !expCodeContext.UserFunctionCall)
+                {
+                    table = table.Replace(".AsEnumerable()", "");
+                    fromItemsCodeContext.Code = fromItemsCodeContext.Code.Replace(".AsEnumerable()", "");
+                }
+                
+                if (fromItemsCodeContext.Count == 0)
+                {
+                    generalAlias = alias;
+                    TablesAlias.Add(alias, alias);
+                    if (expCodeContext == null)
+                        query = $"from {generalAlias} in {table}";
+                    else
+                        query = $"from {generalAlias} in {table} where {expCodeContext} select {generalAlias}";
+                }
+                else
+                {
+                    generalAlias = alias + node.GetHashCode();
+
+                    var fromCode = $"from {alias} in {table} {fromItemsCodeContext.Code}";
+                    var firtSelect = "";
+                    foreach (var tablename in fromItemsCodeContext.TablesName)
+                    {
+                        firtSelect = (firtSelect == "") ? firtSelect : ", " + firtSelect;
+                        if (!TablesAlias.ContainsKey(TablesAlias[tablename]))
+                            TablesAlias.Add(TablesAlias[tablename], generalAlias + "." + TablesAlias[tablename]);
+                        TablesAlias[tablename] = generalAlias + "." + TablesAlias[tablename];
+                    }
+
+                    query = $"from {generalAlias} in ({fromCode}"+" select new {"+ firtSelect +"})";
+
+                    var whereCode = "";
+                    var joinExpCode = "";
+                    if (fromItemsCodeContext.JionExpressions?.Count > 0)
+                    {
+                        foreach (var exp in fromItemsCodeContext.JionExpressions)
+                            joinExpCode = (joinExpCode != "") ? $"{VisitNode(exp).Code}" : $" &&{VisitNode(exp).Code}";
+                    }
+                    if (joinExpCode != "")
+                    {
+                        whereCode = $" where ({joinExpCode})";
+                        if (expCodeContext.Code != null && expCodeContext.Code != "")
+                            whereCode += $" && {expCodeContext.Code}";
+                    }
+                    else
+                    {
+                        if (expCodeContext.Code != null && expCodeContext.Code != "")
+                            whereCode += $" where {expCodeContext.Code}";
+                    }
+                    query += whereCode + $" select {generalAlias}";
+                    var newTA = new Dictionary<string, string>();
+                    foreach (var item in TablesAlias)
+                    {
+                        if (item.Value.StartsWith(generalAlias))
+                            newTA.Add(item.Key, item.Value.Replace(generalAlias, $"item{ node.GetHashCode()}"));
+                        else newTA.Add(item.Key, item.Value);
+                    }
+                    TablesAlias = newTA;
+                    var statemant = $"{GetIdentation}foreach(var item{node.GetHashCode()} in {query})\n" +
+                                       GetIdentation + "{\n";
+                    foreach (var set in node.UpdateSets)
+                    {
+                        statemant += VisitNode(set) + "\n";
+                    }
+                    statemant += GetIdentation + "}\n";
+                    statemant += GetIdentation + "SaveChanges()";
+                }
+                InQuery = false;
+                TablesAlias = tmp;
+                return codeContext;
+            }
+            catch (Exception)
+            {
+                return new CodeContext();
+            }
         }
 
         public override CodeContext Visit(ValuesStmtNode node)
         {
-            throw new NotImplementedException();
+            return new CodeContext();
         }
 
         public override CodeContext Visit(UpdateSetNode node)
         {
-            throw new NotImplementedException();
+            var codeContext = new CodeContext();
+            if(node.Columns.Count <= node.Values.Count)
+                for (int i = 0; i < node.Columns.Count; i++)
+                {
+                    codeContext.Code += $"{VisitNode(node.Columns[i]).Code} = {VisitNode(node.Values[i]).Code},\n";
+                }
+            return codeContext;
         }
 
         public override CodeContext Visit(ValuesValuesNode node)
         {
-            throw new NotImplementedException();
+            var expsCode = "";
+            foreach (var item in node.Expressions)
+                expsCode = (expsCode == "") ? VisitNode(item).Code : " ," + VisitNode(item).Code;
+            return new CodeContext() { Code = $"({expsCode})" };
         }
 
         public override CodeContext Visit(CursorStatementNode node)

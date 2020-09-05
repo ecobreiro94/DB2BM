@@ -170,17 +170,17 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(AliasDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CursorDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(OrdinalTypeDeclarationNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(OtherTypeNode node)
@@ -282,7 +282,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(DecTypeNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(DecimalTypeNode node)
@@ -351,22 +351,22 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(AddAnalizeNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddClusterNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddDeallocatteNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddListenNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddPrepareNode node)
@@ -376,42 +376,42 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(AddReassignNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddRefreshNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddReindexNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddResetNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AddUnlistenNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CopyStmtNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ExplainStmtNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ShowStmtNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CallFunctionCallNode node)
@@ -431,7 +431,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(WithQueryNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CaseStmtNode node)
@@ -454,12 +454,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(WindowsDefinitionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(NullOrderingNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CastExpressionNode node)
@@ -483,17 +483,17 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(BetweenNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(InNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(OfNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(SelectStatementNode node)
@@ -559,7 +559,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(CollateNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
         private List<SemanticResult> SemanticCheckLikeNodes(LikeNode node)
         {
@@ -1009,7 +1009,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(IntervalFieldNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(DatetimeOverlapsNode node)
@@ -1024,12 +1024,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(TableColsNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(UserNameNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(GroupByClauseNode node)
@@ -1042,7 +1042,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(ArrayTypeNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ArrayToSelectNode node)
@@ -1289,47 +1289,47 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(XmlElementFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlForestFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlPiFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlRootFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlExistsFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlParseFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlSerializeFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlTabletFunctionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(XmlTableColumnNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(CurrentCatalogSystemFunctionNode node)
@@ -1435,7 +1435,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(SelectOpsNoParensNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(SelectOpsNode node)
@@ -1642,12 +1642,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(FrameBoundNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(FrameClauseNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(FromItemSimpleNode node)
@@ -1687,17 +1687,17 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(ExceptionStatementNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ExecuteStatementNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(TransactionStatementNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(FromPrimary1Node node)
@@ -1757,12 +1757,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(FromFunctionColumnDefNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AliasClauseNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(VexOrNamedNotationNode node)
@@ -1774,7 +1774,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(ArgumentNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(IndirectionIdentifierNode node)
@@ -1936,7 +1936,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(IdentifierNonTypeNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(DeleteStmtPSqlNode node)
@@ -1961,7 +1961,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(OpCharsNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(LoopStmtNode node)
@@ -2017,22 +2017,22 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(OpNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ConflictObjectNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ConflictActionNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(DeclareStatementNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ModularTypeDeclarationNode node)
@@ -2051,7 +2051,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(AnalizeModeNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(WhileLoopNode node)
@@ -2065,7 +2065,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(ForAliasLoopNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ForIdListLoopNode node)
@@ -2082,7 +2082,7 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(ForCursorLoopNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ForeachLoopNode node)
@@ -2112,22 +2112,22 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(AfterOpsFetchNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AfterOpsForNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AfterOpsLimitNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AfterOpsOffsetNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(OrderByClauseNode node)
@@ -2137,17 +2137,17 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(SortSpecifierNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(OrderSpecificationNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AllOpRefNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(ExecuteStmtNode node)
@@ -2163,8 +2163,8 @@ namespace DB2BM.Extensions.Semantic
         public override List<SemanticResult> Visit(UpdateStmtPSqlNode node)
         {
             var errors = new List<SemanticResult>();
-            if (node.WithClause != null)
-                errors.AddRange(VisitNode(node.WithClause));
+            //if (node.WithClause != null)
+            //    errors.AddRange(VisitNode(node.WithClause));
 
             foreach (var set in node.UpdateSets)
                 errors.AddRange(Visit(set));
@@ -2197,7 +2197,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(UpdateSetNode node)
         {
-            throw new NotImplementedException();
+            var result = new List<SemanticResult>();
+            foreach (var col in node.Columns)
+                result.AddRange(VisitNode(col));
+            foreach (var exp in node.Values)
+                result.AddRange(VisitNode(exp));
+            return result;
         }
 
         public override List<SemanticResult> Visit(ValuesValuesNode node)
@@ -2265,12 +2270,12 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(IsNotDistinctFromNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
         public override List<SemanticResult> Visit(AllSimpleOpNode node)
         {
-            throw new NotImplementedException();
+            return new List<SemanticResult>();
         }
 
     }
