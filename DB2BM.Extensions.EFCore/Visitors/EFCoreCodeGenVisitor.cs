@@ -1075,8 +1075,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
         public override CodeContext Visit(MultiplyNode node)
         {
             var codeContext = new CodeContext();
-            if (multiplaySustitution != null || multiplaySustitution != "")
-                codeContext.Code = multiplaySustitution;
+            if (multiplySustitution != null || multiplySustitution != "")
+                codeContext.Code = multiplySustitution;
             else if (TablesAlias.Count > 0)
                 codeContext.Code = TablesAlias.First().Key;
             else codeContext.Code = "";
@@ -1549,7 +1549,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var predifined = new[] { "count", "sum", "max", "min", "avg" };
             return predifined.Contains(functionCall.SchemaQualifiednameNonType.IdentifierNonType.Text.ToLower());
         }
-        string multiplaySustitution;
+        string multiplySustitution;
         private List<(string, string)> FindJoinColumns(List<FromItemNode> nodes)
         {
             var result = new List<(string, string)>();
@@ -1601,7 +1601,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 if (node.FromItems.Count == 1)
                 {
                     var fromItemsCC = VisitNode(node.FromItems[0]) as CodeContextFromItemResult;
-                    multiplaySustitution = node.FromItems[0].Alias;
+                    multiplySustitution = node.FromItems[0].Alias;
                     generalAlias = node.FromItems[0].Alias;
                     if (fromItemsCC.Count == 1)
                     {
@@ -1612,7 +1612,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 if (bnd)
                 {
                     var alias = "x" + node.GetHashCode().ToString();
-                    multiplaySustitution = alias;
+                    multiplySustitution = alias;
                     generalAlias = alias;
                     var joinExpressions = new List<ExpressionNode>();
                     var tablesName = new List<string>();
@@ -1666,7 +1666,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         var indirection = exp as IndirectionVarNode;
                         if (indirection.Indirections.Count > 0 &&
                             indirection.Indirections[indirection.Indirections.Count - 1].ColLabel != null)
-                            TablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1].ColLabel.Text, "@.Key");
+                            TablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1]
+                                .ColLabel.Text, "@.Key");
                     }
                     codeContext.Code += $" group {generalAlias} by {expCode} into {intoVariable}";
                     var newTA = new Dictionary<string, string>();
@@ -1704,7 +1705,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     if (selectListCodeContext.Code.Contains("Count"))
                     {
                         firstorDefault = false;
-                        var argCC = VisitNode((node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode).VexOrNamedNotations[0]).Code;
+                        var argCC = VisitNode((node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode)
+                            .VexOrNamedNotations[0]).Code;
                         codeContext.Code = $"({codeContext.Code} select {argCC}).{selectListCodeContext.Code}";
                     }
                     else codeContext.Code = $"({codeContext.Code}).{selectListCodeContext.Code}";
@@ -1731,9 +1733,23 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 else
                 {
                     var selection = "";
-                    foreach (var item in node.SelectList.SelectSubLists)
+                    if (node.IntoTable?.Count <= 1)
                     {
-                        selection += (selection == "") ? VisitNode(item).Code : ", " + VisitNode(item).Code;
+                        foreach (var item in node.SelectList.SelectSubLists)
+                            selection += (selection == "") ? VisitNode(item).Code : ", " + VisitNode(item).Code;
+                    }
+                    else
+                    {
+                        var index = 0;
+                        foreach (var item in node.SelectList.SelectSubLists)
+                        {
+                            if (selection == "")
+                                selection += (index < node.IntoTable.Count)?
+                                    $"{ VisitNode(node.IntoTable[index++]).Code} = { VisitNode(item).Code}" : VisitNode(item).Code;
+                            else
+                                selection += (index < node.IntoTable.Count)?
+                                    $",  {VisitNode(node.IntoTable[index++]).Code} = {VisitNode(item).Code}" : VisitNode(item).Code;
+                        }
                     }
                     selectListCodeContext = new CodeContext() { Code = "x => new {" + selectListCodeContext + "}" };
                 }
@@ -1763,18 +1779,21 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
                 else
                 {
-                    var variableName = "";
+                    var variableName = "x" + node.GetHashCode();
                     var variablesList = new List<CodeContext>();
                     foreach (var identifier in node.IntoTable)
                     {
                         var identifierCodeContext = VisitNode(identifier);
                         variablesList.Add(identifierCodeContext);
-                        variableName += identifierCodeContext.Code;
                     }
-                    codeContext.Code = $"{variablesList[0].Code} = {codeContext.Code}";
+                    codeContext.Code = $"{variableName} = {codeContext.Code};\n";
+                    foreach (var item in variablesList)
+                    {
+                        codeContext.Code += $"{item} = {variableName}.{item};\n"; 
+                    }
                 }
             }
-            multiplaySustitution = null;
+            multiplySustitution = null;
             InQuery = false;
             return codeContext;
         }
@@ -2161,30 +2180,37 @@ namespace DB2BM.Extensions.EFCore.Visitors
         public override CodeContext Visit(PerformStmtNode node)
         {
             var codeContext = VisitQuery(node);
-            if (node.IntoTable != null)
-            {
-                if (node.IntoTable.Count == 1)
-                {
-                    var variableCodeContext = VisitNode(node.IntoTable[0]);
-                    if (node.IntoTable[0].TypeReturn == node.TypeReturn)
-                        codeContext.Code = $"{variableCodeContext.Code} = {codeContext.Code}";
-                    else codeContext.Code = $"{variableCodeContext.Code} = ({node.IntoTable[0].TypeReturn}){codeContext.Code}";
-                }
-                else
-                {
-                    var variableName = "";
-                    var variablesList = new List<CodeContext>();
-                    foreach (var identifier in node.IntoTable)
-                    {
-                        var identifierCodeContext = VisitNode(identifier);
-                        variablesList.Add(identifierCodeContext);
-                        variableName += identifierCodeContext.Code;
-                    }
-                    codeContext.Code = $"{variablesList[0].Code} = {codeContext.Code}";
-                }
-            }
-            multiplaySustitution = null;
+            multiplySustitution = null;
             InQuery = false;
+            if (node.SelectOps != null)
+            {
+                var selectOpsCode = VisitNode(node.SelectOps);
+                if (node.Intersect)
+                    return new CodeContext()
+                    {
+                        Code = $"({codeContext.Code}).Intersect({selectOpsCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || selectOpsCode.UserFunctionCall
+                    };
+                else if (node.Except)
+                    return new CodeContext()
+                    {
+                        Code = $"({codeContext.Code}).Except({selectOpsCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || selectOpsCode.UserFunctionCall
+                    };
+                else if (node.SetQualifier1 != null && node.Union && node.SetQualifier1.ToLower() == "distinct")
+                    return new CodeContext()
+                    {
+                        Code = $"({codeContext.Code}).Union({selectOpsCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || selectOpsCode.UserFunctionCall
+                    };
+                else if (node.SetQualifier1 != null && node.Union && node.SetQualifier1.ToLower() == "all")
+                    return new CodeContext()
+                    {
+                        Code = $"({codeContext.Code}).Concat({selectOpsCode.Code})",
+                        UserFunctionCall = selectOpsCode.UserFunctionCall || selectOpsCode.UserFunctionCall
+                    };
+            }
+
             return codeContext;
         }
 
@@ -2286,7 +2312,28 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(DeleteStmtPSqlNode node)
         {
-            throw new NotImplementedException();
+            var tableName = VisitNode(node.DeleteTableName).Code;
+            var alias = "";
+            var tmp = TablesAlias;
+            TablesAlias = new Dictionary<string, string>();
+            if (node.Alias != null)
+                alias = node.Alias.Text;
+
+            else alias = "t" + node.GetHashCode();
+
+            TablesAlias.Add(tableName, "x");
+            var conditionCode = "";
+            if (node.Expression != null)
+            {
+                conditionCode = VisitNode(node.Expression).Code;
+            }
+            var codeContext = new CodeContext();
+            codeContext.Code = $"foreach {alias} in {tableName}.Where(x => {conditionCode}).ToList();\n" +
+                                "{\n" +
+                                GetIdentation + "\t" + $"DbContext.Remove({alias});\n"
+                                + "}";
+
+            return codeContext;
         }
 
         public override CodeContext Visit(OpCharsNode node)
