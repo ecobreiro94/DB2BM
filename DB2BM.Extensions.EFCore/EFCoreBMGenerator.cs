@@ -20,8 +20,37 @@ namespace DB2BM.Extensions
     [Orm("efcore")]
     public class EFCoreBMGenerator : IBMGenerator
     {
+        #region Campos y Propiedades Privados 
+
         private bool prepareCatalog;
         private DatabaseCatalog catalog;
+
+        private TemplateGroupString functionsTemplate;
+        private TemplateGroupString internalFunctionsTemplate;
+        private TemplateGroupString modelTemplate;
+        private TemplateGroupString dbContextTemplate;
+        private TemplateGroupString dbContextExtensionTemplate;
+
+        private Dictionary<string, string> TypesMapper
+        {
+            get => SemanticAnalyzer.TypesMapper;
+        }
+
+        #endregion
+
+        #region Propiedades Públicas para la configuración del Generador 
+
+        public ISemanticAnalyzer SemanticAnalyzer { get; set; }
+        public ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
+
+        public string OutputPathService { get; private set; }
+        public string OutputPathContext { get; private set; }
+        public string OutputPathModel { get; private set; }
+
+        #endregion
+
+        #region Implementación de la interfaz IBMGenerator
+
         public DatabaseCatalog Catalog
         {
             get
@@ -40,18 +69,82 @@ namespace DB2BM.Extensions
             }
         }
 
-        public ISemanticAnalyzer SemanticAnalyzer { get; set; }
-        public ISyntacticAnalyzer SyntacticAnalyzer { get; set; }
+        public void SetOutputPath(string path, bool isProject)
+        {
+            if (!isProject)
+            {
+                OutputPathContext = path;
+                OutputPathModel = path;
+                OutputPathService = path;
+            }
+            else
+            {
+                OutputPathContext = Path.Combine(path, "Context");
+                OutputPathModel = Path.Combine(path, "Model");
+                OutputPathService = Path.Combine(path, "Service");
+            }
+        }
 
-        public string OutputPathService { get; private set; }
-        public string OutputPathContext { get; private set; }
-        public string OutputPathModel { get; private set; }
+        public void GenerateService(string className)
+        {
+            GenerateDatabaseFunctions(className, null);
+        }
 
-        private TemplateGroupString functionsTemplate;
-        private TemplateGroupString internalFunctionsTemplate;
-        private TemplateGroupString modelTemplate;
-        private TemplateGroupString dbContextTemplate;
-        private TemplateGroupString dbContextExtensionTemplate;
+        public void GenerateContext()
+        {
+            var temp = DbContextTemplate.GetInstanceOf("gen_context");
+            DbContextTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+            var parameters = new DbContextTemplateParam()
+            {
+                Name = Catalog.Name,
+                Sequences = Catalog.Sequences.Values.ToList(),
+                Tables = Catalog.Tables.Values.ToList(),
+                UserDefinedTypes = Catalog.UserDefinedTypes.Values.ToList()
+            };
+            temp.Add("db", parameters);
+            var r = temp.Render();
+            Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.cs", r);
+        }
+
+        public void GenerateEntities()
+        {
+            foreach (var item in Catalog.Tables.Values)
+            {
+                var temp = ModelTemplate.GetInstanceOf("gen_model");
+                temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Table = item });
+                ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+                var r = temp.Render();
+                Write(OutputPathModel, item.Name.ToPascal() + ".cs", r);
+            }
+            foreach (var item in Catalog.UserDefinedTypes.Values)
+            {
+                if (item is UserDefinedEnumType)
+                {
+                    var temp = ModelTemplate.GetInstanceOf("gen_enum");
+                    temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Enum = (UserDefinedEnumType)item });
+                    ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+                    var r = temp.Render();
+                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
+                }
+                if (item is UserDefinedType)
+                {
+                    var temp = ModelTemplate.GetInstanceOf("gen_complex_type");
+                    temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, UDT = (UserDefinedType)item });
+                    ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
+                    var r = temp.Render();
+                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
+                }
+            }
+        }
+
+        public void GenerateService(string className, List<string> functionNames)
+        {
+            GenerateDatabaseFunctions(className, functionNames);
+        }
+
+        #endregion
+
+        #region Plantillas para la Generación de Código
 
         public TemplateGroupString FunctionsTemplate
         {
@@ -62,6 +155,7 @@ namespace DB2BM.Extensions
                 return functionsTemplate;
             } 
         }
+
         public TemplateGroupString DbContextExtensionTemplate
         {
             get
@@ -102,38 +196,17 @@ namespace DB2BM.Extensions
             }
         }
 
-        public Dictionary<string, string> TypesMapper
-        {
-            get => SemanticAnalyzer.TypesMapper;
-        }
+        #endregion
 
-        public void SetOutputPath(string path, bool isProject)
-        {
-            if (!isProject)
-            {
-                OutputPathContext = path;
-                OutputPathModel = path;
-                OutputPathService = path;
-            }
-            else
-            {
-                OutputPathContext = Path.Combine(path, "Context");
-                OutputPathModel = Path.Combine(path, "Model");
-                OutputPathService = Path.Combine(path, "Service");
-            }
-        }
-
-        public void GenerateService(string className)
-        {
-            GenerateDatabaseFunctions(className, null);
-        }
+        #region Métodos Privados
 
         private List<StoredProcedure> SelectFunctions(List<string> functionNames)
         {
-            if(functionNames == null)
+            if (functionNames == null)
                 return Catalog.StoredProcedures.Values.ToList();
             return Catalog.StoredProcedures.Values.Where(f => functionNames.Contains(f.Name)).ToList();
         }
+
         private void InsertErrors(IEnumerable<SemanticResult> errors, StoredProcedure Sp)
         {
             foreach (var error in errors)
@@ -195,14 +268,14 @@ namespace DB2BM.Extensions
             }
             var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
             temp.Add("db", new FunctionsTemplateParams()
-                                                {
-                                                    NameSpace = Catalog.Name,
-                                                    ClassName = className ,
-                                                    Functions = visitFunction
-                                                });
+            {
+                NameSpace = Catalog.Name,
+                ClassName = className,
+                Functions = visitFunction
+            });
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();
-            Write(OutputPathService, className +".cs", r);
+            Write(OutputPathService, className + ".cs", r);
             GenerateInternalFunctions(internalFunctionUse);
         }
 
@@ -233,74 +306,23 @@ namespace DB2BM.Extensions
                 }
                 temp = InternalFunctionsTemplate.GetInstanceOf("gen_context");
                 temp.Add("arg", new InternalFunctionTemplateParams()
-                                                {
-                                                    Functions = functions.ToList(),
-                                                    Name = Catalog.Name
-                                                });
+                {
+                    Functions = functions.ToList(),
+                    Name = Catalog.Name
+                });
                 InternalFunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
                 r = temp.Render();
                 Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.Service.cs", r);
             }
         }
 
-        public void GenerateDbContext()
-        {
-            var temp = DbContextTemplate.GetInstanceOf("gen_context");
-            DbContextTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-            var parameters = new DbContextTemplateParam()
-            {
-                Name = Catalog.Name,
-                Sequences = Catalog.Sequences.Values.ToList(),
-                Tables = Catalog.Tables.Values.ToList(),
-                UserDefinedTypes = Catalog.UserDefinedTypes.Values.ToList()
-            };
-            temp.Add("db", parameters);
-            var r = temp.Render();
-            Write(OutputPathContext, Catalog.Name.ToPascal() + "DbContext.cs", r);
-        }
-
-        public void GenerateEntities()
-        {
-            foreach (var item in Catalog.Tables.Values)
-            {
-                var temp = ModelTemplate.GetInstanceOf("gen_model");
-                temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Table = item });
-                ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-                var r = temp.Render();
-                Write(OutputPathModel, item.Name.ToPascal() + ".cs", r);
-            }
-            foreach (var item in Catalog.UserDefinedTypes.Values)
-            {
-                if (item is UserDefinedEnumType)
-                {
-                    var temp = ModelTemplate.GetInstanceOf("gen_enum");
-                    temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, Enum = (UserDefinedEnumType)item });
-                    ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-                    var r = temp.Render();
-                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
-                }
-                if (item is UserDefinedType)
-                {
-                    var temp = ModelTemplate.GetInstanceOf("gen_complex_type");
-                    temp.Add("db", new ModelTemplateParams() { NameSpace = Catalog.Name, UDT = (UserDefinedType)item });
-                    ModelTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
-                    var r = temp.Render();
-                    Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
-                }
-            }
-        }
-
-        public void GenerateService(string className, List<string> functionNames)
-        {
-            GenerateDatabaseFunctions(className, functionNames);
-        }
-
-        public void Write(string path, string csName, string code)
+        private void Write(string path, string csName, string code)
         {
             if (!File.Exists(path))
                 Directory.CreateDirectory(path);
             File.WriteAllText(Path.Combine(path, csName), code);
         }
 
+        #endregion
     }
 }

@@ -17,7 +17,7 @@ namespace DB2BM.Abstractions.Interfaces
         
         void GenerateEntities();
 
-        void GenerateDbContext();
+        void GenerateContext();
 
         void GenerateService(string className);
 

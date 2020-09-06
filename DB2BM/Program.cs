@@ -145,7 +145,7 @@ namespace DB2BM
                         if (o.Generate.Contains(GenerationItem.All))
                         {
                             generator.GenerateEntities();
-                            generator.GenerateDbContext();
+                            generator.GenerateContext();
                             var parameters = string.IsNullOrEmpty(o.StoredProcedures) ?
                                 null :
                                 JsonConvert.DeserializeObject<FunctionsGenerationOptions>(File.ReadAllText(o.StoredProcedures));
@@ -163,7 +163,7 @@ namespace DB2BM
                             }
                             if (o.Generate.Contains(GenerationItem.DbCtx))
                             {
-                                generator.GenerateDbContext();
+                                generator.GenerateContext();
                             }
                             if (o.Generate.Contains(GenerationItem.SPs))
                             {
