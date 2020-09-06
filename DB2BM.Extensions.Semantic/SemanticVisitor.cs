@@ -502,7 +502,7 @@ namespace DB2BM.Extensions.Semantic
             var errors = new List<SemanticResult>();
 
             if (node.WithClause != null)
-                errors.Add(new ErrorResult(String.Format("No Suport SP:{0} Line:{1} Column:{3}", Sp.Name, node.WithClause.Line, node.WithClause.Column)));
+                errors.Add(new ErrorResult(String.Format("No Support SP:{0} Line:{1} Column:{3}", Sp.Name, node.WithClause.Line, node.WithClause.Column)));
             errors.AddRange(VisitNode(node.SelectOps));
             if (node.SelectOps.SelectPrimary != null)
                 node.TypeReturn = node.SelectOps.SelectPrimary.TypeReturn;
