@@ -1,18 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog" Collapsed="true">
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
     <Position X="7.5" Y="2.5" Width="1.5" />
     <AssociationLine Name="Tables" Type="DB2BM.Abstractions.Entities.Table">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="0.024" Y="0.06" />
       </MemberNameLabel>
-    </AssociationLine>
-    <AssociationLine Name="StoreProcedures" Type="DB2BM.Abstractions.Entities.StoreProcedure" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="8.304" Y="3.062" />
-        <Point X="8.304" Y="3.938" />
-        <Point X="9.5" Y="3.938" />
-      </Path>
     </AssociationLine>
     <AssociationLine Name="Relationships" Type="DB2BM.Abstractions.Entities.Relationship" FixedFromPoint="true" FixedToPoint="true">
       <Path>
@@ -28,33 +21,43 @@
         <Point X="7.25" Y="0.812" />
       </Path>
     </AssociationLine>
-    <AssociationLine Name="InternalFunctions" Type="DB2BM.Abstractions.Entities.StoreProcedure" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="7.982" Y="3.062" />
-        <Point X="7.982" Y="4.187" />
-        <Point X="9.5" Y="4.187" />
-      </Path>
-      <MemberNameLabel ManuallyPlaced="true">
-        <Position X="0.147" Y="0.023" />
-      </MemberNameLabel>
-    </AssociationLine>
     <AssociationLine Name="Sequences" Type="DB2BM.Abstractions.Entities.Sequence" FixedToPoint="true">
       <Path>
         <Point X="7.5" Y="2.812" />
         <Point X="6.5" Y="2.812" />
       </Path>
     </AssociationLine>
+    <AssociationLine Name="StoredProcedures" Type="DB2BM.Abstractions.Entities.StoredProcedure" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.875" Y="3.603" />
+        <Point X="7.875" Y="4.188" />
+        <Point X="9.5" Y="4.188" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.258" Y="0.021" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="InternalFunctions" Type="DB2BM.Abstractions.Entities.StoredProcedure" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8.188" Y="3.603" />
+        <Point X="8.188" Y="3.937" />
+        <Point X="9.5" Y="3.937" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.233" Y="0.023" />
+      </MemberNameLabel>
+    </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAABAAQAQAAAAAAEAAAAAAIAMAAAA=</HashCode>
+      <HashCode>QAAAAAAAAAAAAAAAABAAQAQAAAAAAEAAAAAAAAMAAAA=</HashCode>
       <FileName>Entities\DatabaseCatalog.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
       <Property Name="Tables" />
-      <Property Name="StoreProcedures" />
       <Property Name="Relationships" />
       <Property Name="UserDefinedTypes" />
-      <Property Name="InternalFunctions" />
       <Property Name="Sequences" />
+      <Property Name="StoredProcedures" />
+      <Property Name="InternalFunctions" />
     </ShowAsCollectionAssociation>
   </Class>
   <Class Name="DB2BM.Abstractions.Entities.UserDefined.BaseUserDefinedType" Collapsed="true">
@@ -77,24 +80,6 @@
       <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAgAAAAABAAAA=</HashCode>
       <FileName>Entities\UserDefined\UserDefinedTypeEnum.cs</FileName>
     </TypeIdentifier>
-  </Class>
-  <Class Name="DB2BM.Abstractions.Entities.StoreProcedure" Collapsed="true">
-    <Position X="9.5" Y="3.75" Width="1.75" />
-    <AssociationLine Name="Definition" Type="DB2BM.Abstractions.AST.ASTNode">
-      <MemberNameLabel ManuallyPlaced="true">
-        <Position X="0.391" Y="-0.325" />
-      </MemberNameLabel>
-    </AssociationLine>
-    <TypeIdentifier>
-      <HashCode>IAAAAAIAgAAAiAAEACAgAAQAAAAAAQAQAAAAAAAEAAA=</HashCode>
-      <FileName>Entities\StoreProcedure.cs</FileName>
-    </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="Definition" />
-    </ShowAsAssociation>
-    <ShowAsCollectionAssociation>
-      <Property Name="Params" />
-    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="DB2BM.Abstractions.Entities.Relationship" Collapsed="true">
     <Position X="9.5" Y="1" Width="1.5" />
@@ -182,12 +167,12 @@
   <Class Name="DB2BM.Abstractions.Entities.TableField" Collapsed="true">
     <Position X="11.75" Y="1.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AQAAAAAAAAACAAAEAAAAAAAQABIAAAAAAIIAIAAABAA=</HashCode>
+      <HashCode>AQAAAAAAAAACAAAEAAAAQAAQABIAAAAAAIIAIAAABAA=</HashCode>
       <FileName>Entities\Field.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DB2BM.Abstractions.Entities.Parameter" Collapsed="true">
-    <Position X="11.75" Y="5.25" Width="1.5" />
+    <Position X="11.75" Y="5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAIAAAAAAAAEAACAAAwAAABAEAAAAAAAAAEAAAA=</HashCode>
       <FileName>Entities\Parameter.cs</FileName>
@@ -200,6 +185,26 @@
       <FileName>AST\ASTNode.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.StoredProcedure" Collapsed="true">
+    <Position X="9.5" Y="3.75" Width="1.5" />
+    <AssociationLine Name="Params" Type="DB2BM.Abstractions.Entities.Parameter" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="10" Y="4.312" />
+        <Point X="10" Y="5.281" />
+        <Point X="11.75" Y="5.281" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>IAAAAAIAgAAAgAAEAAAgAAQAAAAAwQAAAAAAAAAEDAA=</HashCode>
+      <FileName>Entities\StoredProcedure.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="AST" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="Params" />
+    </ShowAsCollectionAssociation>
   </Class>
   <Enum Name="DB2BM.Abstractions.Entities.RelationshipType" Collapsed="true">
     <Position X="11.75" Y="0.5" Width="1.5" />

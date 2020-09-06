@@ -8,7 +8,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 {
     public class CodeContext
     {
-        public List<StoreProcedure> InternalFunctionUse { get; set; }
+        public List<StoredProcedure> InternalFunctionUse { get; set; }
 
         public string Code { get; set; }
 

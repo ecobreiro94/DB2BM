@@ -20,6 +20,6 @@ namespace DB2BM.Abstractions
 
     public class FunctionResult : SemanticResult
     {
-        public StoreProcedure Sp { get; set; }
+        public StoredProcedure Sp { get; set; }
     }
 }

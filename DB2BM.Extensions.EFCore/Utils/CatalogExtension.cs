@@ -156,7 +156,7 @@ namespace DB2BM.Extensions.Utils
         {
             var userDefineds = catalog.UserDefinedTypes.Values.ToList();
             var tables = catalog.Tables.Values.ToList();
-            foreach (var sp in catalog.StoreProcedures.Values)
+            foreach (var sp in catalog.StoredProcedures.Values)
             {
                 var type = new string(sp.ReturnType.Skip(1).ToArray());
                 if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && userDefineds.Exists(x => x.TypeName == type))

@@ -13,7 +13,7 @@ namespace DB2BM.Extensions.Semantic
 
         public Dictionary<string, string> TypesMapper { get => SemanticVisitor.TypesMapper; set { } }
         
-        public List<SemanticResult> Check(StoreProcedure sp)
+        public List<SemanticResult> Check(StoredProcedure sp)
         {
             var semanticVisitor = new SemanticVisitor(Catalog, sp);
             return sp.AST.Accept(semanticVisitor);

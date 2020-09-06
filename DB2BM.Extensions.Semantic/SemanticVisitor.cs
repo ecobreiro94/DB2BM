@@ -37,7 +37,7 @@ namespace DB2BM.Extensions.Semantic
 {
     public class SemanticVisitor : ASTVisitor<List<SemanticResult>>
     {
-        StoreProcedure Sp;
+        StoredProcedure Sp;
         Dictionary<string, (string, IdentifierType, object) > VariablesTypes;
         Dictionary<string, (List<string>, string)> CursorTypes;
         List<(string, List<string>, string)> PredefinedFunctions = new List<(string, List<string>, string)>()
@@ -64,7 +64,7 @@ namespace DB2BM.Extensions.Semantic
 
         DatabaseCatalog Catalog;
 
-        public SemanticVisitor(DatabaseCatalog catalog, StoreProcedure sp)
+        public SemanticVisitor(DatabaseCatalog catalog, StoredProcedure sp)
         {
             Catalog = catalog;
             Sp = sp;
@@ -76,7 +76,8 @@ namespace DB2BM.Extensions.Semantic
                 VariablesTypes.Add(param.Name, (param.DestinyType, IdentifierType.Variable, null));
             CursorTypes = new Dictionary<string, (List<string>, string)>();
         }
-        SemanticVisitor(DatabaseCatalog catalog, StoreProcedure sp,
+
+        SemanticVisitor(DatabaseCatalog catalog, StoredProcedure sp,
             Dictionary<string, (string, IdentifierType, object)> variablesTypes,
             Dictionary<string, (List<string>, string)> cursorInfo)
         {
@@ -1119,7 +1120,7 @@ namespace DB2BM.Extensions.Semantic
                 node.TypeReturn = "int";
             else
             {
-                var sps = Catalog.StoreProcedures.Values.Where(f => f.Name == functionName).ToList();
+                var sps = Catalog.StoredProcedures.Values.Where(f => f.Name == functionName).ToList();
                 var internalFunctions = Catalog.InternalFunctions.Values.Where(f => f.Name == functionName).ToList();
 
                 if (sps.Count == 0 && internalFunctions.Count == 0)
@@ -1127,7 +1128,7 @@ namespace DB2BM.Extensions.Semantic
                         Sp.Name, node.Line, node.Column)));
                 else
                 {
-                    StoreProcedure sp = null;
+                    StoredProcedure sp = null;
                     foreach (var f in sps.Concat(internalFunctions))
                     {
                         var bnd = false;

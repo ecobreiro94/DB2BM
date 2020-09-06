@@ -35,7 +35,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
     public class EFCoreCodeGenVisitor : ASTVisitor<CodeContext>
     {
         DatabaseCatalog Catalog;
-        StoreProcedure Sp;
+        StoredProcedure Sp;
         bool UseFoundVariable;
         Dictionary<string, string> TypesMapper = new Dictionary<string, string>
         {
@@ -51,7 +51,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             { "TimeSpan", "TimeSpan" },
         };
         Dictionary<string, string> TablesAlias = new Dictionary<string, string>();
-        List<StoreProcedure> InternalFunctionUse = new List<StoreProcedure>();
+        List<StoredProcedure> InternalFunctionUse = new List<StoredProcedure>();
         int identation;
         string GetIdentation
         {
@@ -65,7 +65,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
         }
 
-        void SetType(StoreProcedure sp)
+        void SetType(StoredProcedure sp)
         {
             if (TypesMapper.ContainsKey(sp.ReturnType))
                 sp.ReturnType = TypesMapper[sp.ReturnType];
@@ -85,7 +85,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         bool InQuery;
 
-        public EFCoreCodeGenVisitor(DatabaseCatalog catalog, StoreProcedure sp)
+        public EFCoreCodeGenVisitor(DatabaseCatalog catalog, StoredProcedure sp)
         {
             Catalog = catalog;
             Sp = sp;
@@ -730,7 +730,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
                 Code = $"!DbContext.SimilarEscape({lOpCodeContext.Code}, {rOpCodeContext.Code})",
-                InternalFunctionUse = new List<StoreProcedure>()
+                InternalFunctionUse = new List<StoredProcedure>()
                 {
                     Catalog.InternalFunctions.Values.FirstOrDefault(f => f.Name == "similar_escope")
                 }
@@ -1205,7 +1205,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             else
             {
-                var userDefinedFunctions = Catalog.StoreProcedures.Values.Where(f => f.Name == functionName).ToList();
+                var userDefinedFunctions = Catalog.StoredProcedures.Values.Where(f => f.Name == functionName).ToList();
                 var internalFunctions = Catalog.InternalFunctions.Values.Where(f => f.Name == functionName).ToList();
                 if (userDefinedFunctions != null && userDefinedFunctions.Count > 0)
                     foreach (var function in userDefinedFunctions)

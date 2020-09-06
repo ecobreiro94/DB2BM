@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DB2BM.Abstractions.Entities
 {
-    public class StoreProcedure
+    public class StoredProcedure
     {
         public string Name { get; set; }
 
