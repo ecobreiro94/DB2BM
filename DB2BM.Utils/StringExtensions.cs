@@ -43,6 +43,7 @@ namespace DB2BM.Utils
             }
             return result;
         }
+
         public static string ToCamel(this string _s)
         {
             var s = "";
