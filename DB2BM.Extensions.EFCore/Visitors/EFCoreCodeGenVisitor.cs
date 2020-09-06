@@ -2761,7 +2761,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             else if (node.Fetch)
             {
                 var cursorInstance = VisitNode(node.Var).Code.ToCamel();
-                codeContext.Code = $"{GetIdentation}{cursorInstance}.MoveNext();\n";
+                codeContext.Code = $"{GetIdentation}FOUND = {cursorInstance}.MoveNext();\n";
                 var variables = new List<string>();
                 foreach (var item in node.IntoTable)
                     variables.Add(VisitNode(item).Code);
