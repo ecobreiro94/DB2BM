@@ -105,7 +105,7 @@ namespace DB2BM
                     {
                         catalog = catalogHandler.GetCatalog();
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         throw new Exception("No se puede establecer conexión con la Base de Datos.");
                     }
