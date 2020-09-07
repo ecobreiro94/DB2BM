@@ -1,0 +1,27 @@
+delimiters "%", "%"
+gen_context(arg) ::= <<
+using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using %arg.Name; format="pascal"%.Model;
+
+namespace %arg.Name; format="pascal"%.Context
+{
+    public abstract partial class %arg.Name; format="pascal"%DbContext : DbContext
+    {
+        %arg.Functions:gen_function(); separator="\n"%
+    }
+}
+>>
+
+gen_function(function) ::= <<
+[DbFunction("%function.Name%")]
+public %function.ReturnType% %function.Name; format="pascal"%(%function.Params:gen_param(); separator=","%)
+{
+    %function.GeneratedCode%
+}
+>>
+
+gen_param(p) ::= <<
+%p.DestinyType% %p.Name; format="camel"%
+>>

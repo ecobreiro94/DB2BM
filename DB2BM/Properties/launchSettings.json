@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DB2BM": {
+      "commandName": "Project",
+      "commandLineArgs": "--h vm-win2012-srv1 --db Test --u develop --p develop --outpath D:\\Works\\Enriquito\\DB2BM\\Test --orm efcore --dbms postgre --gen all --splist sp_list.json --project"
+    }
+  }
+}

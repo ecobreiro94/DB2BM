@@ -1,0 +1,53 @@
+gen_functions(db) ::= <<
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using <db.NameSpace; format="pascal">.Context;
+using <db.NameSpace; format="pascal">.Model;
+
+namespace <db.NameSpace; format="pascal">.Service
+{
+    public class <db.ClassName>
+    {
+        public <db.NameSpace; format="pascal">DbContext DbContext {get;}
+
+        public <db.ClassName> (<db.NameSpace; format="pascal">DbContext dbContext)
+        {
+            DbContext = dbContext;
+        }
+
+        <db.Functions:gen_function(); separator="\n">
+    } 
+}
+>>
+
+gen_function(function) ::= <<
+    <if(!function.ExistsParams)>
+/*
+<function.OriginalCode>
+*/
+public <function.ReturnType> <function.Name; format="pascal">() 
+{
+    <function.GeneratedCode:gen_body()>
+}
+    <else>
+/*
+<function.OriginalCode>
+*/
+public <function.ReturnType> <function.Name; format="pascal"> (<function.INParams:gen_param(); separator = ", ">)
+{
+    <function.GeneratedCode:gen_body()>
+}
+    <endif>
+>>
+
+gen_param(p) ::= <<
+<p.DestinyType> <p.Name; format="camel">
+>>
+
+gen_body(body) ::= <<
+<body>
+>>
+

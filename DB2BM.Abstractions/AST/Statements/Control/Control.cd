@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.CallFunctionCallNode" Collapsed="true">
+    <Position X="1.75" Y="4" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>AST\Statements\Control\CallFunctionCallNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.CaseStmtNode" Collapsed="true">
+    <Position X="9" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAEAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\CaseStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ControlStatementNode" Collapsed="true">
+    <Position X="5.25" Y="2.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ControlStatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.IfStmtNode" Collapsed="true">
+    <Position X="7.25" Y="4" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.Statements.Control.ControlStatementNode" FixedToPoint="true">
+      <Path>
+        <Point X="6.125" Y="3.441" />
+        <Point X="6.125" Y="3.7" />
+        <Point X="7.938" Y="3.7" />
+        <Point X="7.938" Y="4" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAIAAABAAAAAAAAgAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\IfStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.LoopStartNode" Collapsed="true">
+    <Position X="5.5" Y="4" Width="1.5" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.Statements.Control.ControlStatementNode" FixedToPoint="true">
+      <Path>
+        <Point X="6.125" Y="3.441" />
+        <Point X="6.125" Y="4" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\LoopStartNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ReturnStmtNode" Collapsed="true">
+    <Position X="3.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAIAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ReturnStmtNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.WhileLoopNode" Collapsed="true">
+    <Position X="1.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\WhileLoopNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.StatementNode" Collapsed="true">
+    <Position X="5.5" Y="1.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AST\Statements\StatementNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.ASTNode" Collapsed="true">
+    <Position X="5.5" Y="0.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>AST\ASTNode.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ForAliasLoopNode" Collapsed="true">
+    <Position X="3.25" Y="5.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQgAAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ForLoopNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ForIdListLoopNode" Collapsed="true">
+    <Position X="7.25" Y="5.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ForLoopNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ForCursorLoopNode" Collapsed="true">
+    <Position X="5.25" Y="5.5" Width="1.75" />
+    <InheritanceLine Type="DB2BM.Abstractions.AST.Statements.Control.LoopStartNode" FixedToPoint="true">
+      <Path>
+        <Point X="6.25" Y="4.691" />
+        <Point X="6.25" Y="5.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ForLoopNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.AST.Statements.Control.ForeachLoopNode" Collapsed="true">
+    <Position X="9.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAIAAAA=</HashCode>
+      <FileName>AST\Statements\Control\ForLoopNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
