@@ -85,11 +85,6 @@ namespace DB2BM.Extensions
             }
         }
 
-        public void GenerateService(string className)
-        {
-            GenerateDatabaseFunctions(className, null);
-        }
-
         public void GenerateContext()
         {
             var temp = DbContextTemplate.GetInstanceOf("gen_context");
@@ -135,6 +130,11 @@ namespace DB2BM.Extensions
                     Write(OutputPathModel, item.TypeName.ToPascal() + ".cs", r);
                 }
             }
+        }
+
+        public void GenerateService(string className)
+        {
+            GenerateDatabaseFunctions(className, null);
         }
 
         public void GenerateService(string className, List<string> functionNames)
