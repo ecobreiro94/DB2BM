@@ -14,6 +14,7 @@ using DB2BM.Utils;
 using DB2BM.Extensions.EFCore.Utils;
 using DB2BM.Abstractions;
 using DB2BM.Extensions.EFCore.Visitors;
+using System.Reflection;
 
 namespace DB2BM.Extensions
 {
@@ -22,6 +23,7 @@ namespace DB2BM.Extensions
     {
         #region Campos y Propiedades Privados 
 
+        string templatesPath;
         private bool prepareCatalog;
         private DatabaseCatalog catalog;
 
@@ -30,6 +32,11 @@ namespace DB2BM.Extensions
         private TemplateGroupString modelTemplate;
         private TemplateGroupString dbContextTemplate;
         private TemplateGroupString dbContextExtensionTemplate;
+
+        public EFCoreBMGenerator()
+        {
+            templatesPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Templates");
+        }
 
         private Dictionary<string, string> TypesMapper
         {
@@ -151,7 +158,7 @@ namespace DB2BM.Extensions
             get
             {
                 if (functionsTemplate == null)
-                    functionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\functions.st4"));
+                    functionsTemplate = new TemplateGroupString(File.ReadAllText(Path.Combine(templatesPath, @"functions.st4")));
                 return functionsTemplate;
             } 
         }
@@ -161,7 +168,7 @@ namespace DB2BM.Extensions
             get
             {
                 if (dbContextExtensionTemplate == null)
-                    functionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\additional_template.st4"));
+                    functionsTemplate = new TemplateGroupString(File.ReadAllText(Path.Combine(templatesPath, "additional_template.st4")));
                 return functionsTemplate;
             }
         }
@@ -171,7 +178,7 @@ namespace DB2BM.Extensions
             get
             {
                 if (internalFunctionsTemplate == null)
-                    internalFunctionsTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\partial_dbcontext.st4"));
+                    internalFunctionsTemplate = new TemplateGroupString(File.ReadAllText(Path.Combine(templatesPath, "partial_dbcontext.st4")));
                 return internalFunctionsTemplate;
             }
         }
@@ -181,7 +188,7 @@ namespace DB2BM.Extensions
             get
             {
                 if(modelTemplate == null)
-                    modelTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\model.st4"));
+                    modelTemplate = new TemplateGroupString(File.ReadAllText(Path.Combine(templatesPath, "model.st4")));
                 return modelTemplate;
             }
         }
@@ -191,7 +198,7 @@ namespace DB2BM.Extensions
             get
             {
                 if(dbContextTemplate == null)
-                    dbContextTemplate = new TemplateGroupString(File.ReadAllText(@"Templates\dbcontext.st4"));
+                    dbContextTemplate = new TemplateGroupString(File.ReadAllText(Path.Combine(templatesPath, "dbcontext.st4")));
                 return dbContextTemplate;
             }
         }

@@ -56,8 +56,10 @@ namespace DB2BM.Extensions.Semantic
         {
             get
             {
+                var installPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 if (typeMapper == null)
-                    typeMapper = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("typesMapper.json"));
+                    typeMapper = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(Path.Combine(installPath, "typesMapper.json")));
+                
                 return typeMapper;
             }
         }
