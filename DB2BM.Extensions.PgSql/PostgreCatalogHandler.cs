@@ -153,7 +153,7 @@ namespace DB2BM.Extensions.PgSql
                                    OriginType = f.TypeName,
                                    OrdinalPosition = f.OrdinalPosition,
                                    Default = f.Default,
-                                   IsNullable = (f.IsNullable == "SI") ? true : false,
+                                   IsNullable = (f.IsNullable == "YES") ? true : false,
                                    CharacterMaximumLength = f.CharacterMaximumLength
                                })
                 });

@@ -37,34 +37,56 @@ namespace DB2BM.Extensions.EFCore.Visitors
         DatabaseCatalog Catalog;
         StoredProcedure Sp;
         bool UseFoundVariable;
-        Dictionary<string, string> TypesMapper = new Dictionary<string, string>
-        {
-            { "object" , "dynamic"},
-            { "bool", "bool" },
-            { "int", "int" },
-            { "long", "long"},
-            { "decimal", "decimal"},
-            { "float", "float" },
-            { "double", "double" },
-            { "string", "string" },
-            { "DateTime", "DateTime" },
-            { "TimeSpan", "TimeSpan" },
-        };
         Dictionary<string, string> TablesAlias = new Dictionary<string, string>();
         List<StoredProcedure> InternalFunctionUse = new List<StoredProcedure>();
+        int countVariablesGen = 0;
         int identation;
-        string GetIdentation
-        {
-            get
-            {
-                var result = "";
-                int i = 0;
-                while (i++ < identation)
-                    result += "\t";
-                return result;
-            }
-        }
+        bool InQuery;
 
+        public static readonly Dictionary<string, string> TypesMapper = new Dictionary<string, string>
+        {
+            { "object" , "dynamic"},
+            { "dynamic" , "dynamic"},
+            { "bool", "bool?" },
+            { "short", "short?"},
+            { "int", "int?" },
+            { "long", "long?"},
+            { "decimal", "decimal?"},
+            { "float", "float?" },
+            { "double", "double?" },
+            { "string", "string" },
+            { "DateTime", "DateTime?" },
+            { "TimeSpan", "TimeSpan?" },
+            { "dynamic[]" , "dynamic[]"},
+            { "uint", "uint?"},
+            { "char", "char"},
+            { "Guid", "Guid"},
+            { "int[]", "int?[]" },
+            { "long[]", "long?[]"},
+            { "bool[]", "bool?[]"},
+            { "byte[]", "byte?[]"},
+            { "uint[]", "uint?[]"},
+            { "PhysicalAddress", "PhysicalAddress" },
+            { "NpgsqlTsQuery","NpgsqlTsQuery" },
+            { "NpgsqlTsVector","NpgsqlTsVector" },
+            { "NpgsqlBox", "NpgsqlBox"},
+            { "NpgsqlCircle", "NpgsqlCircle" },
+            { "NpgsqlLine", "NpgsqlLine" },
+            { "NpgsqlPolygon", "NpgsqlPolygon"},
+            { "NpgsqlPath", "NpgsqlPath"},
+            { "NpgsqlLSeg", "NpgsqlLSeg"},
+            { "NpgsqlPoint", "NpgsqlPoint"},
+            {  "(IPAddress,int)", "(IPAddress,int)"},
+            { "Dictionary<string,string>", "Dictionary<string,string>"}
+        };
+
+        string GenVariable()
+        {
+            var varibleIndex = (++countVariablesGen).ToString();
+            while (varibleIndex.Length < 3)
+                varibleIndex = "0" + varibleIndex;
+            return "_" + varibleIndex;
+        }
         void SetType(StoredProcedure sp)
         {
             if (TypesMapper.ContainsKey(sp.ReturnType))
@@ -82,8 +104,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
             }
         }
-
-        bool InQuery;
+        string GetIdentation
+        {
+            get
+            {
+                var result = "";
+                int i = 0;
+                while (i++ < identation)
+                    result += "\t";
+                return result;
+            }
+        }
 
         public EFCoreCodeGenVisitor(DatabaseCatalog catalog, StoredProcedure sp)
         {
@@ -103,8 +134,6 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (node.Statements != null)
                 foreach (var stmt in node.Statements)
                     result += VisitNode(stmt).Code + "\n";
-            if (node.ExceptionStatement != null)
-                result += VisitNode(node.ExceptionStatement).Code;
 
             var codeContext = new CodeContext();
 
@@ -116,9 +145,9 @@ namespace DB2BM.Extensions.EFCore.Visitors
             foreach (var p in outParameters)
             {
                 if (Sp.ReturnClause.Contains("setof"))
-                    declarationOutParams += $"IEnumerable<{p.DestinyType}> {p.Name.ToCamel()};\n";
+                    declarationOutParams += $"IEnumerable<{TypesMapper[p.DestinyType]}> {p.Name.ToCamel()};\n";
                 else
-                    declarationOutParams += $"{p.DestinyType} {p.Name.ToCamel()} = default({p.DestinyType});\n";
+                    declarationOutParams += $"{TypesMapper[p.DestinyType]} {p.Name.ToCamel()} = default({TypesMapper[p.DestinyType]});\n";
                 parameters += (parameters == "") ? p.Name.ToCamel() : ", " + p.Name.ToCamel();
             }
             if (Sp.LanguageDefinition.ToLower() == "sql")
@@ -136,6 +165,22 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
             }
             codeContext.InternalFunctionUse = InternalFunctionUse;
+
+
+            if (node.ExceptionStatement != null)
+            {
+                var exceptionCode = VisitNode(node.ExceptionStatement).Code;
+                var existCode = codeContext.Code;
+                codeContext.Code = "try \n" +
+                                   "{\n" +
+                                        existCode + "\n" +
+                                   "}\n" +
+                                   "catch (Exception)\n" +
+                                   "{\n" +
+                                        exceptionCode + "\n" +
+                                   "}";
+            }
+
             return codeContext;
         }
         List<string> replaceList = new List<string>();
@@ -152,18 +197,18 @@ namespace DB2BM.Extensions.EFCore.Visitors
             else if (node.TypeDeclaration is OrdinalTypeDeclarationNode)
             {
                 var typeDeclaration = node.TypeDeclaration as OrdinalTypeDeclarationNode;
+                var dataTypeCode = VisitNode(typeDeclaration.DataType).Code;
                 if (typeDeclaration.Expression == null)
                 {
-                    var dataTypeCode = VisitNode(typeDeclaration.DataType).Code;
                     return new CodeContext()
                     {
-                        Code = $"{dataTypeCode} {VisitNode(node.Identifier).Code.ToCamel()} = default({dataTypeCode});"
+                        Code = $"var {VisitNode(node.Identifier).Code.ToCamel()} = default({dataTypeCode});"
                     };
                 }
                 else
                     return new CodeContext()
                     {
-                        Code = $"{VisitNode(typeDeclaration.DataType).Code} {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Expression).Code};"
+                        Code = $"{dataTypeCode} {VisitNode(node.Identifier).Code.ToCamel()} = {VisitNode(typeDeclaration.Expression).Code};"
                     };
             }
             else if (node.TypeDeclaration is CursorDeclarationNode)
@@ -182,10 +227,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     else
                         arguments += acode + ",";
                 }
-                var code = $"IEnumerable<dynamic> {VisitNode(node.Identifier).Code.ToPascal()} ({arguments})\n" +
-                        "{\n" +
-                            "\t" + "return " + VisitNode(typeDeclaration.SelectStmt).Code.Replace(".FirstOrDefault()", "") + "\n" +
-                        "}";
+                var code = $"{GetIdentation}IEnumerator<dynamic> {VisitNode(node.Identifier).Code.ToCamel()};\n";
+                code +=    $"{GetIdentation}IEnumerable<dynamic> {VisitNode(node.Identifier).Code.ToPascal()} ({arguments})\n" +
+                              GetIdentation + "{\n" +
+                              GetIdentation + "\t" + "return " + VisitNode(typeDeclaration.SelectStmt).Code.Replace(".FirstOrDefault()", "") + "\n" +
+                              GetIdentation + "}";
+
                 replaceList = new List<string>();
                 return new CodeContext()
                 {
@@ -266,22 +313,22 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(NumericTypeNode node)
         {
-            return new CodeContext() { Code = "decimal" };
+            return new CodeContext() { Code = "decimal?" };
         }
 
         public override CodeContext Visit(RealTypeNode node)
         {
-            return new CodeContext() { Code = "float" };
+            return new CodeContext() { Code = "float?" };
         }
 
         public override CodeContext Visit(BigintTypeNode node)
         {
-            return new CodeContext() { Code = "long" };
+            return new CodeContext() { Code = "long?" };
         }
 
         public override CodeContext Visit(SmallintTypeNode node)
         {
-            return new CodeContext() { Code = "short" };
+            return new CodeContext() { Code = "short?" };
         }
 
         public override CodeContext Visit(BitTypeNode node)
@@ -291,7 +338,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(TimeTypeNode node)
         {
-            return new CodeContext() { Code = "DateTime" };
+            return new CodeContext() { Code = "DateTime?" };
         }
 
         public override CodeContext Visit(BitVaryingTypeNode node)
@@ -306,7 +353,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(BooleanTypeNode node)
         {
-            return new CodeContext() { Code = "bool" };
+            return new CodeContext() { Code = "bool?" };
         }
 
         public override CodeContext Visit(DecTypeNode node)
@@ -316,7 +363,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(DecimalTypeNode node)
         {
-            return new CodeContext() { Code = "decimal" };
+            return new CodeContext() { Code = "decimal?" };
         }
 
         public override CodeContext Visit(DollarNumberNode node)
@@ -331,7 +378,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(DoublePrecisionTypeNode node)
         {
-            return new CodeContext() { Code = "double" };
+            return new CodeContext() { Code = "double?" };
         }
 
         public override CodeContext Visit(AtTimeZoneNode node)
@@ -341,17 +388,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(FloatTypeNode node)
         {
-            return new CodeContext() { Code = "float" };
+            return new CodeContext() { Code = "float?" };
         }
 
         public override CodeContext Visit(IntTypeNode node)
         {
-            return new CodeContext() { Code = "int" };
+            return new CodeContext() { Code = "int?" };
         }
 
         public override CodeContext Visit(IntegerTypeNode node)
         {
-            return new CodeContext() { Code = "int" };
+            return new CodeContext() { Code = "int?" };
         }
 
         public override CodeContext Visit(IntervalTypeNode node)
@@ -1611,7 +1658,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
                 if (bnd)
                 {
-                    var alias = "x" + node.GetHashCode().ToString();
+                    var alias = GenVariable();
                     multiplySustitution = alias;
                     generalAlias = alias;
                     var joinExpressions = new List<ExpressionNode>();
@@ -1779,7 +1826,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
                 else
                 {
-                    var variableName = "x" + node.GetHashCode();
+                    var variableName = GenVariable();
                     var variablesList = new List<CodeContext>();
                     foreach (var identifier in node.IntoTable)
                     {
@@ -2319,7 +2366,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (node.Alias != null)
                 alias = node.Alias.Text;
 
-            else alias = "t" + node.GetHashCode();
+            else alias = GenVariable();
 
             TablesAlias.Add(tableName, "x");
             var conditionCode = "";
@@ -2496,7 +2543,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 var codeContext = new CodeContext();
                 var table = node.InsertTableName.Identifiers[0].Text.ToPascal();
-                var tableName = "x" + node.GetHashCode();
+                var tableName = GenVariable();
                 ValuesStmtNode valuesStmt = null;
                 if (node.SelectStmt?.SelectOps?.SelectPrimary != null)
                     valuesStmt = node.SelectStmt.SelectOps.SelectPrimary as ValuesStmtNode;
@@ -2662,7 +2709,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
                 else
                 {
-                    generalAlias = alias + node.GetHashCode();
+                    generalAlias = GenVariable();
 
                     var fromCode = $"from {alias} in {table} {fromItemsCodeContext.Code}";
                     var firtSelect = "";
@@ -2696,14 +2743,15 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     }
                     query += whereCode + $" select {generalAlias}";
                     var newTA = new Dictionary<string, string>();
+                    var newAlias = GenVariable();
                     foreach (var item in TablesAlias)
                     {
                         if (item.Value.StartsWith(generalAlias))
-                            newTA.Add(item.Key, item.Value.Replace(generalAlias, $"item{ node.GetHashCode()}"));
+                            newTA.Add(item.Key, item.Value.Replace(generalAlias, newAlias));
                         else newTA.Add(item.Key, item.Value);
                     }
                     TablesAlias = newTA;
-                    var statemant = $"{GetIdentation}foreach(var item{node.GetHashCode()} in {query})\n" +
+                    var statemant = $"{GetIdentation}foreach(var {newAlias} in {query})\n" +
                                        GetIdentation + "{\n";
                     foreach (var set in node.UpdateSets)
                     {
@@ -2752,11 +2800,16 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (node.Open)
             {
                 var varCodeContext = VisitNode(node.Var);
-                codeContext.Code = $"{GetIdentation}var {varCodeContext.Code.ToCamel()} = ";
+                codeContext.Code = $"{GetIdentation}{varCodeContext.Code.ToCamel()} = ";
                 var optionsCode = "";
                 foreach (var option in node.Options)
                     optionsCode = (optionsCode == "") ? VisitNode(option).Code : ", " + VisitNode(option).Code;
                 codeContext.Code += $"{varCodeContext.Code.ToPascal()}({optionsCode}).GetEnumerator();";
+            }
+            else if (node.Move)
+            {
+                var cursorInstance = VisitNode(node.Var).Code.ToCamel();
+                codeContext.Code = $"{GetIdentation}FOUND = {cursorInstance}.MoveNext();\n";
             }
             else if (node.Fetch)
             {
@@ -2774,7 +2827,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             else if (node.Close)
             {
                 var varCodeContext = VisitNode(node.Var);
-                codeContext.Code = $"{varCodeContext.Code.ToCamel()} = null;";
+                codeContext.Code = $"{varCodeContext.Code.ToCamel()}.Dispose();";
             }
             return codeContext;
         }

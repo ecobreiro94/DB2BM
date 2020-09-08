@@ -152,7 +152,7 @@ namespace DB2BM.Extensions.Utils
             }
         }
 
-        private static void PrepareFunctions(DatabaseCatalog catalog, Dictionary<string, string> typesMapper)
+        private static void PrepareFunctions(DatabaseCatalog catalog, Dictionary<string, string> dbmsTypesMapper)
         {
             var userDefineds = catalog.UserDefinedTypes.Values.ToList();
             var tables = catalog.Tables.Values.ToList();
@@ -163,10 +163,10 @@ namespace DB2BM.Extensions.Utils
                     sp.ReturnType = type + "[]";
                 else if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && tables.Exists(x => x.Name == type))
                     sp.ReturnType = type.ToPascal() + "[]";
-                else if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && typesMapper.ContainsKey(type))
+                else if (sp.ReturnType.Length > 0 && sp.ReturnType[0] == '_' && dbmsTypesMapper.ContainsKey(type))
                     sp.ReturnType = type + "[]";
-                else if (typesMapper.ContainsKey(sp.ReturnType))
-                    sp.ReturnType = typesMapper[sp.ReturnType];
+                else if (dbmsTypesMapper.ContainsKey(sp.ReturnType))
+                    sp.ReturnType = dbmsTypesMapper[sp.ReturnType];
                 else
                 {
                     if (tables.Any(t => t.Name == sp.ReturnType))
@@ -181,10 +181,10 @@ namespace DB2BM.Extensions.Utils
                         p.DestinyType = type += "[]";
                     else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && tables.Exists(x => x.Name == type))
                         p.DestinyType = type.ToPascal() + "[]";
-                    else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && typesMapper.ContainsKey(type))
-                        p.DestinyType = typesMapper[type] + "[]";
-                    else if (typesMapper.ContainsKey(p.OriginType))
-                        p.DestinyType = typesMapper[p.OriginType];
+                    else if (p.OriginType.Length > 0 && p.OriginType[0] == '_' && dbmsTypesMapper.ContainsKey(type))
+                        p.DestinyType = dbmsTypesMapper[type] + "[]";
+                    else if (dbmsTypesMapper.ContainsKey(p.OriginType))
+                        p.DestinyType = dbmsTypesMapper[p.OriginType];
                 }
 
                 var paramsOutMode = sp.Params.FindAll(p => p.OutMode);
@@ -194,21 +194,27 @@ namespace DB2BM.Extensions.Utils
                 {
                     var returnType = "";
                     foreach (var p in paramsOutMode)
-                        returnType += (returnType == "") ? p.DestinyType : "," + p.DestinyType;
+                        returnType += (returnType == "") ? 
+                            EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper[p.DestinyType] :
+                            "," + EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper[p.DestinyType];
                     sp.ReturnType = "(" + returnType + ")";
                 }
 
                 if (sp.ReturnClause.ToLower().Contains("setof "))
-                    sp.ReturnType = "IEnumerable<" + sp.ReturnType + ">";
+                {
+                    if (EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper.ContainsKey(sp.ReturnType))
+                        sp.ReturnType = "IEnumerable<" + EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper[sp.ReturnType] + ">";
+                    else sp.ReturnType = "IEnumerable<" + sp.ReturnType + ">";
+                }
             }
             foreach (var function in catalog.InternalFunctions.Values)
             {
-                if (typesMapper.ContainsKey(function.ReturnType))
-                    function.ReturnType = typesMapper[function.ReturnType];
+                if (dbmsTypesMapper.ContainsKey(function.ReturnType))
+                    function.ReturnType = dbmsTypesMapper[function.ReturnType];
                 foreach (var parameter in function.Params)
                 {
-                    if (typesMapper.ContainsKey(parameter.OriginType))
-                        parameter.DestinyType = typesMapper[parameter.OriginType];
+                    if (dbmsTypesMapper.ContainsKey(parameter.OriginType))
+                        parameter.DestinyType = dbmsTypesMapper[parameter.OriginType];
                     else
                         parameter.DestinyType = parameter.OriginType;
                     if (parameter.Name == null || parameter.Name == "")
@@ -217,11 +223,11 @@ namespace DB2BM.Extensions.Utils
             }
         }
 
-        public static void PrepareCatalog(this DatabaseCatalog catalog,Dictionary<string, string> typesMapper)
+        public static void PrepareCatalog(this DatabaseCatalog catalog, Dictionary<string, string> dbmsTypesMapper)
         {
-            PrepareTables(catalog, typesMapper);
-            PrepareUdts(catalog, typesMapper);
-            PrepareFunctions(catalog, typesMapper);
+            PrepareTables(catalog, dbmsTypesMapper);
+            PrepareUdts(catalog, dbmsTypesMapper);
+            PrepareFunctions(catalog, dbmsTypesMapper);
             PushRelations(catalog);
         }
     }

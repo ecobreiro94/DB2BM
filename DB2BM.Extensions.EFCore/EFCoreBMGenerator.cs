@@ -273,6 +273,12 @@ namespace DB2BM.Extensions
                     }
                 }
             }
+
+            foreach (var f in visitFunction)
+                foreach (var p in f.Params)
+                    if(EFCoreCodeGenVisitor.TypesMapper.ContainsKey(p.DestinyType))
+                        p.DestinyType = EFCoreCodeGenVisitor.TypesMapper[p.DestinyType];
+
             var temp = FunctionsTemplate.GetInstanceOf("gen_functions");
             temp.Add("db", new FunctionsTemplateParams()
             {
@@ -283,6 +289,11 @@ namespace DB2BM.Extensions
             FunctionsTemplate.RegisterRenderer(typeof(string), new CSharpRenderer(), true);
             var r = temp.Render();
             Write(OutputPathService, className + ".cs", r);
+
+            foreach (var f in internalFunctionUse)
+                foreach (var p in f.Params)
+                    if (EFCoreCodeGenVisitor.TypesMapper.ContainsKey(p.DestinyType))
+                        p.DestinyType = EFCoreCodeGenVisitor.TypesMapper[p.DestinyType];
             GenerateInternalFunctions(internalFunctionUse);
         }
 
