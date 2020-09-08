@@ -38,7 +38,7 @@ namespace DB2BM.Extensions.PgSql
 
         private string GetConnectionString(DbOption options)
         {
-            return "Host=" + options.Host + ";Username=" + options.User + ";Password=" + options.Password + ";Database=" + options.DataBaseName;
+            return $"Host={options.Host};Username={options.User};Password={options.Password};Database={options.DataBaseName};SSL Mode=Prefer";
         }
 
         private IEnumerable<StoredProcedure> GetFunctions(bool internals)
@@ -70,7 +70,7 @@ namespace DB2BM.Extensions.PgSql
                 .AsEnumerable()
                 .Select(f =>
                     new StoredProcedure()
-                    { 
+                    {
                         Name = f.Name,
                         SpecificName = f.SpecificName,
                         LanguageDefinition = f.LanguageDefinition,
@@ -85,11 +85,11 @@ namespace DB2BM.Extensions.PgSql
                                   OrdinalPosition = p.OrdinalPosition,
                                   IsResult = p.IsResult,
                                   ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true)
-                              }).ToList()                    
+                              }).ToList()
                     });
             return functs;
         }
-        
+
         private IEnumerable<Table> GetTables()
         {
             var tables =
@@ -118,7 +118,7 @@ namespace DB2BM.Extensions.PgSql
             return tables;
         }
 
-        private IEnumerable<Relationship> GetRelations(IDictionary<string,Table> tables)
+        private IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables)
         {
             var relations = InternalDbContext.Relationships
                                 .Include(x => x.KeyColumn)
@@ -133,7 +133,7 @@ namespace DB2BM.Extensions.PgSql
                                         Column = tables[r.TableName].Fields.First(c => c.Name == r.KeyColumn.ColumnName),
                                         ReferenceColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
                                         Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
-                                    });                                                            
+                                    });
             return relations;
         }
 
@@ -142,39 +142,41 @@ namespace DB2BM.Extensions.PgSql
             IEnumerable<BaseUserDefinedType> udts = InternalDbContext.UDTs
                 .Include(x => x.Fields)
                 .Where(x => x.Schema == "public" && x.Category == "STRUCTURED")
+                .AsEnumerable()
                 .Select(x =>
-                new UserDefinedType()
-                {
-                    TypeName = x.Name,
-                    Fields = x.Fields.Select(f =>
-                               new UdtField()
-                               {
-                                   Name = f.Name,
-                                   OriginType = f.TypeName,
-                                   OrdinalPosition = f.OrdinalPosition,
-                                   Default = f.Default,
-                                   IsNullable = (f.IsNullable == "SI") ? true : false,
-                                   CharacterMaximumLength = f.CharacterMaximumLength
-                               })
-                });
+                    new UserDefinedType()
+                    {
+                        TypeName = x.Name,
+                        Fields = x.Fields.Select(f =>
+                                   new UdtField()
+                                   {
+                                       Name = f.Name,
+                                       OriginType = f.TypeName,
+                                       OrdinalPosition = f.OrdinalPosition,
+                                       Default = f.Default,
+                                       IsNullable = (f.IsNullable == "YES") ? true : false,
+                                       CharacterMaximumLength = f.CharacterMaximumLength
+                                   })
+                    });
 
-            IEnumerable<BaseUserDefinedType> enumsOptions = 
+            IEnumerable<BaseUserDefinedType> enumsOptions =
                 InternalDbContext.Set<Entities.PostgreUDEnumOption>()
                    .FromSqlRaw(@"
                                 SELECT 
-                                    pg_type.typname AS EnumName, pg_enum.enumlabel AS Option
+                                    pg_type.typname AS EnumName, 
+                                    pg_enum.enumlabel AS Option
                                 FROM 
                                     pg_type 
                                     JOIN pg_enum ON pg_enum.enumtypid = pg_type.oid
                             ")
-               .AsEnumerable()
-               .GroupBy(x => x.EnumName)
-               .Select(x =>
-                   new UserDefinedEnumType()
-                   {
-                       TypeName = x.Key,
-                       Options = x.Select(o => o.Option)
-                   });
+                   .AsEnumerable()
+                   .GroupBy(x => x.EnumName)
+                   .Select(x =>
+                       new UserDefinedEnumType()
+                       {
+                           TypeName = x.Key,
+                           Options = x.Select(o => o.Option)
+                       });
             return udts.Union(enumsOptions);
         }
 
