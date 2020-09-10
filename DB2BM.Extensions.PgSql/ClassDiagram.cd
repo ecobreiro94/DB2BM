@@ -1,24 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="DB2BM.Extensions.PgSql.PostgreCatalogHandler">
-    <Position X="1.5" Y="0.5" Width="5" />
+    <Position X="2" Y="0.75" Width="2" />
     <AssociationLine Name="internalDbContext" Type="DB2BM.Extensions.PgSql.PostgreDbContext" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.5" Y="2.312" />
-        <Point X="9.024" Y="2.312" />
-        <Point X="9.024" Y="5.562" />
-        <Point X="7.833" Y="5.562" Type="JumpStart" />
-        <Point X="7.667" Y="5.562" Type="JumpEnd" />
-        <Point X="7.5" Y="5.562" />
-      </Path>
-    </AssociationLine>
-    <AssociationLine Name="Catalog" Type="DB2BM.Abstractions.Entities.DatabaseCatalog" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="2.625" Y="3.401" />
-        <Point X="2.625" Y="4.5" />
-        <Point X="7.75" Y="4.5" />
-        <Point X="7.75" Y="7.757" />
-        <Point X="9.25" Y="7.757" />
+        <Point X="4" Y="1.312" />
+        <Point X="4.875" Y="1.312" />
+        <Point X="4.875" Y="1.312" />
+        <Point X="5.75" Y="1.312" />
       </Path>
     </AssociationLine>
     <TypeIdentifier>
@@ -31,24 +20,24 @@
     </ShowAsAssociation>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
-    <Position X="9.25" Y="6.25" Width="1.5" />
-    <TypeIdentifier />
-  </Class>
   <Class Name="DB2BM.Extensions.PgSql.PostgreDbContext">
-    <Position X="2.75" Y="4.75" Width="4.75" />
+    <Position X="5.75" Y="0.5" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAEAIAAQAAAAAAAEAAQAIAEAAAAAEBACAAAAMAgAA=</HashCode>
       <FileName>PostgreDbContext.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.PostgreSyntacticAnalyzer">
-    <Position X="10" Y="3.5" Width="4.5" />
+    <Position X="8" Y="0.5" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>PostgreSyntacticAnalyzer.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
+    <Position X="3.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier />
   </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>
