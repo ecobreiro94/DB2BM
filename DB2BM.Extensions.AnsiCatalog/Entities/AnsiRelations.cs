@@ -2,19 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.PgSql.Entities
+namespace DB2BM.Extensions.AnsiCatalog.Entities
 {
-    public class PostgreRelationColumnUsage
-    {
-        public string ConstraintName { get; set; }
-
-        public string TableName { get; set; }
-
-        public string ColumnName { get; set; }
-        public PostgreRelationship Relation { get; set; }
-    }
-
-    public class PostgreKeyColumnUsage
+    public class AnsiRelationColumnUsage
     {
         public string ConstraintName { get; set; }
 
@@ -22,10 +12,21 @@ namespace DB2BM.Extensions.PgSql.Entities
 
         public string ColumnName { get; set; }
 
-        public PostgreRelationship Relation { get; set; }
+        public AnsiRelationship Relation { get; set; }
     }
 
-    public class PostgreRelationship
+    public class AnsiKeyColumnUsage
+    {
+        public string ConstraintName { get; set; }
+
+        public string TableName { get; set; }
+
+        public string ColumnName { get; set; }
+
+        public AnsiRelationship Relation { get; set; }
+    }
+
+    public class AnsiRelationship
     {
         public string ConstraintName { get; set; }
 
@@ -35,8 +36,8 @@ namespace DB2BM.Extensions.PgSql.Entities
 
         public string ConstraintType { get; set; }
 
-        public virtual PostgreRelationColumnUsage RelationColumn { get; set; }
+        public virtual AnsiRelationColumnUsage RelationColumn { get; set; }
 
-        public virtual PostgreKeyColumnUsage KeyColumn { get; set; }
+        public virtual AnsiKeyColumnUsage KeyColumn { get; set; }
     }
 }

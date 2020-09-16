@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.PgSql.Entities
+namespace DB2BM.Extensions.AnsiCatalog.Entities
 {
-    public class PostgreParams
+    public class AnsiParams
     {
         public string Name { get; set; }
 
-        public string TypeName { get; set; }
-
         public string FunctionSpecificName { get; set; }
 
-        public PostgreFunction Function { get; set; }
+        public string DataTypeName { get; set; }
+
+        public string UdtName { get; set; }
 
         public int OrdinalPosition { get; set; }
 
         public string IsResult { get; set; }
 
         public string ParameterMode { get; set; }
+
+        public AnsiRoutine Function { get; set; }
     }
 }

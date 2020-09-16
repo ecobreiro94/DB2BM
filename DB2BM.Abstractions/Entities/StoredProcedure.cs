@@ -1,8 +1,8 @@
-﻿using DB2BM.Abstractions.AST;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DB2BM.Abstractions.AST;
 
 namespace DB2BM.Abstractions.Entities
 {
@@ -16,7 +16,7 @@ namespace DB2BM.Abstractions.Entities
 
         public string ReturnType { get; set; }
 
-        public string ReturnClause { get; set; }
+        public bool ReturnIsSet { get; set; }
 
         public bool IsInternal { get; set; }
         

@@ -1,40 +1,21 @@
-﻿using DB2BM.Extensions.PgSql.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using DB2BM.Extensions.AnsiCatalog;
+using DB2BM.Extensions.AnsiCatalog.Entities;
+using DB2BM.Extensions.PgSql.Entities;
 
 namespace DB2BM.Extensions.PgSql
 {
-    public class PostgreDbContext : DbContext
+    public class PostgreDbContext : AnsiCatalogDbContext
     {
-        public DbSet<PostgreTable> Tables { get; set; }
-
-        public DbSet<PostgreFunction> Functions { get; set; }
-
-        public DbSet<PostgreField> Fields { get; set; }
-
-        public DbSet<PostgreParams> Params { get; set; }
-
-        public DbSet<PostgreRelationship> Relationships { get; set; }
-
         public DbSet<PostgreUserDefinedType> UDTs { get; set; }
 
         public DbSet<PostgreUDTField> UDTFs { get; set; }
 
         public DbSet<PostgreUDEnumOption> EnumsOptions { get; set; }
-
-        public DbSet<PostgreSequence> Sequences { get; set; }
-
-        public DbSet<PostgreFunctionResult> FuntionResults { get; set; }
-
-        public string ConnectionString { get; }
-
-        public PostgreDbContext(DbContextOptions options, string connectionString)
-        {
-            ConnectionString = connectionString;
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,7 +23,7 @@ namespace DB2BM.Extensions.PgSql
 
             modelBuilder.HasDefaultSchema("information_schema");
             
-            modelBuilder.Entity<PostgreTable>(config =>
+            modelBuilder.Entity<AnsiTable>(config =>
             {
                 config.HasKey(t => t.Name);
                 config.Property(t => t.Name).HasColumnName("table_name");
@@ -51,7 +32,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("tables");
             });
 
-            modelBuilder.Entity<PostgreSequence>(config =>
+            modelBuilder.Entity<AnsiSequence>(config =>
             {
                 config.HasKey(s => s.Name);
                 config.Property(s => s.Name).HasColumnName("sequence_name");
@@ -62,7 +43,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("sequences");
             });
 
-            modelBuilder.Entity<PostgreField>(config =>
+            modelBuilder.Entity<AnsiField>(config =>
             {
                 config.HasKey(f => new { f.Name, f.TableName });
                 config.Property(f => f.Name).HasColumnName("column_name");
@@ -70,31 +51,35 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(f => f.TableName).HasColumnName("table_name");
                 config.Property(f => f.OrdinalPosition).HasColumnName("ordinal_position");
                 config.Property(f => f.IsNullable).HasColumnName("is_nullable");
-                config.Property(f => f.TypeName).HasColumnName("udt_name");
+                config.Property(f => f.DataTypeName).HasColumnName("data_type");
+                config.Property(f => f.UdtName).HasColumnName("udt_name");
                 config.Property(f => f.CharacterMaximumLength).HasColumnName("character_maximum_length");
                 config.Property(f => f.Default).HasColumnName("column_default");
                 config.ToTable("columns");
             });
 
-            modelBuilder.Entity<PostgreFunction>(config =>
+            modelBuilder.Entity<AnsiRoutine>(config =>
             {
                 config.HasKey(f => f.SpecificName);
                 config.Property(f => f.Name).HasColumnName("routine_name");
                 config.HasMany(f => f.Params).WithOne(p => p.Function);
                 config.Property(f => f.SpecificName).HasColumnName("specific_name");
                 config.Property(f => f.SpecificSchema).HasColumnName("routine_schema");
-                config.Property(f => f.FunctionType).HasColumnName("routine_type");
+                config.Property(f => f.RoutineType).HasColumnName("routine_type");
                 config.Property(f => f.ReturnClause)
                     .HasColumnName("return_clause")
                     .HasComputedColumnSql("PG_GET_FUNCTION_RESULT(CAST(REPLACE(specific_name, CONCAT(routine_name, '_'), '') AS INT))");
-                config.Property(f => f.ReturnType).HasColumnName("type_udt_name");
+                config.Ignore(f => f.MaxDynamicResultSets);
+                config.Property(f => f.ReturnDataType).HasColumnName("data_type");
+                config.Property(f => f.ReturnUdtType).HasColumnName("type_udt_name");
                 config.Property(f => f.Definition).HasColumnName("routine_definition");
-                config.Property(f => f.LanguageDefinition).HasColumnName("external_language");
+                config.Property(f => f.RoutineLanguage).HasColumnName("routine_body");
+                config.Property(f => f.ExternalLanguage).HasColumnName("external_language");
                 config.ToTable("routines");
 
             });
 
-            modelBuilder.Entity<PostgreParams>(config =>
+            modelBuilder.Entity<AnsiParams>(config =>
             {
                 config.HasKey(p => new { p.OrdinalPosition, p.FunctionSpecificName });
                 config.Property(p => p.FunctionSpecificName).HasColumnName("specific_name");
@@ -103,7 +88,8 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(p => p.ParameterMode).HasColumnName("parameter_mode");
                 config.Property(p => p.IsResult).HasColumnName("is_result");
                 config.Property(p => p.Name).HasColumnName("parameter_name");
-                config.Property(p => p.TypeName).HasColumnName("udt_name");
+                config.Property(p => p.DataTypeName).HasColumnName("data_type");
+                config.Property(p => p.UdtName).HasColumnName("udt_name");
                 config.ToTable("parameters");
             });
 
@@ -112,19 +98,19 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(p => p.Clause).HasColumnName("clause");
             });
             
-            modelBuilder.Entity<PostgreRelationship>(config => 
+            modelBuilder.Entity<AnsiRelationship>(config => 
             {
                 config.HasKey(r => r.ConstraintName);
                 config.Property(r => r.ConstraintName).HasColumnName("constraint_name");
                 config.Property(r => r.SchemaName).HasColumnName("constraint_schema");
                 config.Property(r => r.TableName).HasColumnName("table_name");
                 config.Property(r => r.ConstraintType).HasColumnName("constraint_type");
-                config.HasOne(r => r.RelationColumn).WithOne(x => x.Relation).HasForeignKey<PostgreRelationColumnUsage>(y => y.ConstraintName);
-                config.HasOne(r => r.KeyColumn).WithOne(x => x.Relation).HasForeignKey<PostgreKeyColumnUsage>(y => y.ConstraintName);
+                config.HasOne(r => r.RelationColumn).WithOne(x => x.Relation).HasForeignKey<AnsiRelationColumnUsage>(y => y.ConstraintName);
+                config.HasOne(r => r.KeyColumn).WithOne(x => x.Relation).HasForeignKey<AnsiKeyColumnUsage>(y => y.ConstraintName);
                 config.ToTable("table_constraints");
             });
 
-            modelBuilder.Entity<PostgreRelationColumnUsage>(config =>
+            modelBuilder.Entity<AnsiRelationColumnUsage>(config =>
             {
                 config.HasKey(r => r.ConstraintName);
                 config.Property(r => r.ConstraintName).HasColumnName("constraint_name");
@@ -134,7 +120,7 @@ namespace DB2BM.Extensions.PgSql
                 config.ToTable("constraint_column_usage");
             });
 
-            modelBuilder.Entity<PostgreKeyColumnUsage>(config =>
+            modelBuilder.Entity<AnsiKeyColumnUsage>(config =>
             {
                 config.HasKey(k => k.ConstraintName);
                 config.Property(k => k.ConstraintName).HasColumnName("constraint_name");
@@ -163,7 +149,8 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(udtf => udtf.Default).HasColumnName("attribute_default");
                 config.Property(udtf => udtf.CharacterMaximumLength).HasColumnName("character_maximum_length");
                 config.Property(udtf => udtf.IsNullable).HasColumnName("is_nullable");
-                config.Property(udtf => udtf.TypeName).HasColumnName("attribute_udt_name");
+                config.Ignore(udtf => udtf.DataTypeName);
+                config.Property(udtf => udtf.UdtName).HasColumnName("attribute_udt_name");
                 config.HasOne(udtf => udtf.UDT).WithMany(udt => udt.Fields);
                 config.ToTable("attributes");
             });
@@ -172,12 +159,6 @@ namespace DB2BM.Extensions.PgSql
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql(ConnectionString);
-        }
-
-        public static DbContextOptions GetOptions(string connectionString)
-        {
-            var optionBuilder = new DbContextOptionsBuilder();
-            return optionBuilder.UseNpgsql(connectionString).Options;
         }
     }
 }

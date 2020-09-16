@@ -93,14 +93,14 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 sp.ReturnType = TypesMapper[sp.ReturnType];
             else if (Catalog.Tables.Values.Any(t => t.Name == sp.ReturnType))
             {
-                if (sp.ReturnClause.Contains("setof"))
+                if (sp.ReturnIsSet)
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType.ToPascal()}>";
                 else
                     sp.ReturnType = sp.ReturnType.ToPascal();
             }
             else if (Catalog.UserDefinedTypes.Values.Any(u => u.TypeName == sp.ReturnType))
             {
-                if (sp.ReturnClause.Contains("setof"))
+                if (sp.ReturnIsSet)
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
             }
         }
@@ -144,7 +144,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var code = (UseFoundVariable) ? foundDec + result : result;
             foreach (var p in outParameters)
             {
-                if (Sp.ReturnClause.Contains("setof"))
+                if (Sp.ReturnIsSet)
                     declarationOutParams += $"IEnumerable<{TypesMapper[p.DestinyType]}> {p.Name.ToCamel()};\n";
                 else
                     declarationOutParams += $"{TypesMapper[p.DestinyType]} {p.Name.ToCamel()} = default({TypesMapper[p.DestinyType]});\n";
@@ -153,7 +153,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (Sp.LanguageDefinition.ToLower() == "sql")
             {
                 codeContext.Code = "return " + result;
-                if (Sp.ReturnClause.ToLower().Contains("setof"))
+                if (Sp.ReturnIsSet)
                     codeContext.Code = codeContext.Code.Replace(".FirstOrDefault()", "");
             }
             else

@@ -200,7 +200,7 @@ namespace DB2BM.Extensions.Utils
                     sp.ReturnType = "(" + returnType + ")";
                 }
 
-                if (sp.ReturnClause.ToLower().Contains("setof "))
+                if (sp.ReturnIsSet)
                 {
                     if (EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper.ContainsKey(sp.ReturnType))
                         sp.ReturnType = "IEnumerable<" + EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper[sp.ReturnType] + ">";

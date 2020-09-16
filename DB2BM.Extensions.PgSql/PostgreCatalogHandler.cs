@@ -1,56 +1,40 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
+using Newtonsoft.Json;
+using System.Linq.Expressions;
+using DB2BM.Utils;
 using DB2BM.Abstractions.Entities;
 using DB2BM.Abstractions;
 using DB2BM.Abstractions.Attrs;
 using DB2BM.Abstractions.Interfaces;
 using DB2BM.Abstractions.Entities.UserDefined;
-using Microsoft.EntityFrameworkCore;
-using System.IO;
-using Newtonsoft.Json;
-using DB2BM.Utils;
-using System.Linq.Expressions;
+using DB2BM.Extensions.AnsiCatalog.Entities;
 using DB2BM.Extensions.PgSql.Entities;
+using DB2BM.Extensions.AnsiCatalog;
 
 namespace DB2BM.Extensions.PgSql
 {
     [Dbms("postgre")]
-    public class PostgreCatalogHandler : ICatalogHandler
+    public class PostgreCatalogHandler : AnsiCatalogHandler<PostgreDbContext>
     {
-        PostgreDbContext internalDbContext;
-        public PostgreDbContext InternalDbContext
-        {
-            get
-            {
-                if (internalDbContext == null)
-                {
-                    var connectionString = GetConnectionString(Options);
-                    internalDbContext = new PostgreDbContext(PostgreDbContext.GetOptions(connectionString), connectionString);
-                }
-                return internalDbContext;
-            }
-        }
-
-        public DbOption Options { get; set; }
-
-        DatabaseCatalog Catalog;
-
-        private string GetConnectionString(DbOption options)
+        protected override string GetConnectionString(DbOption options)
         {
             return $"Host={options.Host};Username={options.User};Password={options.Password};Database={options.DataBaseName};SSL Mode=Prefer";
         }
 
-        private IEnumerable<StoredProcedure> GetFunctions(bool internals)
+        protected override IEnumerable<StoredProcedure> GetFunctions(bool internals)
         {
             var filter = internals ?
-                (Expression<Func<PostgreFunction, bool>>)(f => f.SpecificSchema == "pg_catalog") :
-                (Expression<Func<PostgreFunction, bool>>)
-                    (f => f.SpecificSchema == "public" && f.FunctionType == "FUNCTION" &&
-                          (f.LanguageDefinition == "SQL" || f.LanguageDefinition == "PLPGSQL") &&
-                          f.ReturnType != "trigger");
+                (Expression<Func<AnsiRoutine, bool>>)(f => f.SpecificSchema == "pg_catalog") :
+                (Expression<Func<AnsiRoutine, bool>>)
+                    (f => f.SpecificSchema == "public" && (f.RoutineType == "FUNCTION" || f.RoutineType == "PROCEDURE") &&
+                          (f.RoutineLanguage == "SQL" || f.ExternalLanguage == "PLPGSQL") &&
+                          f.ReturnClause != "trigger");
 
-            var functs = InternalDbContext.Functions
+            var functs = InternalDbContext.Routines
                 .FromSqlRaw(
                    @"
                       select 
@@ -58,9 +42,11 @@ namespace DB2BM.Extensions.PgSql
                         routine_name,
                         routine_schema,
                         routine_type,
+                        data_type,
                         type_udt_name,
                         PG_GET_FUNCTION_RESULT(CAST(REPLACE(specific_name, CONCAT(routine_name, '_'), '') AS INT)) AS return_clause,
                         routine_definition,
+                        routine_body,
                         external_language
                       from
                         information_schema.routines
@@ -73,15 +59,17 @@ namespace DB2BM.Extensions.PgSql
                     {
                         Name = f.Name,
                         SpecificName = f.SpecificName,
-                        LanguageDefinition = f.LanguageDefinition,
-                        OriginalCode = f.LanguageDefinition == "SQL" ? "BEGIN " + f.Definition : f.Definition,
-                        ReturnClause = f.ReturnClause,
-                        ReturnType = f.ReturnType,
+                        LanguageDefinition = f.RoutineLanguage == "EXTERNAL" ? f.ExternalLanguage : f.RoutineLanguage,
+                        OriginalCode = f.RoutineLanguage == "SQL" ? 
+                            $"BEGIN {f.Definition} END" : 
+                            f.Definition,
+                        ReturnIsSet = f.ReturnClause == "setof",
+                        ReturnType = f.ReturnUdtType,
                         Params = f.Params.Select(p =>
                               new Parameter()
                               {
                                   Name = p.Name,
-                                  OriginType = p.TypeName,
+                                  OriginType = p.UdtName,
                                   OrdinalPosition = p.OrdinalPosition,
                                   IsResult = p.IsResult,
                                   ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true)
@@ -90,7 +78,7 @@ namespace DB2BM.Extensions.PgSql
             return functs;
         }
 
-        private IEnumerable<Table> GetTables()
+        protected override IEnumerable<Table> GetTables()
         {
             var tables =
                 InternalDbContext.Tables
@@ -107,9 +95,9 @@ namespace DB2BM.Extensions.PgSql
                                      {
                                          GenName = (t.Name == f.Name) ? "_" + f.Name.ToPascal() : f.Name.ToPascal(),
                                          Name = f.Name,
-                                         IsNullable = (f.IsNullable == "SI") ? true : false,
+                                         IsNullable = (f.IsNullable == "YES") ? true : false,
                                          OrdinalPosition = f.OrdinalPosition,
-                                         OriginType = f.TypeName,
+                                         OriginType = f.UdtName,
                                          Default = f.Default,
                                          CharacterMaximumLength = f.CharacterMaximumLength,
                                      }).ToList()
@@ -118,7 +106,7 @@ namespace DB2BM.Extensions.PgSql
             return tables;
         }
 
-        private IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables)
+        protected override IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables)
         {
             var relations = InternalDbContext.Relationships
                                 .Include(x => x.KeyColumn)
@@ -137,7 +125,7 @@ namespace DB2BM.Extensions.PgSql
             return relations;
         }
 
-        private IEnumerable<BaseUserDefinedType> GetUserDefineds()
+        protected override IEnumerable<BaseUserDefinedType> GetUserDefinedTypes()
         {
             IEnumerable<BaseUserDefinedType> udts = InternalDbContext.UDTs
                 .Include(x => x.Fields)
@@ -151,7 +139,7 @@ namespace DB2BM.Extensions.PgSql
                                    new UdtField()
                                    {
                                        Name = f.Name,
-                                       OriginType = f.TypeName,
+                                       OriginType = f.UdtName,
                                        OrdinalPosition = f.OrdinalPosition,
                                        Default = f.Default,
                                        IsNullable = (f.IsNullable == "YES") ? true : false,
@@ -160,7 +148,7 @@ namespace DB2BM.Extensions.PgSql
                     });
 
             IEnumerable<BaseUserDefinedType> enumsOptions =
-                InternalDbContext.Set<Entities.PostgreUDEnumOption>()
+                InternalDbContext.Set<PostgreUDEnumOption>()
                    .FromSqlRaw(@"
                                 SELECT 
                                     pg_type.typname AS EnumName, 
@@ -180,7 +168,7 @@ namespace DB2BM.Extensions.PgSql
             return udts.Union(enumsOptions);
         }
 
-        private IEnumerable<Sequence> GetSequences()
+        protected override IEnumerable<Sequence> GetSequences()
         {
             return InternalDbContext.Sequences.Select(x =>
                    new Sequence()
@@ -193,50 +181,5 @@ namespace DB2BM.Extensions.PgSql
                    });
         }
 
-        public DatabaseCatalog GetCatalog()
-        {
-            if (Catalog != null) return Catalog;
-
-
-            var catalog = new DatabaseCatalog()
-            {
-                Name = Options.DataBaseName,
-            };
-
-            var tables = GetTables();
-            var catalogTables = new Dictionary<string, Table>();
-            foreach (var t in tables)
-                catalogTables.Add(t.Name, t);
-            var relations = GetRelations(catalogTables).ToList();
-
-            var functions = GetFunctions(false);
-            var catalogFunctions = new Dictionary<string, StoredProcedure>();
-            foreach (var f in functions)
-                catalogFunctions.Add(f.SpecificName, f);
-
-            var internalFunctions = GetFunctions(true);
-            var catalogInternalFunctions = new Dictionary<string, StoredProcedure>();
-            foreach (var f in internalFunctions)
-                catalogInternalFunctions.Add(f.SpecificName, f);
-
-            var userDefineds = GetUserDefineds();
-            var catalogUserDefinedType = new Dictionary<string, BaseUserDefinedType>();
-            foreach (var u in userDefineds)
-                catalogUserDefinedType.Add(u.TypeName, u);
-
-            var catalogSequences = new Dictionary<string, Sequence>();
-            foreach (var s in GetSequences())
-                catalogSequences.Add(s.Name, s);
-
-            catalog.StoredProcedures = catalogFunctions;
-            catalog.InternalFunctions = catalogInternalFunctions;
-            catalog.Relationships = relations;
-            catalog.Sequences = catalogSequences;
-            catalog.Tables = catalogTables;
-            catalog.UserDefinedTypes = catalogUserDefinedType;
-
-            Catalog = catalog;
-            return Catalog;
-        }
     }
 }

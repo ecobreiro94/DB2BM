@@ -2,28 +2,15 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="DB2BM.Extensions.PgSql.PostgreCatalogHandler">
     <Position X="2" Y="0.75" Width="2" />
-    <AssociationLine Name="internalDbContext" Type="DB2BM.Extensions.PgSql.PostgreDbContext" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="4" Y="1.312" />
-        <Point X="4.875" Y="1.312" />
-        <Point X="4.875" Y="1.312" />
-        <Point X="5.75" Y="1.312" />
-      </Path>
-    </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AEAAAAAAAAEBAAAAACBAAAgBAAAABAAAgAAAAABAAAA=</HashCode>
+      <HashCode>AEAAAAAAAAABAAAAACAAAAgAAAAAAAAAgAAAAAAAAEA=</HashCode>
       <FileName>PostgreCatalogHandler.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Field Name="internalDbContext" />
-      <Field Name="Catalog" />
-    </ShowAsAssociation>
-    <Lollipop Position="0.2" />
   </Class>
   <Class Name="DB2BM.Extensions.PgSql.PostgreDbContext">
     <Position X="5.75" Y="0.5" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAEAIAAQAAAAAAAEAAQAIAEAAAAAEBACAAAAMAgAA=</HashCode>
+      <HashCode>AAAAEAAAAQAAAAAAAAAAAAAAEAAAAAEBAAAAAAAAAAA=</HashCode>
       <FileName>PostgreDbContext.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -36,7 +23,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog">
-    <Position X="3.75" Y="4.75" Width="1.5" />
+    <Position X="4.25" Y="4.25" Width="1.5" />
     <TypeIdentifier />
   </Class>
   <Font Name="Segoe UI" Size="9" />
