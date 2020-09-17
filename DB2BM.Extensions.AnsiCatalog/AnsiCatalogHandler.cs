@@ -14,9 +14,19 @@ using DB2BM.Utils;
 namespace DB2BM.Extensions.AnsiCatalog
 {
     public abstract class AnsiCatalogHandler<TDbContext> : ICatalogHandler
-        where TDbContext: AnsiCatalogDbContext, new()
+        where TDbContext : AnsiCatalogDbContext, new()
     {
-        TDbContext internalDbContext;
+        private DatabaseCatalog Catalog;
+
+        private TDbContext internalDbContext;
+
+        public AnsiCatalogHandler(string schemaName)
+        {
+            SchemaName = schemaName;
+        }
+
+        public string SchemaName { get; private set; }
+
         public TDbContext InternalDbContext
         {
             get
@@ -35,19 +45,104 @@ namespace DB2BM.Extensions.AnsiCatalog
 
         public DbOption Options { get; set; }
 
-        private DatabaseCatalog Catalog;
-
         protected abstract string GetConnectionString(DbOption options);
 
-        protected abstract IEnumerable<StoredProcedure> GetFunctions(bool internals);
+        protected virtual IEnumerable<StoredProcedure> GetFunctions(bool internals)
+        {
+            if (internals)
+                return Enumerable.Empty<StoredProcedure>();
 
-        protected abstract IEnumerable<Table> GetTables();
+            var functs = InternalDbContext.Routines
+                .Include(x => x.Params)
+                .Where(f => f.SpecificSchema == SchemaName)
+                .Select(f =>
+                    new StoredProcedure()
+                    {
+                        Name = f.Name,
+                        SpecificName = f.SpecificName,
+                        LanguageDefinition = f.RoutineLanguage,
+                        OriginalCode = f.Definition,
+                        ReturnType = f.ReturnUdtType ?? f.ReturnDataType,
+                        Params = f.Params.Select(p =>
+                              new Parameter()
+                              {
+                                  Name = p.Name,
+                                  OriginType = p.UdtName ?? p.DataTypeName,
+                                  OrdinalPosition = p.OrdinalPosition,
+                                  IsResult = p.IsResult,
+                                  ParameterMode = (ParameterMode)Enum.Parse(typeof(ParameterMode), p.ParameterMode.Replace(" ", ""), true)
+                              }).ToList()
+                    });
+            return functs;
 
-        protected abstract IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables);
+        }
 
-        protected abstract IEnumerable<Sequence> GetSequences();
+        protected virtual IEnumerable<Table> GetTables()
+        {
+            var tables =
+                InternalDbContext.Tables
+                    .Where(t => t.SchemaName == SchemaName)
+                    .Include(x => x.Fields)
+                    .Select(t =>
+                       new Table()
+                       {
+                           Name = t.Name,
+                           Fields = t.Fields
+                               .OrderBy(f => f.OrdinalPosition)
+                               .Select(f =>
+                                     new TableField()
+                                     {
+                                         GenName = (t.Name == f.Name) ? "_" + f.Name.ToPascal() : f.Name.ToPascal(),
+                                         Name = f.Name,
+                                         IsNullable = (f.IsNullable == "YES") ? true : false,
+                                         OrdinalPosition = f.OrdinalPosition,
+                                         OriginType = f.UdtName ?? f.DataTypeName,
+                                         Default = f.Default,
+                                         CharacterMaximumLength = f.CharacterMaximumLength,
+                                     }).ToList()
+                       });
 
-        protected abstract IEnumerable<BaseUserDefinedType> GetUserDefinedTypes();
+            return tables;
+        }
+
+        protected virtual IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables)
+
+        {
+            var relations = InternalDbContext.Relationships
+                                .Include(x => x.KeyColumn)
+                                .Include(x => x.RelationColumn)
+                                .Where(r => r.SchemaName == SchemaName && r.ConstraintType != "CHECK")
+                                .AsEnumerable()
+                                .Select(r =>
+                                    new Relationship()
+                                    {
+                                        Table = tables[r.TableName],
+                                        ReferenceTable = tables[r.RelationColumn.TableName],
+                                        Column = tables[r.TableName].Fields.First(c => c.Name == r.KeyColumn.ColumnName),
+                                        ReferenceColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
+                                        Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
+                                    });
+            return relations;
+        }
+
+        protected virtual IEnumerable<Sequence> GetSequences()
+        {
+            return InternalDbContext.Sequences.Select(x =>
+                   new Sequence()
+                   {
+                       Name = x.Name,
+                       Increment = int.Parse(x.Increment),
+                       Start = int.Parse(x.Start),
+                       MinValue = int.Parse(x.MinValue),
+                       MaxValue = long.Parse(x.MaxValue)
+                   });
+        }
+
+
+        protected virtual IEnumerable<BaseUserDefinedType> GetUserDefinedTypes()
+        {
+            return Enumerable.Empty<BaseUserDefinedType>();
+        }
 
         public DatabaseCatalog GetCatalog()
         {

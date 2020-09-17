@@ -20,6 +20,10 @@ namespace DB2BM.Extensions.PgSql
     [Dbms("postgre")]
     public class PostgreCatalogHandler : AnsiCatalogHandler<PostgreDbContext>
     {
+        public PostgreCatalogHandler() : base("public")
+        {
+        }
+
         protected override string GetConnectionString(DbOption options)
         {
             return $"Host={options.Host};Username={options.User};Password={options.Password};Database={options.DataBaseName};SSL Mode=Prefer";
@@ -78,53 +82,6 @@ namespace DB2BM.Extensions.PgSql
             return functs;
         }
 
-        protected override IEnumerable<Table> GetTables()
-        {
-            var tables =
-                InternalDbContext.Tables
-                    .Include(x => x.Fields)
-                    .Where(t => t.SchemaName == "public")
-                    .Select(t =>
-                       new Table()
-                       {
-                           Name = t.Name,
-                           Fields = t.Fields
-                               .OrderBy(f => f.OrdinalPosition)
-                               .Select(f =>
-                                     new TableField()
-                                     {
-                                         GenName = (t.Name == f.Name) ? "_" + f.Name.ToPascal() : f.Name.ToPascal(),
-                                         Name = f.Name,
-                                         IsNullable = (f.IsNullable == "YES") ? true : false,
-                                         OrdinalPosition = f.OrdinalPosition,
-                                         OriginType = f.UdtName,
-                                         Default = f.Default,
-                                         CharacterMaximumLength = f.CharacterMaximumLength,
-                                     }).ToList()
-                       });
-
-            return tables;
-        }
-
-        protected override IEnumerable<Relationship> GetRelations(IDictionary<string, Table> tables)
-        {
-            var relations = InternalDbContext.Relationships
-                                .Include(x => x.KeyColumn)
-                                .Include(x => x.RelationColumn)
-                                .Where(r => r.SchemaName == "public" && r.ConstraintType != "CHECK")
-                                .AsEnumerable()
-                                .Select(r =>
-                                    new Relationship()
-                                    {
-                                        Table = tables[r.TableName],
-                                        ReferenceTable = tables[r.RelationColumn.TableName],
-                                        Column = tables[r.TableName].Fields.First(c => c.Name == r.KeyColumn.ColumnName),
-                                        ReferenceColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
-                                        Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
-                                    });
-            return relations;
-        }
-
         protected override IEnumerable<BaseUserDefinedType> GetUserDefinedTypes()
         {
             IEnumerable<BaseUserDefinedType> udts = InternalDbContext.UDTs
@@ -166,19 +123,6 @@ namespace DB2BM.Extensions.PgSql
                            Options = x.Select(o => o.Option)
                        });
             return udts.Union(enumsOptions);
-        }
-
-        protected override IEnumerable<Sequence> GetSequences()
-        {
-            return InternalDbContext.Sequences.Select(x =>
-                   new Sequence()
-                   {
-                       Name = x.Name,
-                       Increment = int.Parse(x.Increment),
-                       Start = int.Parse(x.Start),
-                       MinValue = int.Parse(x.MinValue),
-                       MaxValue = long.Parse(x.MaxValue)
-                   });
         }
 
     }
