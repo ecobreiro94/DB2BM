@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2BM.Extensions.EFCoreBMGenerator">
+    <Position X="2.5" Y="1.25" Width="2.75" />
+    <Members>
+      <Field Name="catalog" Hidden="true" />
+      <Field Name="dbContextExtensionTemplate" Hidden="true" />
+      <Field Name="dbContextTemplate" Hidden="true" />
+      <Field Name="functionsTemplate" Hidden="true" />
+      <Method Name="GenerateDatabaseFunctions" Hidden="true" />
+      <Method Name="GenerateInternalFunctions" Hidden="true" />
+      <Method Name="InsertErrors" Hidden="true" />
+      <Field Name="internalFunctionsTemplate" Hidden="true" />
+      <Field Name="modelTemplate" Hidden="true" />
+      <Field Name="prepareCatalog" Hidden="true" />
+      <Method Name="SelectFunctions" Hidden="true" />
+      <Field Name="templatesPath" Hidden="true" />
+      <Method Name="Write" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>ABAAIAQKQAQIEAgAAQEAAAA5AGIAMAAEAACABAGQAAA=</HashCode>
+      <FileName>EFCoreBMGenerator.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="TypesMapper" />
+      <Property Name="SemanticAnalyzer" />
+      <Property Name="SyntacticAnalyzer" />
+      <Property Name="Catalog" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Abstractions.Entities.DatabaseCatalog" Collapsed="true">
+    <Position X="6.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="System.Collections.Generic.Dictionary&lt;TKey, TValue&gt;" Collapsed="true">
+    <Position X="8.75" Y="3.75" Width="2" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="DB2BM.Abstractions.Interfaces.ISyntacticAnalyzer" Collapsed="true">
+    <Position X="6.75" Y="2.25" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="DB2BM.Abstractions.Interfaces.ISemanticAnalyzer" Collapsed="true">
+    <Position X="6.75" Y="3" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
