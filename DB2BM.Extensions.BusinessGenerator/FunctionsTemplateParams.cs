@@ -10,6 +10,7 @@ namespace DB2BM.Extensions.BusinessGenerator
         public string Name { get; set; }
         public List<StoredProcedure> Functions { get; set; }
     }
+
     public class FunctionsTemplateParams
     {
         public string NameSpace { get; set; }

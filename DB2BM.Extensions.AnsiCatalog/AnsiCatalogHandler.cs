@@ -16,7 +16,7 @@ namespace DB2BM.Extensions.AnsiCatalog
     public abstract class AnsiCatalogHandler<TDbContext> : ICatalogHandler
         where TDbContext : AnsiCatalogDbContext, new()
     {
-        private DatabaseCatalog Catalog;
+        private DatabaseCatalog catalog;
 
         private TDbContext internalDbContext;
 
@@ -81,8 +81,8 @@ namespace DB2BM.Extensions.AnsiCatalog
         {
             var tables =
                 InternalDbContext.Tables
-                    .Where(t => t.SchemaName == SchemaName)
                     .Include(x => x.Fields)
+                    .Where(t => t.SchemaName == SchemaName)
                     .Select(t =>
                        new Table()
                        {
@@ -138,7 +138,6 @@ namespace DB2BM.Extensions.AnsiCatalog
                    });
         }
 
-
         protected virtual IEnumerable<BaseUserDefinedType> GetUserDefinedTypes()
         {
             return Enumerable.Empty<BaseUserDefinedType>();
@@ -146,10 +145,10 @@ namespace DB2BM.Extensions.AnsiCatalog
 
         public DatabaseCatalog GetCatalog()
         {
-            if (Catalog != null) return Catalog;
+            if (this.catalog != null)
+                return this.catalog;
 
-
-            var catalog = new DatabaseCatalog()
+            catalog = new DatabaseCatalog()
             {
                 Name = Options.DataBaseName,
             };
@@ -186,8 +185,7 @@ namespace DB2BM.Extensions.AnsiCatalog
             catalog.Tables = catalogTables;
             catalog.UserDefinedTypes = catalogUserDefinedType;
 
-            Catalog = catalog;
-            return Catalog;
+            return catalog;
         }
     }
 }
