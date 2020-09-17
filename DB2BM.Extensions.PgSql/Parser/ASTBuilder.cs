@@ -28,7 +28,7 @@ using DB2BM.Abstractions.AST.Types;
 
 namespace DB2BM.Extensions.PgSql.Parser
 {
-    public class ASTGenerator : PlPgSqlParserBaseVisitor<ASTNode>
+    public class ASTBuilder : PlPgSqlParserBaseVisitor<ASTNode>
     {
         //ok
         public override ASTNode VisitAdditional_statement([NotNull] PlPgSqlParser.Additional_statementContext context)

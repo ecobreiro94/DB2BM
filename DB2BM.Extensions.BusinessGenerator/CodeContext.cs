@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.EFCore.Visitors
+namespace DB2BM.Extensions.BusinessGenerator.Visitors
 {
     public class CodeContext
     {
@@ -15,10 +15,4 @@ namespace DB2BM.Extensions.EFCore.Visitors
         public bool UserFunctionCall { get; set; }
     }
 
-    public class CodeContextFromItemResult : CodeContext
-    {
-        public List<ExpressionNode> JionExpressions { get; set; }
-        public List<string> TablesName { get; set; }
-        public int Count { get; set; }
-    }
 }
