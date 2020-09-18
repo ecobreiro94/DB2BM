@@ -5,9 +5,9 @@ using System.Text;
 using Antlr4.StringTemplate;
 using DB2BM.Utils;
 
-namespace DB2BM.Extensions.EFCore.Utils
+namespace DB2BM.Extensions.BusinessGenerator.Utils
 {
-    public class CSharpRenderer : StringRenderer
+    public class CodeRenderer : StringRenderer
     {
         public override string ToString(object o, string formatString, CultureInfo culture)
         {

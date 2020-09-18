@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.PgSql.Entities
+namespace DB2BM.Extensions.AnsiCatalog.Entities
 {
-    public class PostgreSequence
+    public class AnsiSequence
     {
         public string Name { get; set; }
+
         public string Increment { get; set; }
 
         public string Start { get; set; }

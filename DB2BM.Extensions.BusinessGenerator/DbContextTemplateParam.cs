@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.Utils
+namespace DB2BM.Extensions.BusinessGenerator
 {
     public class DbContextTemplateParam
     {

@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DB2BM.Extensions.PgSql.Entities
+namespace DB2BM.Extensions.AnsiCatalog.Entities
 {
-    public abstract class PostgreBaseField
+    public abstract class AnsiBaseField
     {
         public string Name { get; set; }
 
-        public string TypeName { get; set; }
+        public string DataTypeName { get; set; }
+
+        public string UdtName { get; set; }
 
         public int OrdinalPosition { get; set; }
 
@@ -16,6 +18,6 @@ namespace DB2BM.Extensions.PgSql.Entities
 
         public string IsNullable { get; set; }
 
-        public int? CharacterMaximumLength { get; set; }
+        public uint? CharacterMaximumLength { get; set; }
     }
 }

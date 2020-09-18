@@ -14,6 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />
+    <ProjectReference Include="..\DB2BM.Extensions.AnsiCatalog\DB2BM.Extensions.AnsiCatalog.csproj" />
+    <ProjectReference Include="..\DB2BM.Extensions.AntlrSyntacticAnalyser\DB2BM.Extensions.AntlrSyntacticAnalyser.csproj" />
     <ProjectReference Include="..\DB2BM.Utils\DB2BM.Utils.csproj" />
   </ItemGroup>
 

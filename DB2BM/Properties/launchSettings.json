@@ -2,7 +2,7 @@
   "profiles": {
     "DB2BM": {
       "commandName": "Project",
-      "commandLineArgs": "--h localhost --db TestDb --u postgres --p kike --outpath D:\\Works\\Enriquito\\DB2BM\\Test --orm efcore --dbms postgre --gen all --splist sp_list.json --project"
+      "commandLineArgs": "--h pgsql.postgres.database.azure.com --db Test --u develop@pgsql --p develop --outpath .\\TestPostgreSql --orm efcore --dbms postgre --gen all --splist sp_list.json --project"
     }
   }
 }

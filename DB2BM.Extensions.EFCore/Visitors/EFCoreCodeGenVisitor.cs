@@ -22,26 +22,28 @@ using DB2BM.Abstractions.AST.Statements.Cursor;
 using DB2BM.Abstractions.AST.Statements.Data;
 using DB2BM.Abstractions.AST.Types;
 using DB2BM.Abstractions.Entities;
-using DB2BM.Abstractions.Visitors;
-using DB2BM.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using DB2BM.Abstractions.Visitors;
+using DB2BM.Extensions.BusinessGenerator;
+using DB2BM.Extensions.BusinessGenerator.Visitors;
+using DB2BM.Utils;
 
 namespace DB2BM.Extensions.EFCore.Visitors
 {
-    public class EFCoreCodeGenVisitor : ASTVisitor<CodeContext>
+    public class EFCoreCodeGenVisitor : ASTVisitor<CodeContext>, ICodeGenerator
     {
-        DatabaseCatalog Catalog;
-        StoredProcedure Sp;
-        bool UseFoundVariable;
-        Dictionary<string, string> TablesAlias = new Dictionary<string, string>();
-        List<StoredProcedure> InternalFunctionUse = new List<StoredProcedure>();
-        int countVariablesGen = 0;
+        bool useFoundVariable;
+        Dictionary<string, string> tablesAlias;
+        List<StoredProcedure> internalFunctionUse;
+        List<string> replaceList;
+        int countVariablesGen;
         int identation;
-        bool InQuery;
+        bool inQuery;
+        string multiplySustitution;
 
         public static readonly Dictionary<string, string> TypesMapper = new Dictionary<string, string>
         {
@@ -87,23 +89,25 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 varibleIndex = "0" + varibleIndex;
             return "_" + varibleIndex;
         }
+
         void SetType(StoredProcedure sp)
         {
             if (TypesMapper.ContainsKey(sp.ReturnType))
                 sp.ReturnType = TypesMapper[sp.ReturnType];
             else if (Catalog.Tables.Values.Any(t => t.Name == sp.ReturnType))
             {
-                if (sp.ReturnClause.Contains("setof"))
+                if (sp.ReturnIsSet)
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType.ToPascal()}>";
                 else
                     sp.ReturnType = sp.ReturnType.ToPascal();
             }
             else if (Catalog.UserDefinedTypes.Values.Any(u => u.TypeName == sp.ReturnType))
             {
-                if (sp.ReturnClause.Contains("setof"))
+                if (sp.ReturnIsSet)
                     sp.ReturnType = $"IEnumerable<{sp.ReturnType}>";
             }
         }
+
         string GetIdentation
         {
             get
@@ -116,12 +120,32 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
         }
 
-        public EFCoreCodeGenVisitor(DatabaseCatalog catalog, StoredProcedure sp)
+        public StoredProcedure Sp { get; private set; }
+
+        public DatabaseCatalog Catalog { get; set; }
+
+        public CodeContext GenerateBody(StoredProcedure sp)
         {
-            Catalog = catalog;
-            Sp = sp;
+            useFoundVariable = false;
+            tablesAlias = new Dictionary<string, string>();
+            internalFunctionUse = new List<StoredProcedure>();
+            replaceList = new List<string>();
+            countVariablesGen = 0;
             identation = 0;
+            inQuery = false;
+            multiplySustitution = null;
+
+            Sp = sp;
             SetType(Sp);
+
+            return VisitNode(Sp.AST);
+        }
+
+        public void PreparaParams(StoredProcedure sp)
+        {
+            foreach (var p in sp.Params)
+                if (TypesMapper.ContainsKey(p.DestinyType))
+                    p.DestinyType = TypesMapper[p.DestinyType];
         }
 
         public override CodeContext Visit(FunctionBlockNode node)
@@ -141,10 +165,10 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var outParameters = Sp.Params.Where(p => p.OutMode).ToList();
             var parameters = "";
 
-            var code = (UseFoundVariable) ? foundDec + result : result;
+            var code = (useFoundVariable) ? foundDec + result : result;
             foreach (var p in outParameters)
             {
-                if (Sp.ReturnClause.Contains("setof"))
+                if (Sp.ReturnIsSet)
                     declarationOutParams += $"IEnumerable<{TypesMapper[p.DestinyType]}> {p.Name.ToCamel()};\n";
                 else
                     declarationOutParams += $"{TypesMapper[p.DestinyType]} {p.Name.ToCamel()} = default({TypesMapper[p.DestinyType]});\n";
@@ -153,7 +177,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (Sp.LanguageDefinition.ToLower() == "sql")
             {
                 codeContext.Code = "return " + result;
-                if (Sp.ReturnClause.ToLower().Contains("setof"))
+                if (Sp.ReturnIsSet)
                     codeContext.Code = codeContext.Code.Replace(".FirstOrDefault()", "");
             }
             else
@@ -164,7 +188,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     codeContext.Code = declarationOutParams + codeContext.Code + "return (" + parameters + ");";
                 }
             }
-            codeContext.InternalFunctionUse = InternalFunctionUse;
+            codeContext.InternalFunctionUse = internalFunctionUse;
 
 
             if (node.ExceptionStatement != null)
@@ -183,7 +207,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
             return codeContext;
         }
-        List<string> replaceList = new List<string>();
+
         public override CodeContext Visit(DeclarationNode node)
         {
             if (node.TypeDeclaration is AliasDeclarationNode)
@@ -215,7 +239,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 var typeDeclaration = node.TypeDeclaration as CursorDeclarationNode;
                 var arguments = "";
-                UseFoundVariable = true;
+                useFoundVariable = true;
                 replaceList = new List<string>();
                 foreach (var arg in typeDeclaration.ArgumentList)
                 {
@@ -241,7 +265,6 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             return null;
         }
-
 
         public override CodeContext Visit(AliasDeclarationNode node)
         {
@@ -614,7 +637,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectStatementNode node)
         {
-            InQuery = true;
+            inQuery = true;
             var codeContext = new CodeContext();
             if (node.SelectOps != null)
             {
@@ -633,7 +656,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
             }
             codeContext.Code += ";";
-            InQuery = false;
+            inQuery = false;
             return codeContext;
         }
 
@@ -722,7 +745,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = (InQuery) ? $"EF.Functions.Like({lCode}, {rCode})" :
+                Code = (inQuery) ? $"EF.Functions.Like({lCode}, {rCode})" :
                     $"DbContext.Like({ lCode },{ rCode })"
             };
 
@@ -739,7 +762,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = (InQuery) ? $"EF.Functions.Like(({lCode}).ToLower(), ({rCode}).ToLower())" :
+                Code = (inQuery) ? $"EF.Functions.Like(({lCode}).ToLower(), ({rCode}).ToLower())" :
                     $"DbContext.Like(({lCode}).ToLower(), ({rCode}).ToLower())"
             };
         }
@@ -755,7 +778,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = (InQuery) ? $"!EF.Functions.Like({lCode}, {rCode})" :
+                Code = (inQuery) ? $"!EF.Functions.Like({lCode}, {rCode})" :
                     "!" + $"DbContext.Like({ lCode },{ rCode })"
             };
         }
@@ -771,7 +794,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
-                Code = (InQuery) ? $"!EF.Functions.Like(({lCode}).ToLower(), ({rCode}).ToLower())" :
+                Code = (inQuery) ? $"!EF.Functions.Like(({lCode}).ToLower(), ({rCode}).ToLower())" :
                     "!" + $"DbContext.Like(({lCode}).ToLower(), ({rCode}).ToLower())"
             };
         }
@@ -780,7 +803,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var lOpCodeContext = VisitNode(node.LeftOperand);
             var rOpCodeContext = VisitNode(node.RightOperand);
-            InternalFunctionUse.Add(Catalog.InternalFunctions.Values.FirstOrDefault(f => f.Name == "similar_escape"));
+            internalFunctionUse.Add(Catalog.InternalFunctions.Values.FirstOrDefault(f => f.Name == "similar_escape"));
             return new CodeContext()
             {
                 UserFunctionCall = lOpCodeContext.UserFunctionCall || rOpCodeContext.UserFunctionCall,
@@ -1143,8 +1166,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var codeContext = new CodeContext();
             if (multiplySustitution != null || multiplySustitution != "")
                 codeContext.Code = multiplySustitution;
-            else if (TablesAlias.Count > 0)
-                codeContext.Code = TablesAlias.First().Key;
+            else if (tablesAlias.Count > 0)
+                codeContext.Code = tablesAlias.First().Key;
             else codeContext.Code = "";
             return codeContext;
         }
@@ -1259,12 +1282,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var codeContext = new CodeContext();
             var functionName = node.SchemaQualifiednameNonType.IdentifierNonType.Text;
-            if (InQuery && functionName.ToLower() == "count")
+            if (inQuery && functionName.ToLower() == "count")
             {
                 var arg = VisitNode(node.VexOrNamedNotations[0]);
                 codeContext.Code = $"Count()";
             }
-            else if (InQuery && functionName.ToLower() == "Sum")
+            else if (inQuery && functionName.ToLower() == "Sum")
             {
                 var arg = VisitNode(node.VexOrNamedNotations[0]);
                 codeContext.Code = $"Sum({arg.Code})";
@@ -1302,7 +1325,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         if (function.Params.Where(p => !p.OutMode).Count() == node.VexOrNamedNotations.Count)
                         {
                             codeContext.Code = "DbContext." + functionName.ToPascal() + "(";
-                            InternalFunctionUse.Add(function);
+                            internalFunctionUse.Add(function);
                             var first = true;
                             foreach (var arg in node.VexOrNamedNotations)
                             {
@@ -1610,12 +1633,13 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 return codeContext;
             }
         }
+
         bool IfPredefinedFunction(BasicFunctionCallNode functionCall)
         {
             var predifined = new[] { "count", "sum", "max", "min", "avg" };
             return predifined.Contains(functionCall.SchemaQualifiednameNonType.IdentifierNonType.Text.ToLower());
         }
-        string multiplySustitution;
+
         private List<(string, string)> FindJoinColumns(List<FromItemNode> nodes)
         {
             var result = new List<(string, string)>();
@@ -1650,13 +1674,13 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         private CodeContext VisitQuery(SelectBodyNode node)
         {
-            InQuery = true;
+            inQuery = true;
             var codeContext = new CodeContext();
             int expressionsIndex = 0;
             var result = "";
-            var tmp = TablesAlias;
+            var tmp = tablesAlias;
             var firstorDefault = false;
-            TablesAlias = new Dictionary<string, string>();
+            tablesAlias = new Dictionary<string, string>();
             if (node.FromItems != null && node.FromItems.Count > 0)
             {
                 firstorDefault = true;
@@ -1685,17 +1709,17 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     foreach (var fromItem in node.FromItems)
                     {
                         var fiCodeContext = VisitNode(fromItem) as CodeContextFromItemResult;
-                        joinExpressions.AddRange(fiCodeContext.JionExpressions);
+                        joinExpressions.AddRange(fiCodeContext.JoinExpressions);
                         tablesName.AddRange(fiCodeContext.TablesName);
                         fromItemsCode += fiCodeContext.Code + " ";
                     }
                     var selectCode = "";
                     foreach (var tn in tablesName)
                     {
-                        selectCode += (selectCode == "") ? TablesAlias[tn] : ", " + TablesAlias[tn];
-                        if (!TablesAlias.ContainsKey(TablesAlias[tn]))
-                            TablesAlias.Add(TablesAlias[tn], alias + "." + TablesAlias[tn]);
-                        TablesAlias[tn] = alias + "." + TablesAlias[tn];
+                        selectCode += (selectCode == "") ? tablesAlias[tn] : ", " + tablesAlias[tn];
+                        if (!tablesAlias.ContainsKey(tablesAlias[tn]))
+                            tablesAlias.Add(tablesAlias[tn], alias + "." + tablesAlias[tn]);
+                        tablesAlias[tn] = alias + "." + tablesAlias[tn];
 
                     }
 
@@ -1732,7 +1756,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         var indirection = exp as IndirectionVarNode;
                         if (indirection.Indirections?.Count > 0 &&
                             indirection.Indirections[indirection.Indirections.Count - 1].ColLabel != null)
-                            TablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1]
+                            tablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1]
                                 .ColLabel.Text, "@.Key");
                         else if (indirection.Identifiers != null)
                             TablesAlias.Add(indirection.Identifiers.Text, "@.Key");
@@ -1741,7 +1765,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     multiplySustitution = intoVariable;
                     var newTA = new Dictionary<string, string>();
                     newTA.Add(generalAlias, "@" + intoVariable);
-                    foreach (var ta in TablesAlias)
+                    foreach (var ta in tablesAlias)
                     {
                         if (ta.Value.StartsWith(generalAlias))
                         {
@@ -1758,7 +1782,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         else
                             newTA.Add(ta.Key, ta.Value);
                     }
-                    TablesAlias = newTA;
+                    tablesAlias = newTA;
                 }
             }
             var flag = true;
@@ -1830,10 +1854,11 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 codeContext.Code = codeContext.Code + " select " + selectListCodeContext.Code;
             if (firstorDefault)
                 codeContext.Code = $"({codeContext.Code}).FirstOrDefault()";
-            TablesAlias = tmp;
+            tablesAlias = tmp;
 
             return codeContext;
         }
+
         public override CodeContext Visit(SelectPrimaryNode node)
         {
             var codeContext = VisitQuery(node);
@@ -1863,7 +1888,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
             }
             multiplySustitution = null;
-            InQuery = false;
+            inQuery = false;
             return codeContext;
         }
 
@@ -1898,7 +1923,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
             if (node.Text == "FOUND")
             {
-                UseFoundVariable = true;
+                useFoundVariable = true;
                 codeContext.Code = node.Text;
             }
             else if (replaceList.Contains(node.Text))
@@ -1909,19 +1934,19 @@ namespace DB2BM.Extensions.EFCore.Visitors
             {
                 if (node.Type == IdentifierType.Table)
                     codeContext.Code = node.Table.Name.ToPascal();
-                else if (TablesAlias.ContainsKey(node.Text))
+                else if (tablesAlias.ContainsKey(node.Text))
                 {
-                    if (TablesAlias[node.Text].StartsWith("@"))
-                        codeContext.Code = new String(TablesAlias[node.Text].Skip(1).ToArray());
+                    if (tablesAlias[node.Text].StartsWith("@"))
+                        codeContext.Code = new String(tablesAlias[node.Text].Skip(1).ToArray());
                     else
-                        codeContext.Code = TablesAlias[node.Text];
+                        codeContext.Code = tablesAlias[node.Text];
                 }
-                else if (node.Type == IdentifierType.TableField && TablesAlias.ContainsKey(node.TableField.Table.Name))
+                else if (node.Type == IdentifierType.TableField && tablesAlias.ContainsKey(node.TableField.Table.Name))
                 {
-                    if (TablesAlias[node.TableField.Table.Name].StartsWith("@"))
-                        codeContext.Code = new String(TablesAlias[node.Text].Skip(1).ToArray());
+                    if (tablesAlias[node.TableField.Table.Name].StartsWith("@"))
+                        codeContext.Code = new String(tablesAlias[node.Text].Skip(1).ToArray());
                     else
-                        codeContext.Code = TablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
+                        codeContext.Code = tablesAlias[node.TableField.Table.Name] + "." + node.Text.ToPascal();
                 }
                 else if (node.Type == IdentifierType.UdtField)
                     codeContext.Code = node.Text;
@@ -1998,7 +2023,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContextFromItemResult()
             {
                 Code = itemCodeContext.Code,
-                JionExpressions = itemCodeContext.JionExpressions,
+                JoinExpressions = itemCodeContext.JoinExpressions,
                 TablesName = itemCodeContext.TablesName,
                 Count = itemCodeContext.Count
             };
@@ -2011,8 +2036,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContextFromItemResult()
             {
                 Code = item1CodeContext.Code + " " + item2CodeContext.Code,
-                JionExpressions = item1CodeContext.JionExpressions
-                    .Union(item2CodeContext.JionExpressions).ToList(),
+                JoinExpressions = item1CodeContext.JoinExpressions
+                    .Union(item2CodeContext.JoinExpressions).ToList(),
                 TablesName = item1CodeContext.TablesName
                     .Union(item2CodeContext.TablesName).ToList(),
                 Count = item1CodeContext.Count + item2CodeContext.Count
@@ -2023,12 +2048,12 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var item1CodeContext = VisitNode(node.Item1) as CodeContextFromItemResult;
             var item2CodeContext = VisitNode(node.Item2) as CodeContextFromItemResult;
-            item1CodeContext.JionExpressions.Union(item2CodeContext.JionExpressions).ToList();
-            item1CodeContext.JionExpressions.Add(node.Expression);
+            item1CodeContext.JoinExpressions.Union(item2CodeContext.JoinExpressions).ToList();
+            item1CodeContext.JoinExpressions.Add(node.Expression);
             return new CodeContextFromItemResult()
             {
                 Code = item1CodeContext.Code + " " + item2CodeContext.Code,
-                JionExpressions = item1CodeContext.JionExpressions,
+                JoinExpressions = item1CodeContext.JoinExpressions,
                 TablesName = item1CodeContext.TablesName
                     .Union(item2CodeContext.TablesName)
                     .ToList(),
@@ -2055,8 +2080,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContextFromItemResult()
             {
                 Code = item1CodeContext.Code + " " + item2CodeContext.Code,
-                JionExpressions = item1CodeContext.JionExpressions
-                    .Union(item2CodeContext.JionExpressions).ToList(),
+                JoinExpressions = item1CodeContext.JoinExpressions
+                    .Union(item2CodeContext.JoinExpressions).ToList(),
                 TablesName = item1CodeContext.TablesName
                     .Union(item2CodeContext.TablesName).ToList(),
                 Count = item1CodeContext.Count + item2CodeContext.Count
@@ -2071,8 +2096,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
             return new CodeContextFromItemResult()
             {
                 Code = item1CodeContext.Code + " " + item2CodeContext.Code,
-                JionExpressions = item1CodeContext.JionExpressions
-                    .Union(item2CodeContext.JionExpressions).ToList(),
+                JoinExpressions = item1CodeContext.JoinExpressions
+                    .Union(item2CodeContext.JoinExpressions).ToList(),
                 TablesName = item1CodeContext.TablesName
                     .Union(item2CodeContext.TablesName).ToList(),
                 Count = item1CodeContext.Count + item2CodeContext.Count
@@ -2108,26 +2133,26 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 node.Alias = (String.Concat(from x in node.SchemaQualifield.Identifiers select x.Text)).ToCamel();
             }
             var code = $"from {node.Alias} in {VisitNode(node.SchemaQualifield).Code}";
-            if (!TablesAlias.ContainsKey(node.SchemaQualifield.TypeReturn))
-                TablesAlias.Add(node.SchemaQualifield.TypeReturn, node.Alias);
+            if (!tablesAlias.ContainsKey(node.SchemaQualifield.TypeReturn))
+                tablesAlias.Add(node.SchemaQualifield.TypeReturn, node.Alias);
             return new CodeContextFromItemResult()
             {
                 Code = code,
                 TablesName = new List<string>() { node.SchemaQualifield.TypeReturn },
-                JionExpressions = new List<ExpressionNode>(),
+                JoinExpressions = new List<ExpressionNode>(),
                 Count = 1
             };
         }
 
         public override CodeContext Visit(FromPrimary2Node node)
         {
-            if (!TablesAlias.ContainsKey(node.AliasClause.Alias.Text.ToCamel()))
-                TablesAlias.Add(node.AliasClause.Alias.Text.ToCamel(), node.TableSubquery.TypeReturn);
+            if (!tablesAlias.ContainsKey(node.AliasClause.Alias.Text.ToCamel()))
+                tablesAlias.Add(node.AliasClause.Alias.Text.ToCamel(), node.TableSubquery.TypeReturn);
             return new CodeContextFromItemResult()
             {
                 Code = $"from {node.AliasClause.Alias.Text.ToCamel()} in ({VisitNode(node.TableSubquery).Code})",
                 TablesName = new List<string>() { node.AliasClause.Alias.Text.ToCamel() },
-                JionExpressions = new List<ExpressionNode>(),
+                JoinExpressions = new List<ExpressionNode>(),
                 Count = 1
             };
         }
@@ -2219,7 +2244,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             else if (node.Expression != null)
             {
-                UseFoundVariable = true;
+                useFoundVariable = true;
                 var expCodeContext = VisitNode(node.Expression);
                 return new CodeContext()
                 {
@@ -2229,7 +2254,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             }
             else if (node.Stmt != null)
             {
-                UseFoundVariable = true;
+                useFoundVariable = true;
                 var stmtCodeContext = VisitNode(node.Stmt);
                 stmtCodeContext.Code = stmtCodeContext.Code.Replace(".FirstOrDefault();", "");
                 return new CodeContext()
@@ -2250,7 +2275,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var codeContext = VisitQuery(node);
             multiplySustitution = null;
-            InQuery = false;
+            inQuery = false;
             if (node.SelectOps != null)
             {
                 var selectOpsCode = VisitNode(node.SelectOps);
@@ -2383,14 +2408,14 @@ namespace DB2BM.Extensions.EFCore.Visitors
         {
             var tableName = VisitNode(node.DeleteTableName).Code;
             var alias = "";
-            var tmp = TablesAlias;
-            TablesAlias = new Dictionary<string, string>();
+            var tmp = tablesAlias;
+            tablesAlias = new Dictionary<string, string>();
             if (node.Alias != null)
                 alias = node.Alias.Text;
 
             else alias = GenVariable();
 
-            TablesAlias.Add(tableName, "x");
+            tablesAlias.Add(tableName, "x");
             var conditionCode = "";
             if (node.Expression != null)
             {
@@ -2521,7 +2546,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForIdListLoopNode node)
         {
-            UseFoundVariable = true;
+            useFoundVariable = true;
             var identifiersCodeContexts = new List<CodeContext>();
             foreach (var identifier in node.Identifiers)
                 identifiersCodeContexts.Add(VisitNode(identifier));
@@ -2535,7 +2560,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForCursorLoopNode node)
         {
-            UseFoundVariable = true;
+            useFoundVariable = true;
             var cursorCodeContext = VisitNode(node.Cursor);
             var identifierCodeContext = VisitNode(node.Identifier);
             var codeContext = new CodeContext();
@@ -2549,7 +2574,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ForeachLoopNode node)
         {
-            UseFoundVariable = true;
+            useFoundVariable = true;
             var codeContext = new CodeContext();
             var idsCodeContext = new List<CodeContext>();
             foreach (var id in node.Identifiers)
@@ -2695,18 +2720,18 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     alias = VisitNode(node.Alias).Code;
                 else
                     alias = node.UpdateTableName.Identifiers[0].Text.ToCamel();
-                InQuery = true;
+                inQuery = true;
                 var query = "";
 
-                var tmp = TablesAlias;
-                TablesAlias = new Dictionary<string, string>();
+                var tmp = tablesAlias;
+                tablesAlias = new Dictionary<string, string>();
 
                 var fromItemsCodeContext = new CodeContextFromItemResult();
                 foreach (var item in node.FromItems)
                 {
                     var itemCodeContext = VisitNode(item) as CodeContextFromItemResult;
                     fromItemsCodeContext.Code += $" {itemCodeContext.Code}";
-                    fromItemsCodeContext.JionExpressions.AddRange(itemCodeContext.JionExpressions);
+                    fromItemsCodeContext.JoinExpressions.AddRange(itemCodeContext.JoinExpressions);
                     fromItemsCodeContext.Count += itemCodeContext.Count;
                     fromItemsCodeContext.TablesName.AddRange(itemCodeContext.TablesName);
                 }
@@ -2723,7 +2748,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 if (fromItemsCodeContext.Count == 0)
                 {
                     generalAlias = alias;
-                    TablesAlias.Add(alias, alias);
+                    tablesAlias.Add(alias, alias);
                     if (expCodeContext == null)
                         query = $"from {generalAlias} in {table}";
                     else
@@ -2738,18 +2763,18 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     foreach (var tablename in fromItemsCodeContext.TablesName)
                     {
                         firtSelect = (firtSelect == "") ? firtSelect : ", " + firtSelect;
-                        if (!TablesAlias.ContainsKey(TablesAlias[tablename]))
-                            TablesAlias.Add(TablesAlias[tablename], generalAlias + "." + TablesAlias[tablename]);
-                        TablesAlias[tablename] = generalAlias + "." + TablesAlias[tablename];
+                        if (!tablesAlias.ContainsKey(tablesAlias[tablename]))
+                            tablesAlias.Add(tablesAlias[tablename], generalAlias + "." + tablesAlias[tablename]);
+                        tablesAlias[tablename] = generalAlias + "." + tablesAlias[tablename];
                     }
 
                     query = $"from {generalAlias} in ({fromCode}"+" select new {"+ firtSelect +"})";
 
                     var whereCode = "";
                     var joinExpCode = "";
-                    if (fromItemsCodeContext.JionExpressions?.Count > 0)
+                    if (fromItemsCodeContext.JoinExpressions?.Count > 0)
                     {
-                        foreach (var exp in fromItemsCodeContext.JionExpressions)
+                        foreach (var exp in fromItemsCodeContext.JoinExpressions)
                             joinExpCode = (joinExpCode != "") ? $"{VisitNode(exp).Code}" : $" &&{VisitNode(exp).Code}";
                     }
                     if (joinExpCode != "")
@@ -2766,13 +2791,13 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     query += whereCode + $" select {generalAlias}";
                     var newTA = new Dictionary<string, string>();
                     var newAlias = GenVariable();
-                    foreach (var item in TablesAlias)
+                    foreach (var item in tablesAlias)
                     {
                         if (item.Value.StartsWith(generalAlias))
                             newTA.Add(item.Key, item.Value.Replace(generalAlias, newAlias));
                         else newTA.Add(item.Key, item.Value);
                     }
-                    TablesAlias = newTA;
+                    tablesAlias = newTA;
                     var statemant = $"{GetIdentation}foreach(var {newAlias} in {query})\n" +
                                        GetIdentation + "{\n";
                     foreach (var set in node.UpdateSets)
@@ -2782,8 +2807,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     statemant += GetIdentation + "}\n";
                     statemant += GetIdentation + "SaveChanges()";
                 }
-                InQuery = false;
-                TablesAlias = tmp;
+                inQuery = false;
+                tablesAlias = tmp;
                 return codeContext;
             }
             catch (Exception)

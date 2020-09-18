@@ -1,5 +1,5 @@
 ﻿using System;
-using DB2BM.Extensions.PgSql;
+using DB2BM.Extensions.AnsiCatalog;
 using CommandLine;
 using System.Collections;
 using System.Collections.Generic;
@@ -105,7 +105,7 @@ namespace DB2BM
                     {
                         catalog = catalogHandler.GetCatalog();
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         throw new Exception("No se puede establecer conexión con la Base de Datos.");
                     }

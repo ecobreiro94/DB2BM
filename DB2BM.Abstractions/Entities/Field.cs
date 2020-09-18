@@ -21,7 +21,7 @@ namespace DB2BM.Abstractions.Entities
 
         public bool IsNullable { get; set; }
 
-        public int? CharacterMaximumLength { get; set; }
+        public uint? CharacterMaximumLength { get; set; }
 
         public bool OwnsMany { get; set; }
 

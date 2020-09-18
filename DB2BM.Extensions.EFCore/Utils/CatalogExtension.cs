@@ -128,24 +128,24 @@ namespace DB2BM.Extensions.Utils
                 {
                     var table = catalog.Tables.Values.First(t => t.Name == r.Table.Name);
 
-                    var name = $"R_{r.ReferenceTable.Name}".ToPascal();
+                    var name = $"R_{r.ReferencedTable.Name}".ToPascal();
                     table.Fields.Add(new TableField()
                     {
-                        DestinyType = r.ReferenceTable.Name.ToPascal(),
+                        DestinyType = r.ReferencedTable.Name.ToPascal(),
                         Name = name,
                         GenName = name,
                         FieldRelation = $"{r.Table.Name}s",
                         Attribute = AttributeField.RelationManyOne
                     });
                     table.Fields.First(f => f.Name == r.Column.Name).Attribute = AttributeField.ForeingKey;
-                    var referenceTable = catalog.Tables.Values.First(t => t.Name == r.ReferenceTable.Name);
+                    var referenceTable = catalog.Tables.Values.First(t => t.Name == r.ReferencedTable.Name);
                     name = $"{r.Table.Name}s".ToPascal();
                     referenceTable.Fields.Add(new TableField()
                     {
                         DestinyType = $"ICollection<{r.Table.Name.ToPascal()}>",
                         Name = name,
                         GenName = name,
-                        FieldRelation = $"R_{r.ReferenceTable.Name}",
+                        FieldRelation = $"R_{r.ReferencedTable.Name}",
                         Attribute = AttributeField.RelationOneMany
                     });
                 }
@@ -200,7 +200,7 @@ namespace DB2BM.Extensions.Utils
                     sp.ReturnType = "(" + returnType + ")";
                 }
 
-                if (sp.ReturnClause.ToLower().Contains("setof "))
+                if (sp.ReturnIsSet)
                 {
                     if (EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper.ContainsKey(sp.ReturnType))
                         sp.ReturnType = "IEnumerable<" + EFCore.Visitors.EFCoreCodeGenVisitor.TypesMapper[sp.ReturnType] + ">";

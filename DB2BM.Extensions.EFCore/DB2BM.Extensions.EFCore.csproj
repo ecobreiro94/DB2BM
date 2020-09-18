@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />
+    <ProjectReference Include="..\DB2BM.Extensions.BusinessGenerator\DB2BM.Extensions.BusinessGenerator.csproj" />
     <ProjectReference Include="..\DB2BM.Utils\DB2BM.Utils.csproj" />
   </ItemGroup>
 

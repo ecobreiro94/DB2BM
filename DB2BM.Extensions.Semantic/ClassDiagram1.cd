@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DB2BM.Extensions.Semantic.SemanticAnalyzer">
+    <Position X="4.25" Y="3" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAAAAAAAAAABAAAAAAAAAAAAAACAAAA=</HashCode>
+      <FileName>SemanticAnalyzer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DB2BM.Extensions.Semantic.SemanticVisitor">
+    <Position X="6.5" Y="3" Width="3.25" />
+    <Members>
+      <Field Name="Catalog" Hidden="true" />
+      <Field Name="CursorTypes" Hidden="true" />
+      <Field Name="PredefinedFunctions" Hidden="true" />
+      <Field Name="Sp" Hidden="true" />
+      <Field Name="typeMapper" Hidden="true" />
+      <Field Name="VariablesTypes" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAAQAgAAAAAABAAAAQAAQIIQIAACAAKA=</HashCode>
+      <FileName>SemanticVisitor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DB2BM.Abstractions.Visitors.ASTVisitor&lt;TResult&gt;" Collapsed="true">
+    <Position X="7" Y="2" Width="2.25" />
+    <TypeIdentifier />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
