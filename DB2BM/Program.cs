@@ -93,8 +93,8 @@ namespace DB2BM
                     User = o.User
                 };
                 IServiceProvider serviceProvider;
-                //try
-                //{
+                try
+                {
                     serviceProvider = ConfigureServiceProvider(o.Orm, o.Dbms);
                     var catalogHandler = serviceProvider.GetService<ICatalogHandler>();
 
@@ -177,14 +177,14 @@ namespace DB2BM
                                         parameters.FunctionsNames);
                             }
                         }
-                    }
-                //}
-                //catch (Exception e)
-                //{
-                //    Console.WriteLine(e.Message);
-                //}
+                }
+            }
+                catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
 
-            });
+        });
         }
 
 
