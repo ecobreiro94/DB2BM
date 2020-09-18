@@ -662,7 +662,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectStmtNonParensNode node)
         {
-            InQuery = true;
+            inQuery = true;
             var codeContext = new CodeContext();
             if (node.SelectOps != null)
             {
@@ -680,7 +680,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     codeContext.UserFunctionCall |= afterOpCodeContext.UserFunctionCall;
                 }
             }
-            InQuery = false;
+            inQuery = false;
             return codeContext;
         }
 
@@ -1759,7 +1759,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                             tablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1]
                                 .ColLabel.Text, "@.Key");
                         else if (indirection.Identifiers != null)
-                            TablesAlias.Add(indirection.Identifiers.Text, "@.Key");
+                            tablesAlias.Add(indirection.Identifiers.Text, "@.Key");
                     }
                     codeContext.Code += $" group {generalAlias} by ({expCode}) into {intoVariable}";
                     multiplySustitution = intoVariable;
