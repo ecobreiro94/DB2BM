@@ -750,7 +750,8 @@ namespace DB2BM.Extensions.Semantic
         }
         private string SelectType(string typeA, string typeB)
         {
-            if (TypeInfo.TypesInfo.ContainsKey(typeA) && TypeInfo.TypesInfo.ContainsKey(typeB))
+            if ((typeA!= null && TypeInfo.TypesInfo.ContainsKey(typeA)) && 
+                (typeB != null && TypeInfo.TypesInfo.ContainsKey(typeB)))
                 if (TypeInfo.TypesInfo[typeA].GeneralType == TypeInfo.TypesInfo[typeB].GeneralType)
                     return (TypeInfo.TypesInfo[typeA].Index <= TypeInfo.TypesInfo[typeB].Index) ? typeA : typeB;
                 else return (TypeInfo.TypesInfo[typeA].Index < TypeInfo.TypesInfo[typeB].Index) ? typeB : typeA;
@@ -1438,7 +1439,14 @@ namespace DB2BM.Extensions.Semantic
 
         public override List<SemanticResult> Visit(SelectOpsNoParensNode node)
         {
-            return new List<SemanticResult>();
+            if (node.SelectStmt != null)
+                return VisitNode(node.SelectStmt);
+            else if (node.SelectPrimary != null)
+                return VisitNode(node.SelectPrimary);
+            else
+            {
+                return VisitNode(node.SelectOps);
+            }
         }
 
         public override List<SemanticResult> Visit(SelectOpsNode node)

@@ -639,7 +639,26 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectStmtNonParensNode node)
         {
-            return new CodeContext();
+            InQuery = true;
+            var codeContext = new CodeContext();
+            if (node.SelectOps != null)
+            {
+                var selectOpsCodeContext = VisitNode(node.SelectOps);
+                codeContext.Code = selectOpsCodeContext.Code;
+                codeContext.UserFunctionCall = selectOpsCodeContext.UserFunctionCall;
+            }
+            if (node.AfterOps != null && node.AfterOps.Count > 0)
+            {
+                codeContext.Code = codeContext.Code.Replace(".FirstOrDefault()", "");
+                foreach (var afterOp in node.AfterOps)
+                {
+                    var afterOpCodeContext = VisitNode(afterOp);
+                    codeContext.Code = $"({codeContext.Code}).{afterOpCodeContext.Code}";
+                    codeContext.UserFunctionCall |= afterOpCodeContext.UserFunctionCall;
+                }
+            }
+            InQuery = false;
+            return codeContext;
         }
 
         public override CodeContext Visit(TruncateStmtNode node)
@@ -1188,7 +1207,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(ValueExpressionPrimaryNode node)
         {
-            return new CodeContext();
+            return VisitNode(node.SelectStmtNonParens);
         }
 
         public override CodeContext Visit(IntervalFieldNode node)
@@ -1708,15 +1727,18 @@ namespace DB2BM.Extensions.EFCore.Visitors
                     var intoVariable = "_" + generalAlias;
                     foreach (var exp in node.GroupByClause.Expressions)
                     {
-                        expCode = (expCode == "") ? VisitNode(exp).Code : ", " + VisitNode(exp).Code;
+                        expCode += (expCode == "") ? VisitNode(exp).Code : ", " + VisitNode(exp).Code;
 
                         var indirection = exp as IndirectionVarNode;
-                        if (indirection.Indirections.Count > 0 &&
+                        if (indirection.Indirections?.Count > 0 &&
                             indirection.Indirections[indirection.Indirections.Count - 1].ColLabel != null)
                             TablesAlias.Add(indirection.Indirections[indirection.Indirections.Count - 1]
                                 .ColLabel.Text, "@.Key");
+                        else if (indirection.Identifiers != null)
+                            TablesAlias.Add(indirection.Identifiers.Text, "@.Key");
                     }
-                    codeContext.Code += $" group {generalAlias} by {expCode} into {intoVariable}";
+                    codeContext.Code += $" group {generalAlias} by ({expCode}) into {intoVariable}";
+                    multiplySustitution = intoVariable;
                     var newTA = new Dictionary<string, string>();
                     newTA.Add(generalAlias, "@" + intoVariable);
                     foreach (var ta in TablesAlias)
