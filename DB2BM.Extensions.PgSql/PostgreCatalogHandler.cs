@@ -20,9 +20,7 @@ namespace DB2BM.Extensions.PgSql
     [Dbms("postgre")]
     public class PostgreCatalogHandler : AnsiCatalogHandler<PostgreDbContext>
     {
-        public PostgreCatalogHandler() : base("public")
-        {
-        }
+        public override string SchemaName => "public";
 
         protected override string GetConnectionString(DbOption options)
         {

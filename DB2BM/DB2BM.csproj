@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DB2BM.Extensions.MySql\DB2BM.Extensions.MySql.csproj" />
     <ProjectReference Include="..\DB2BM.Extensions.PgSql\DB2BM.Extensions.PgSql.csproj" />
     <ProjectReference Include="..\DB2BM.Extensions.EFCore\DB2BM.Extensions.EFCore.csproj" />
     <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />

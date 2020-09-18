@@ -12,7 +12,6 @@ namespace DB2BM.Extensions.AnsiCatalog.Entities
 
         public string ColumnName { get; set; }
 
-        public AnsiRelationship Relation { get; set; }
     }
 
     public class AnsiKeyColumnUsage
@@ -22,8 +21,6 @@ namespace DB2BM.Extensions.AnsiCatalog.Entities
         public string TableName { get; set; }
 
         public string ColumnName { get; set; }
-
-        public AnsiRelationship Relation { get; set; }
     }
 
     public class AnsiRelationship

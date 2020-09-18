@@ -20,12 +20,7 @@ namespace DB2BM.Extensions.AnsiCatalog
 
         private TDbContext internalDbContext;
 
-        public AnsiCatalogHandler(string schemaName)
-        {
-            SchemaName = schemaName;
-        }
-
-        public string SchemaName { get; private set; }
+        public abstract string SchemaName { get; }
 
         public TDbContext InternalDbContext
         {
@@ -55,6 +50,7 @@ namespace DB2BM.Extensions.AnsiCatalog
             var functs = InternalDbContext.Routines
                 .Include(x => x.Params)
                 .Where(f => f.SpecificSchema == SchemaName)
+                .AsEnumerable()
                 .Select(f =>
                     new StoredProcedure()
                     {
@@ -83,6 +79,7 @@ namespace DB2BM.Extensions.AnsiCatalog
                 InternalDbContext.Tables
                     .Include(x => x.Fields)
                     .Where(t => t.SchemaName == SchemaName)
+                    .AsEnumerable()
                     .Select(t =>
                        new Table()
                        {
@@ -117,9 +114,9 @@ namespace DB2BM.Extensions.AnsiCatalog
                                     new Relationship()
                                     {
                                         Table = tables[r.TableName],
-                                        ReferenceTable = tables[r.RelationColumn.TableName],
+                                        ReferencedTable = tables[r.RelationColumn.TableName],
                                         Column = tables[r.TableName].Fields.First(c => c.Name == r.KeyColumn.ColumnName),
-                                        ReferenceColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
+                                        ReferencedColumn = tables[r.RelationColumn.TableName].Fields.First(c => c.Name == r.RelationColumn.ColumnName),
                                         Type = (r.ConstraintType == "PRIMARY KEY") ? RelationshipType.PrimaryKey : RelationshipType.ForeingKey
                                     });
             return relations;
@@ -157,6 +154,7 @@ namespace DB2BM.Extensions.AnsiCatalog
             var catalogTables = new Dictionary<string, Table>();
             foreach (var t in tables)
                 catalogTables.Add(t.Name, t);
+
             var relations = GetRelations(catalogTables).ToList();
 
             var functions = GetFunctions(false);

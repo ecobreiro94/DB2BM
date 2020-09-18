@@ -18,6 +18,6 @@ namespace DB2BM.Extensions.AnsiCatalog.Entities
 
         public string IsNullable { get; set; }
 
-        public int? CharacterMaximumLength { get; set; }
+        public uint? CharacterMaximumLength { get; set; }
     }
 }

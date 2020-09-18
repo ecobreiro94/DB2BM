@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DB2BM.Abstractions\DB2BM.Abstractions.csproj" />
+    <ProjectReference Include="..\DB2BM.Extensions.AnsiCatalog\DB2BM.Extensions.AnsiCatalog.csproj" />
+  </ItemGroup>
+
+</Project>

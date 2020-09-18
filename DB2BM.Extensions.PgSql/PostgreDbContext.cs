@@ -105,8 +105,8 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(r => r.SchemaName).HasColumnName("constraint_schema");
                 config.Property(r => r.TableName).HasColumnName("table_name");
                 config.Property(r => r.ConstraintType).HasColumnName("constraint_type");
-                config.HasOne(r => r.RelationColumn).WithOne(x => x.Relation).HasForeignKey<AnsiRelationColumnUsage>(y => y.ConstraintName);
-                config.HasOne(r => r.KeyColumn).WithOne(x => x.Relation).HasForeignKey<AnsiKeyColumnUsage>(y => y.ConstraintName);
+                config.HasOne(r => r.RelationColumn).WithOne().HasForeignKey<AnsiRelationColumnUsage>(y => y.ConstraintName);
+                config.HasOne(r => r.KeyColumn).WithOne().HasForeignKey<AnsiKeyColumnUsage>(y => y.ConstraintName);
                 config.ToTable("table_constraints");
             });
 
@@ -116,7 +116,7 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(r => r.ConstraintName).HasColumnName("constraint_name");
                 config.Property(r => r.ColumnName).HasColumnName("column_name");
                 config.Property(r => r.TableName).HasColumnName("table_name");
-                config.HasOne(r => r.Relation).WithOne(x => x.RelationColumn);
+                //config.HasOne(r => r.Relation).WithOne(x => x.RelationColumn);
                 config.ToTable("constraint_column_usage");
             });
 
@@ -126,7 +126,7 @@ namespace DB2BM.Extensions.PgSql
                 config.Property(k => k.ConstraintName).HasColumnName("constraint_name");
                 config.Property(k => k.ColumnName).HasColumnName("column_name");
                 config.Property(k => k.TableName).HasColumnName("table_name");
-                config.HasOne(k => k.Relation).WithOne(x => x.KeyColumn);
+                //config.HasOne(k => k.Relation).WithOne(x => x.KeyColumn);
                 config.ToTable("key_column_usage");
             });
 
