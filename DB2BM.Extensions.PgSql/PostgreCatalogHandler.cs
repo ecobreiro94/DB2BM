@@ -156,7 +156,7 @@ namespace DB2BM.Extensions.PgSql
                                        Default = f.Default,
                                        IsNullable = (f.IsNullable == "YES") ? true : false,
                                        CharacterMaximumLength = f.CharacterMaximumLength
-                                   })
+                                   }).ToList()
                     });
 
             IEnumerable<BaseUserDefinedType> enumsOptions =
