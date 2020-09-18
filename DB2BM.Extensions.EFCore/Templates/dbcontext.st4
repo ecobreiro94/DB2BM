@@ -13,7 +13,7 @@ namespace %db.Name; format="pascal"%.Context
 
         public string ConnectionString { get; }
 
-        public %db.Name; format="pascal"%DbContext(DbContextOptions options, string connectionString)
+        public %db.Name; format="pascal"%DbContext(string connectionString)
         {
             ConnectionString = connectionString;
         }

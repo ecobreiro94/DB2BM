@@ -1,5 +1,6 @@
 ﻿using DB2BM.Abstractions.Entities;
 using DB2BM.Abstractions.Entities.UserDefined;
+using DB2BM.Extensions.EFCore.Visitors;
 using DB2BM.Utils;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,12 @@ namespace DB2BM.Extensions.Utils
                     }
                     if (f.DestinyType == null || f.DestinyType == f.OriginType)
                         f.DestinyType = GetType(f.OriginType, typesMapper);
+
+                    if (EFCoreCodeGenVisitor.TypesMapper.ContainsKey(f.DestinyType) &&
+                           !EFCoreCodeGenVisitor.TypesMapper[f.DestinyType].Contains('?'))
+                    {
+                        f.IsNullable = false;
+                    }
                 }
             }
         }
@@ -84,6 +91,11 @@ namespace DB2BM.Extensions.Utils
                             f.OwnsMany = true;
                         }
                         else f.DestinyType = GetType(f.OriginType, typesMapper);
+                        if (EFCoreCodeGenVisitor.TypesMapper.ContainsKey(f.DestinyType) &&
+                           !EFCoreCodeGenVisitor.TypesMapper[f.DestinyType].Contains('?'))
+                        {
+                            f.IsNullable = false;
+                        }
                     }
                 }
             }

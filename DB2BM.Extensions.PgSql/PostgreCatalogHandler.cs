@@ -65,7 +65,7 @@ namespace DB2BM.Extensions.PgSql
                         OriginalCode = f.RoutineLanguage == "SQL" ? 
                             $"BEGIN {f.Definition} END" : 
                             f.Definition,
-                        ReturnIsSet = f.ReturnClause == "setof",
+                        ReturnIsSet = f.ReturnClause.ToLower().Contains("setof"),
                         ReturnType = f.ReturnUdtType,
                         Params = f.Params.Select(p =>
                               new Parameter()
