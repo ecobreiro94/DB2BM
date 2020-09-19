@@ -11,19 +11,22 @@ namespace DB2BM.Extensions.Utils
 {
     public static class CatalogExtension
     {
-        private static string GetType(string type, Dictionary<string, string> typesMapper)
+        private static string GetType(BaseField field, Dictionary<string, string> typesMapper)
         {
-            if (typesMapper.ContainsKey(type))
-                return typesMapper[type];
+            if (typesMapper.ContainsKey(field.OriginType))
+                return typesMapper[field.OriginType];
 
-            else if (type.Length > 0 && type[0] == '_')
+            else if (field.OriginType.Length > 0 && field.OriginType[0] == '_')
             {
-                var simpleType = new string(type.Skip(1).ToArray());
+                var simpleType = new string(field.OriginType.Skip(1).ToArray());
                 if (typesMapper.ContainsKey(simpleType))
+                {
+                    field.IsNullable = false;
                     return typesMapper[simpleType] + "[]";
+                }
             }
 
-            return type;
+            return field.OriginType;
         }
 
         private static bool prepareCatalog;
@@ -31,6 +34,9 @@ namespace DB2BM.Extensions.Utils
         {
             foreach (var t in catalog.Tables.Values)
             {
+                if (t.Name == "film")
+                {
+                }
                 foreach (var f in t.Fields)
                 {
                     f.Table = t;
@@ -43,6 +49,7 @@ namespace DB2BM.Extensions.Utils
                         else
                             f.IsUDTEnum = true;
                         f.DestinyType = f.OriginType;
+                        f.IsNullable = false;
                         continue;
                     }
                     if (f.OriginType != null && f.OriginType.Length > 0 && f.OriginType[0] == '_')
@@ -51,12 +58,13 @@ namespace DB2BM.Extensions.Utils
                         if (udtypes.Exists(x => x.TypeName == type))
                         {
                             f.DestinyType = type += "[]";
+                            f.IsNullable = false;
                             f.OwnsMany = true;
                             continue;
                         }
                     }
                     if (f.DestinyType == null || f.DestinyType == f.OriginType)
-                        f.DestinyType = GetType(f.OriginType, typesMapper);
+                        f.DestinyType = GetType(f, typesMapper);
 
                     if (EFCoreCodeGenVisitor.TypesMapper.ContainsKey(f.DestinyType) &&
                            !EFCoreCodeGenVisitor.TypesMapper[f.DestinyType].Contains('?'))
@@ -89,8 +97,9 @@ namespace DB2BM.Extensions.Utils
                         {
                             f.DestinyType = type += "[]";
                             f.OwnsMany = true;
+                            f.IsNullable = false;
                         }
-                        else f.DestinyType = GetType(f.OriginType, typesMapper);
+                        else f.DestinyType = GetType(f, typesMapper);
                         if (EFCoreCodeGenVisitor.TypesMapper.ContainsKey(f.DestinyType) &&
                            !EFCoreCodeGenVisitor.TypesMapper[f.DestinyType].Contains('?'))
                         {

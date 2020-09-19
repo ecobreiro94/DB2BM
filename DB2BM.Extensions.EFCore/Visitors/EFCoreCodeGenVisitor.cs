@@ -637,6 +637,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectStatementNode node)
         {
+            var tmpInQuery = inQuery;
             inQuery = true;
             var codeContext = new CodeContext();
             if (node.SelectOps != null)
@@ -656,7 +657,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
             }
             codeContext.Code += ";";
-            inQuery = false;
+            inQuery = tmpInQuery;
             return codeContext;
         }
 
@@ -1203,6 +1204,8 @@ namespace DB2BM.Extensions.EFCore.Visitors
         public override CodeContext Visit(ExistsNode node)
         {
             var stmtCodeContext = VisitNode(node.SelectStmt);
+            if (stmtCodeContext.Code.EndsWith(";"))
+                stmtCodeContext.Code = stmtCodeContext.Code.Remove(stmtCodeContext.Code.Length - 1);
             return new CodeContext()
             {
                 Code = $"({stmtCodeContext.Code}).Any()",
@@ -1285,7 +1288,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (inQuery && functionName.ToLower() == "count")
             {
                 var arg = VisitNode(node.VexOrNamedNotations[0]);
-                codeContext.Code = $"Count()";
+                codeContext.Code = $"Count({arg.Code})";
             }
             else if (inQuery && functionName.ToLower() == "Sum")
             {
@@ -1680,7 +1683,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             var result = "";
             var tmp = tablesAlias;
             var firstorDefault = false;
-            tablesAlias = new Dictionary<string, string>();
+            //tablesAlias = new Dictionary<string, string>();
             if (node.FromItems != null && node.FromItems.Count > 0)
             {
                 firstorDefault = true;
@@ -1800,7 +1803,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         firstorDefault = false;
                         var argCC = VisitNode((node.SelectList.SelectSubLists[0].Expression as BasicFunctionCallNode)
                             .VexOrNamedNotations[0]).Code;
-                        codeContext.Code = $"({codeContext.Code} select {argCC}).{selectListCodeContext.Code}";
+                        codeContext.Code = $"({codeContext.Code} select {argCC}).Count()";
                     }
                     else codeContext.Code = $"({codeContext.Code}).{selectListCodeContext.Code}";
                 }
@@ -1837,14 +1840,14 @@ namespace DB2BM.Extensions.EFCore.Visitors
                         foreach (var item in node.SelectList.SelectSubLists)
                         {
                             if (selection == "")
-                                selection += (index < node.IntoTable.Count)?
+                                selection += (index < node.IntoTable?.Count)?
                                     $"{ VisitNode(node.IntoTable[index++]).Code} = { VisitNode(item).Code}" : VisitNode(item).Code;
                             else
-                                selection += (index < node.IntoTable.Count)?
-                                    $",  {VisitNode(node.IntoTable[index++]).Code} = {VisitNode(item).Code}" : VisitNode(item).Code;
+                                selection += (index < node.IntoTable?.Count)?
+                                    $",  {VisitNode(node.IntoTable[index++]).Code} = {VisitNode(item).Code}" : $", {VisitNode(item).Code}";
                         }
                     }
-                    selectListCodeContext = new CodeContext() { Code = "x => new {" + selectListCodeContext + "}" };
+                    selectListCodeContext = new CodeContext() { Code = "x => new {" + selection + "}" };
                 }
             }
             codeContext.UserFunctionCall |= selectListCodeContext.UserFunctionCall;
@@ -1861,6 +1864,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
 
         public override CodeContext Visit(SelectPrimaryNode node)
         {
+            var tmpInQuery = inQuery;
             var codeContext = VisitQuery(node);
             if (node.IntoTable != null)
             {
@@ -1888,7 +1892,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
                 }
             }
             multiplySustitution = null;
-            inQuery = false;
+            inQuery = tmpInQuery;
             return codeContext;
         }
 
@@ -2205,7 +2209,7 @@ namespace DB2BM.Extensions.EFCore.Visitors
             if (node.ColLabel != null)
                 return new CodeContext()
                 {
-                    Code = "." + VisitNode(node.ColLabel).Code.ToPascal()
+                    Code = "." + node.ColLabel.Text.ToPascal()
                 };
             else
             {
